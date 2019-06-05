@@ -58,50 +58,6 @@ func TestNewView(t *testing.T) {
 	}
 } // TestNewView()
 
-func TestNewDataList(t *testing.T) {
-	dl := TDataList{}
-	tests := []struct {
-		name string
-		want *TDataList
-	}{
-		// TODO: Add test cases.
-		{" 1", &dl},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewDataList(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewDataList() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // TestNewDataList()
-
-func TestTDataList_Set(t *testing.T) {
-	dl := NewDataList()
-	rl := NewDataList()
-	(*rl)["Title"] = "Testing"
-	type args struct {
-		aKey   string
-		aValue interface{}
-	}
-	tests := []struct {
-		name string
-		d    *TDataList
-		args args
-		want *TDataList
-	}{
-		// TODO: Add test cases.
-		{" 1", dl, args{"Title", "Testing"}, rl},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.d.Set(tt.args.aKey, tt.args.aValue); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TDataList.Add() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // TestTDataList_Set()
-
 func TestNewViewList(t *testing.T) {
 	vl := TViewList{}
 	tests := []struct {

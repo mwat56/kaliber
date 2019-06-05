@@ -20,32 +20,6 @@ import (
 	"regexp"
 )
 
-type (
-	// TDataList is a list of values to be injected into a template.
-	TDataList map[string]interface{}
-)
-
-// NewDataList returns a new (empty) TDataList instance.
-func NewDataList() *TDataList {
-	result := make(TDataList, 32)
-
-	return &result
-} // NewDatalist()
-
-// Set inserts `aValue` identified by `aKey` to the list.
-//
-// If there's already a list entry with `aKey` its current value
-// gets replaced by `aValue`.
-//
-// `aKey` is the values's identifier (as used as placeholder in the template).
-//
-// `aValue` contains the data entry's value.
-func (dl *TDataList) Set(aKey string, aValue interface{}) *TDataList {
-	(*dl)[aKey] = aValue
-
-	return dl
-} // Set()
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // TView combines a template and its logical name.
@@ -87,7 +61,7 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 
 // `render()` is the core of `Render()` with a slightly different API
 // (`io.Writer` instead of `http.ResponseWriter`) for easier testing.
-func (v *TView) render(aWriter io.Writer, aData *TDataList) (rErr error) {
+func (v *TView) render(aWriter io.Writer, aData *TemplateData) (rErr error) {
 	var page []byte
 
 	if page, rErr = v.RenderedPage(aData); nil != rErr {
@@ -108,7 +82,7 @@ func (v *TView) render(aWriter io.Writer, aData *TDataList) (rErr error) {
 // If an error occurs executing the template or writing its output,
 // execution stops, and the method returns without writing anything
 // to the output `aWriter`.
-func (v *TView) Render(aWriter http.ResponseWriter, aData *TDataList) error {
+func (v *TView) Render(aWriter http.ResponseWriter, aData *TemplateData) error {
 	return v.render(aWriter, aData)
 } // Render()
 
@@ -116,7 +90,7 @@ func (v *TView) Render(aWriter http.ResponseWriter, aData *TDataList) error {
 // executing the template.
 //
 // `aData` is a list of data to be injected into the template.
-func (v *TView) RenderedPage(aData *TDataList) (rBytes []byte, rErr error) {
+func (v *TView) RenderedPage(aData *TemplateData) (rBytes []byte, rErr error) {
 	buf := &bytes.Buffer{}
 
 	if rErr = v.tpl.ExecuteTemplate(buf, v.name, aData); nil != rErr {
@@ -171,7 +145,7 @@ func (vl *TViewList) Get(aName string) (*TView, bool) {
 
 // `render()` is the core of `Render()` with a slightly different API
 // (`io.Writer` instead of `http.ResponseWriter`) for easier testing.
-func (vl *TViewList) render(aName string, aWriter io.Writer, aData *TDataList) error {
+func (vl *TViewList) render(aName string, aWriter io.Writer, aData *TemplateData) error {
 	if view, ok := (*vl)[aName]; ok {
 		return view.render(aWriter, aData)
 	}
@@ -190,7 +164,7 @@ func (vl *TViewList) render(aName string, aWriter io.Writer, aData *TDataList) e
 // If an error occurs executing the template or writing its output,
 // execution stops, and the method returns without writing anything
 // to the output `aWriter`.
-func (vl *TViewList) Render(aName string, aWriter http.ResponseWriter, aData *TDataList) error {
+func (vl *TViewList) Render(aName string, aWriter http.ResponseWriter, aData *TemplateData) error {
 	return vl.render(aName, aWriter, aData)
 } // Render()
 
@@ -199,7 +173,7 @@ func (vl *TViewList) Render(aName string, aWriter http.ResponseWriter, aData *TD
 // `aName` is the name of the template/view to use.
 //
 // `aData` is a list of data to be injected into the template.
-func (vl *TViewList) RenderedPage(aName string, aData *TDataList) (rBytes []byte, rErr error) {
+func (vl *TViewList) RenderedPage(aName string, aData *TemplateData) (rBytes []byte, rErr error) {
 
 	if view, ok := (*vl)[aName]; ok {
 		return view.RenderedPage(aData)
