@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/mwat56/passlist"
@@ -95,6 +94,33 @@ func NewPageHandler() (*TPageHandler, error) {
 	return result, nil
 } // NewPageHandler()
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+// GetErrorPage returns an error page for `aStatus`,
+// implementing the `TErrorPager` interface.
+func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
+	var empty []byte
+
+	pageData := ph.basicTemplateData()
+
+	switch aStatus {
+	case 404:
+		if page, err := ph.viewList.RenderedPage("404", pageData); nil == err {
+			return page
+		}
+
+	//TODO implement other status codes
+
+	default:
+		pageData = pageData.Set("Error", template.HTML(aData))
+		if page, err := ph.viewList.RenderedPage("error", pageData); nil == err {
+			return page
+		}
+	}
+
+	return empty
+} // GetErrorPage()
+
 // `newViewList()` returns a list of views found in `aDirectory`
 // and a possible I/O error.
 func newViewList(aDirectory string) (*TViewList, error) {
@@ -124,70 +150,25 @@ func (ph *TPageHandler) Address() string {
 	return ph.addr
 } // Address()
 
-// `basicPageData()` returns a list of common Head entries.
-func (ph *TPageHandler) basicPageData() *TDataList {
+// `basicTemplateData()` returns a list of common Head entries.
+func (ph *TPageHandler) basicTemplateData() *TemplateData {
 	y, m, d := time.Now().Date()
-	date := fmt.Sprintf("%d-%02d-%02d", y, m, d)
-	pageData := NewDataList().
+	result := NewTemplateData().
 		Set("Blogname", ph.bn).
 		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+ph.theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
 		Set("Lang", ph.lang).
 		Set("Robots", "noindex,nofollow").
-		Set("Title", ph.realm+": "+date)
-
-	return pageData
-} // basicPageData()
-
-// `getQueryOptions()` returns a `TQueryOptions` instance with values
-// read from the `aRequest` data.
-func getQueryOptions(aRequest *http.Request) *TQueryOptions {
-	result := NewQueryOptions()
-	if qos := aRequest.FormValue("qos"); 0 < len(qos) {
-		if qosu, err := url.QueryUnescape(qos); nil == err {
-			result.Scan(qosu)
-		}
-	}
-
-	if fll := aRequest.FormValue("limitlength"); 0 < len(fll) {
-		if ll, err := strconv.Atoi(fll); nil == err {
-			result.LimitLength = uint(ll)
-		}
-	}
-	if fob := aRequest.FormValue("order"); 0 < len(fob) {
-		if "descending" == fob {
-			result.Descending = true
-		}
-	}
-	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
-		switch fsb {
-		case "author":
-			result.SortBy = SortByAuthor
-		case "date":
-			result.SortBy = SortByTime
-		case "language":
-			result.SortBy = SortByLanguage
-		case "rating":
-			result.SortBy = SortByRating
-		case "title":
-			result.SortBy = SortByTitle
-		case "series":
-			result.SortBy = SortBySeries
-		case "size":
-			result.SortBy = SortBySize
-		case "tags":
-			result.SortBy = SortByTags
-		}
-	}
+		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d))
 
 	return result
-} // getQueryOptions()
+} // basicTemplateData()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
-	qo := getQueryOptions(aRequest)
-	pageData := ph.basicPageData()
+	qo := getQueryOptions(aRequest) // in `queryoptions.go`
+	pageData := ph.basicTemplateData()
 	path, tail := URLparts(aRequest.URL.Path)
 	// log.Printf("head: `%s`: tail: `%s`", path, tail) //FIXME REMOVE
 	switch path {
@@ -200,10 +181,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
 		qo.Entity = path
+		qo.IncLimit()
 		doclist, _ := queryEntity(qo)
 		pageData.
 			Set("Documents", doclist).
-			Set("QOS", qo.CGI())
+			Set("HasNext", true).
+			Set("QOS", qo.String()).
+			Set("QOC", qo.CGI())
 		ph.viewList.Render("index", aWriter, pageData)
 
 	case "certs": // these files are handled internally
@@ -243,6 +227,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		pageData.
 			Set("Document", doc).
+			Set("HasNext", false).
 			Set("QOS", qo.CGI())
 		ph.viewList.Render("document", aWriter, pageData)
 
@@ -280,12 +265,15 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.sh.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
+		pageData.Set("HasNext", false)
 		ph.viewList.Render("imprint", aWriter, pageData)
 
 	case "licence", "license", "lizenz":
+		pageData.Set("HasNext", false)
 		ph.viewList.Render("licence", aWriter, pageData)
 
 	case "privacy", "datenschutz":
+		pageData.Set("HasNext", false)
 		ph.viewList.Render("privacy", aWriter, pageData)
 
 	case "views": // this files are handled internally
@@ -306,11 +294,15 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.Request) {
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
-	case "qo": // query options
+	case "post": // query options
 		qo := getQueryOptions(aRequest)
-		if nil == qo {
-			http.Redirect(aWriter, aRequest, "/", http.StatusSeeOther)
-			return
+
+		if next := aRequest.FormValue("next"); 0 < len(next) {
+			switch qo.Entity { // we're following an established query
+			case "author", "lang", "publisher", "series", "tag":
+				http.Redirect(aWriter, aRequest, "/"+qo.Entity, http.StatusSeeOther)
+				return
+			}
 		}
 
 		//TODO call `handleRoot()`?
@@ -324,7 +316,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleRoot()` serves the logical web-root directory.
-func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aData *TDataList, aWriter http.ResponseWriter, aRequest *http.Request) {
+func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aData *TemplateData, aWriter http.ResponseWriter, aRequest *http.Request) {
 
 	doclist, _ := QeueryBy(aQueryOption)
 	// aQueryOption.LimitStart += aQueryOption.LimitLength
@@ -335,7 +327,7 @@ func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aData *TDataList
 } // handleRoot()
 
 // `handleSearch()` serves the search results.
-func (ph *TPageHandler) handleSearch(aTerm string, aData *TDataList, aWriter http.ResponseWriter, aRequest *http.Request) {
+func (ph *TPageHandler) handleSearch(aTerm string, aData *TemplateData, aWriter http.ResponseWriter, aRequest *http.Request) {
 	/*
 		pl := SearchPostings(regexp.QuoteMeta(aTerm))
 		aData = check4lang(aData, aRequest).
@@ -377,7 +369,7 @@ func (ph TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Req
 
 var (
 	// RegEx to find path and possible added path components
-	routeRE = regexp.MustCompile(`(?i)^/?([ÄÖÜß\w._-]+)?/?([§ÄÖÜß\w.?=:;/,_@-]*)?`)
+	routeRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?([§ÄÖÜß\w.?=:;/,_@-]*)?`)
 )
 
 // URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
