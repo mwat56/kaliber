@@ -9,26 +9,11 @@ package kaliber
 import (
 	"database/sql"
 	"fmt"
-	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3" // anonymous import
-)
-
-// Constants defining the ORDER_BY clause
-const (
-	SortUnsorted = uint8(iota)
-	SortByAuthor
-	SortByLanguage
-	SortByPublisher
-	SortByRating
-	SortBySize
-	SortBySeries
-	SortByTags
-	SortByTime
-	SortByTitle
 )
 
 const (
@@ -108,55 +93,6 @@ var (
 	}
 )
 
-type (
-	// TQueryOptions holds properties configuring a query.
-	//
-	// This type is used by the HTTP pagehandler when receiving
-	// a FORM's data.
-	TQueryOptions struct {
-		ID          TID    // an entity ID to lookup
-		Descending  bool   // sort direction
-		Entity      string // for limiting to a certin entity (author,publisher, series, tag)
-		LimitLength uint   // number of documents per page
-		LimitStart  uint   // starting number
-		Matching    string // text to lookup in all documents
-		SortBy      uint8  // display order of documents
-	}
-)
-
-// NewQueryOptions returns a new `TQueryOptions` instance.
-func NewQueryOptions() *TQueryOptions {
-	result := TQueryOptions{
-		LimitLength: 25,
-		SortBy:      SortByTime,
-		Descending:  true,
-	}
-
-	return &result
-} // NewQueryOptions()
-
-// CGI returns the object's query escaped string representation
-// fit for use as the `qos` CGI argument.
-func (qo *TQueryOptions) CGI() string {
-	return "?qos=" + url.QueryEscape(qo.String())
-} // CGI()
-
-// String returns the options as a `|` delimited string.
-func (qo *TQueryOptions) String() string {
-	return fmt.Sprintf("%d|%v|%d|%d|%s|%d|%s", qo.ID, qo.Descending, qo.LimitLength, qo.LimitStart, "", qo.SortBy, qo.Entity)
-} // String()
-
-// Scan returns the options read from `aString`.
-func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
-	var desc string
-	fmt.Sscanf(aString, "%d|%v|%d|%d|%s|%d|%s", &qo.ID, &desc, &qo.LimitLength, &qo.LimitStart, &qo.Matching, &qo.SortBy, qo.Entity)
-	if "true" == desc {
-		qo.Descending = true
-	}
-
-	return qo
-} // Scan()
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 var (
@@ -182,8 +118,8 @@ func DBopen(aFilename string) error {
 	return sqliteDatabase.Ping()
 } // DBopen()
 
-// `dbDocListQuery()` returns a list of documents.
-func dbDocListQuery(aQuery string) (*TDocList, error) {
+// `docListQuery()` returns a list of documents.
+func docListQuery(aQuery string) (*TDocList, error) {
 	rows, err := sqliteDatabase.Query(aQuery)
 	if nil != err {
 		return nil, err
@@ -191,7 +127,8 @@ func dbDocListQuery(aQuery string) (*TDocList, error) {
 
 	result := newDocList()
 	for rows.Next() {
-		var authors, formats, identifiers, language, publisher, series, tags tCSVstring
+		var authors, formats, identifiers, language,
+			publisher, series, tags tCSVstring
 
 		doc := newDocument()
 		rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &language, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
@@ -208,7 +145,7 @@ func dbDocListQuery(aQuery string) (*TDocList, error) {
 	}
 
 	return result, nil
-} // dbQuery()
+} // docListQuery()
 
 // `limit()` returns a LIMIT clause defined by `aStart` and `aLength`.
 func limit(aStart, aLength uint) string {
@@ -233,7 +170,7 @@ func limit(aStart, aLength uint) string {
 // `aDescending` if `true` the query result is sorted in DESCending order.
 func orderBy(aOrder uint8, aDescending bool) string {
 	result := "ORDER BY "
-	switch aOrder {
+	switch aOrder { // constants defined in `queryoptions.go`
 	case SortByAuthor:
 		result += "b.author_sort, b.pubdate "
 	case SortByLanguage:
@@ -419,7 +356,7 @@ func QeueryBy(aOption *TQueryOptions) (*TDocList, error) {
 		orderBy(aOption.SortBy, aOption.Descending) +
 		limit(aOption.LimitStart, aOption.LimitLength)
 
-	return dbDocListQuery(query)
+	return docListQuery(query)
 } // orderBy()
 
 const (
@@ -457,7 +394,7 @@ func QueryDocMini(aID TID) *TDocument {
 
 // `queryDocument()` returns the `TDocument` identified by `aID`.
 func queryDocument(aID TID) *TDocument {
-	list, _ := dbDocListQuery(baseQueryString + fmt.Sprintf("WHERE b.id=%d ", aID))
+	list, _ := docListQuery(baseQueryString + fmt.Sprintf("WHERE b.id=%d ", aID))
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
@@ -469,7 +406,7 @@ func queryDocument(aID TID) *TDocument {
 
 // `queryEntity()` returns a list of documents as defined by `aOption`.
 func queryEntity(aOption *TQueryOptions) (*TDocList, error) {
-	return dbDocListQuery(baseQueryString +
+	return docListQuery(baseQueryString +
 		fmt.Sprintf(having[aOption.Entity], aOption.ID) +
 		orderBy(aOption.SortBy, aOption.Descending) +
 		limit(aOption.LimitStart, aOption.LimitLength))
@@ -480,7 +417,7 @@ func QueryLimit(aStart, aLength uint) (*TDocList, error) {
 	query := baseQueryString +
 		limit(aStart, aLength)
 
-	return dbDocListQuery(query)
+	return docListQuery(query)
 } // QueryLimit()
 
 /* _EoF_ */
