@@ -13,7 +13,7 @@
 		{{- range $i, $author := $doc.Authors -}}
 			{{- $name := $author.Name -}}
 			{{- $url := $author.URL -}}
-			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -23,7 +23,7 @@
 		{{- range $i, $format := $doc.Formats -}}
 			{{- $name := $format.Name -}}
 			{{- $url := $format.URL -}}
-			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -35,7 +35,7 @@
 		{{- $series := $doc.Series -}}
 		{{- $name := $series.Name -}}
 		{{- $url := $series.URL -}}
-		<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		{{- $doc.SeriesIndex -}} &nbsp;
 		</td>
 	</tr>
@@ -47,7 +47,7 @@
 		{{- $pub := $doc.Publisher -}}
 		{{- $name := $pub.Name -}}
 		{{- $url := $pub.URL -}}
-		<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		</td>
 	</tr>
 	{{- end -}}
@@ -74,7 +74,7 @@
 		{{- range $i, $ident := $doc.Identifiers -}}
 			{{- $name := $ident.Name -}}
 			{{- $url := $ident.URL -}}
-			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -86,7 +86,7 @@
 		{{- range $i, $tag := $doc.Tags -}}
 			{{- $name := $tag.Name -}}
 			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -98,7 +98,7 @@
 		{{- $lang := $doc.Language -}}
 		{{- $name := $lang.Name -}}
 		{{- $url := $lang.URL -}}
-		<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
 		</td>
 	</tr>
 	{{- end -}}
