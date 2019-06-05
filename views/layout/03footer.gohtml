@@ -1,0 +1,31 @@
+{{- define "footer" -}}
+<footer>
+	<p><small>
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	{{- if eq $lang "de" -}}
+<img src="/img/favicon.ico" alt="*">
+– <a href="/{{.QOC}}">Startseite</a>
+– <a href="/impressum{{.QOC}}">Impressum</a>
+– <a href="/datenschutz{{.QOC}}">Datenschutz</a>
+– <img src="/img/favicon.ico" alt="*">
+	{{- else -}}
+<img src="/img/favicon.ico" alt="*">
+– <a href="/{{.QOC}}">Startpage</a>
+– <a href="/imprint{{.QOC}}">Imprint</a>
+– <a href="/privacy{{.QOC}}">Privacy</a>
+– <img src="/img/favicon.ico" alt="*">
+	{{- end -}}
+	</small></p>
+</footer>
+{{- if $.HasNext -}}
+	<p class="next">
+	{{- if eq $lang "de" -}}
+	<input form="pageform" id="next" name="next" type="submit" value="Nächste">
+	{{- else -}}
+	<input form="pageform" id="next" name="next" type="submit" value="Next">
+	{{- end -}}
+	</p>
+{{- end -}}
+</form><!-- FORM opened in 03header.gohtml -->
+{{- end -}}

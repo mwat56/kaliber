@@ -1,10 +1,10 @@
 {{- define "header" -}}
 <h2 class="left">Kaliber</h2>
-<form method="post" action="/ad{{.QOS}}" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<form method="post" action="/post{{.QOS}}" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
 <header>
 <p id="logo"><img alt="calibre" src="/img/calibre.png"></p>
 <div id="search_box">
-	<!-- input id="qo" name="qo" type="hidden" value="{{if .QO}}{{.QO}}{{end}}" form="pageform" -->
 	{{- $lang := "de" -}}
 	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
 	{{- if eq $lang "de" -}}
@@ -33,7 +33,7 @@
 	{{- end -}}
 	&nbsp;<select id="sortby" name="sortby" form="pageform">
 	{{- if eq $lang "de" -}}
-		<option SELECTED value="date">Datum</option>
+		<option SELECTED value="time">Datum</option>
 		<option value="author">AutorIn</option>
 		<option value="rating">Bewertung</option>
 		<option value="size">Größe</option>
@@ -43,7 +43,7 @@
 		<option value="title">Titel</option>
 	{{- else -}}
 		<option value="author">author</option>
-		<option SELECTED value="date">date</option>
+		<option SELECTED value="time">date</option>
 		<option value="language">language</option>
 		<option value="rating">rating</option>
 		<option value="title">title</option>
@@ -62,9 +62,9 @@
 	{{- end -}}
 	</select>
 	{{- if eq $lang "de" -}}
-	<input id="header" name="header" type="submit" value="Suche" form="pageform">
+	<input id="search" name="search" type="submit" value="Suche" form="pageform">
 	{{- else -}}
-	<input id="header" name="header" type="submit" value="Search" form="pageform">
+	<input id="search" name="search" type="submit" value="Search" form="pageform">
 	{{- end -}}
 </div>
 </header>
