@@ -41,41 +41,17 @@ type (
 	// TEntityList is a list of entities
 	TEntityList []TEntity
 
-	// a single author
-	// tAuthor TEntity
-	/*  struct {
-		id   TID
-		name string
-		sort string
-		link string
-	}
-	*/
-
 	// a list of authors
 	tAuthorList = TEntityList
 
-	// a single book format
-	// tFormat TEntity
-
 	// a list of formats
 	tFormatList = TEntityList
-
-	// a single identifier
-	// tIdentifier TEntity
 
 	// a list of identifiers
 	tIdentifierList = TEntityList
 
 	// a single language code
 	tLanguage = TEntity
-	/* struct {
-		id       TID
-		langCode string
-	}
-	*/
-
-	// a list of languages
-	// tLanguageList []tLanguage
 
 	// TPathList is a map of document formats holding the
 	// respective library file.
@@ -84,17 +60,8 @@ type (
 	// a single publisher
 	tPublisher = TEntity
 
-	// a list of publisher
-	// tPublisherList []tPublisher
-
 	// a single series
 	tSeries = TEntity
-
-	// a list of series'
-	// tSeriesList []tSeries
-
-	// a single tag
-	// tTag TEntity
 
 	// a list of tags
 	tTagList = TEntityList

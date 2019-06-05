@@ -267,262 +267,6 @@ func Test_prepTags(t *testing.T) {
 	}
 } // Test_prepTags()
 
-func Test_queryAuthor(t *testing.T) {
-	openDB()
-
-	o1 := &TQueryOptions{
-		ID:          3524,
-		Descending:  false,
-		LimitLength: 10,
-		LimitStart:  0,
-		Matching:    "",
-		SortBy:      SortByTitle,
-	}
-	o2 := &TQueryOptions{
-		ID:          0,
-		Descending:  false,
-		LimitLength: 25,
-		LimitStart:  0,
-		Matching:    "",
-		SortBy:      SortByTitle,
-	}
-	o3 := &TQueryOptions{
-		ID:          3524,
-		Descending:  false,
-		LimitLength: 10,
-		LimitStart:  10,
-		Matching:    "",
-		SortBy:      SortByTitle,
-	}
-	type args struct {
-		aOption *TQueryOptions
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int //*TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{o1}, 10, false},
-		{" 2", args{o2}, 0, false},
-		{" 3", args{o3}, 4, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := queryAuthor(tt.args.aOption)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("queryAuthor() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("queryAuthor() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // Test_queryAuthor()
-
-func Test_queryPublisher(t *testing.T) {
-	openDB()
-
-	o1 := &TQueryOptions{
-		ID:          574,
-		Descending:  false,
-		LimitLength: 25,
-		LimitStart:  0,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	o2 := &TQueryOptions{
-		ID:          574,
-		Descending:  false,
-		LimitLength: 25,
-		LimitStart:  25,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	type args struct {
-		aOption *TQueryOptions
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int //*TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{o1}, 25, false},
-		{" 2", args{o2}, 17, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := queryPublisher(tt.args.aOption)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("queryPublisher() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("queryPublisher() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // Test_queryPublisher()
-
-func Test_querySeries(t *testing.T) {
-	openDB()
-
-	o1 := &TQueryOptions{
-		ID:          519,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  0,
-		Matching:    "",
-		SortBy:      SortByTime,
-	}
-	o2 := &TQueryOptions{
-		ID:          519,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  100,
-		Matching:    "",
-		SortBy:      SortByTime,
-	}
-	o3 := &TQueryOptions{
-		ID:          519,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  200,
-		Matching:    "",
-		SortBy:      SortByTime,
-	}
-	o4 := &TQueryOptions{
-		ID:          519,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  300,
-		Matching:    "",
-		SortBy:      SortByTime,
-	}
-	o5 := &TQueryOptions{
-		ID:          519,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  400,
-		Matching:    "",
-		SortBy:      SortByTime,
-	}
-	type args struct {
-		aOption *TQueryOptions
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int //*TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{o1}, 100, false},
-		{" 2", args{o2}, 100, false},
-		{" 3", args{o3}, 100, false},
-		{" 4", args{o4}, 50, false},
-		{" 5", args{o5}, 0, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := querySeries(tt.args.aOption)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("querySeries() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("querySeries() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // Test_querySeries()
-
-func Test_queryTag(t *testing.T) {
-	openDB()
-
-	o1 := &TQueryOptions{
-		ID:          60,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  0,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	o2 := &TQueryOptions{
-		ID:          60,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  100,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	o3 := &TQueryOptions{
-		ID:          60,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  200,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	o4 := &TQueryOptions{
-		ID:          60,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  300,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	o5 := &TQueryOptions{
-		ID:          60,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  400,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	o6 := &TQueryOptions{
-		ID:          60,
-		Descending:  false,
-		LimitLength: 100,
-		LimitStart:  500,
-		Matching:    "",
-		SortBy:      SortByAuthor,
-	}
-	type args struct {
-		aOption *TQueryOptions
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int //*TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{o1}, 100, false},
-		{" 2", args{o2}, 100, false},
-		{" 3", args{o3}, 100, false},
-		{" 4", args{o4}, 100, false},
-		{" 5", args{o5}, 48, false},
-		{" 6", args{o6}, 0, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := queryTag(tt.args.aOption)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("queryTag() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("queryTag() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // Test_queryTag
-
 func TestDBopen(t *testing.T) {
 	dir, _ := filepath.Abs("./")
 	SetCalibreLibraryPath(dir)
@@ -547,44 +291,6 @@ func TestDBopen(t *testing.T) {
 	}
 } // TestDBopen()
 
-/*
-func TestQueryAuthor(t *testing.T) {
-	openDB()
-
-	type args struct {
-		aID         int
-		aStart      uint
-		aLength     uint
-		aDescending bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int //*TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{960, 0, 20, false}, 2, false},
-		{" 2", args{1258, 0, 20, false}, 3, false},
-		{" 3", args{3758, 0, 20, false}, 6, false},
-		{" 4", args{3524, 0, 10, false}, 10, false},
-		{" 5", args{3524, 10, 10, false}, 4, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := QueryAuthor(tt.args.aID, tt.args.aStart, tt.args.aLength, tt.args.aDescending)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryAuthor() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("QueryAuthor() = %v, want %v", len(*got), tt.want)
-			}
-		})
-	}
-} // TestQueryAuthor()
-*/
-
 func Test_queryDocument(t *testing.T) {
 	openDB()
 
@@ -597,7 +303,7 @@ func Test_queryDocument(t *testing.T) {
 		want bool // *TDocument
 	}{
 		// TODO: Add test cases.
-		// {" 1", args{1}, true},
+		{" 1", args{1}, true},
 		{" 2", args{2}, false},
 	}
 	for _, tt := range tests {
@@ -608,6 +314,83 @@ func Test_queryDocument(t *testing.T) {
 		})
 	}
 } // Test_queryDocument()
+
+func Test_queryEntity(t *testing.T) {
+	openDB()
+	o1 := &TQueryOptions{
+		ID:          3524,
+		Descending:  false,
+		Entity:      "author",
+		LimitLength: 50,
+		LimitStart:  0,
+		Matching:    "",
+		SortBy:      SortByAuthor,
+	}
+	o2 := &TQueryOptions{
+		ID:          1,
+		Descending:  false,
+		Entity:      "lang",
+		LimitLength: 50,
+		LimitStart:  0,
+		Matching:    "",
+		SortBy:      SortByLanguage,
+	}
+	o3 := &TQueryOptions{
+		ID:          574,
+		Descending:  false,
+		Entity:      "publisher",
+		LimitLength: 50,
+		LimitStart:  0,
+		Matching:    "",
+		SortBy:      SortByPublisher,
+	}
+	o4 := &TQueryOptions{
+		ID:          519,
+		Descending:  false,
+		Entity:      "series",
+		LimitLength: 50,
+		LimitStart:  0,
+		Matching:    "",
+		SortBy:      SortByTime,
+	}
+	o5 := &TQueryOptions{
+		ID:          60,
+		Descending:  false,
+		Entity:      "tag",
+		LimitLength: 50,
+		LimitStart:  0,
+		Matching:    "",
+		SortBy:      SortByTags,
+	}
+	type args struct {
+		aOption *TQueryOptions
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int // *TDocList
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", args{o1}, 14, false},
+		{" 2", args{o2}, 50, false},
+		{" 3", args{o3}, 42, false},
+		{" 4", args{o4}, 50, false},
+		{" 5", args{o5}, 50, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := queryEntity(tt.args.aOption)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("queryEntity() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(*got) != tt.want {
+				t.Errorf("queryEntity() = %d, want %d", len(*got), tt.want)
+			}
+		})
+	}
+} // Test_queryEntity()
 
 func TestQueryLimit(t *testing.T) {
 	openDB()
@@ -643,110 +426,8 @@ func TestQueryLimit(t *testing.T) {
 				return
 			}
 			if len(*got) != tt.want {
-				t.Errorf("QueryLimit() = %v, want %v", len(*got), tt.want)
+				t.Errorf("QueryLimit() = %d, want %d", len(*got), tt.want)
 			}
 		})
 	}
 } // TestQueryLimit()
-
-/*
-func TestQueryPublisher(t *testing.T) {
-	openDB()
-	type args struct {
-		aID         int
-		aStart      uint
-		aLength     uint
-		aDescending bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int //*TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{71, 0, 200, false}, 200, false},
-		{" 2", args{71, 200, 200, false}, 190, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := QueryPublisher(tt.args.aID, tt.args.aStart, tt.args.aLength, tt.args.aDescending)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryPublisher() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("QueryPublisher() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // TestQueryPublisher()
-
-*/
-/*
-func TestQuerySeries(t *testing.T) {
-	openDB()
-	type args struct {
-		aID         int
-		aStart      uint
-		aLength     uint
-		aDescending bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int // *TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{519, 0, 200, false}, 200, false},
-		{" 2", args{519, 200, 200, false}, 150, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := QuerySeries(tt.args.aID, tt.args.aStart, tt.args.aLength, tt.args.aDescending)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QuerySeries() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("QuerySeries() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // TestQuerySeries
-*/
-
-/*
-func TestQueryTag(t *testing.T) {
-	openDB()
-	type args struct {
-		aID         int
-		aStart      uint
-		aLength     uint
-		aDescending bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int // *TDocList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{109, 0, 50, false}, 50, false},
-		{" 2", args{109, 50, 50, false}, 16, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := QueryTag(tt.args.aID, tt.args.aStart, tt.args.aLength, tt.args.aDescending)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryTag() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("QueryTag() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // TestQueryTag()
-*/

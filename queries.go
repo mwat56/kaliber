@@ -206,11 +206,6 @@ func dbDocListQuery(aQuery string) (*TDocList, error) {
 
 		*result = append(*result, *doc)
 	}
-	// if err := rows.Err(); nil != err {
-	// 	log.Printf("rows.Next(): %v\n", err)
-	// }
-	// /var/opt/Calibre/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)
-	// /legacy/get/PDF/7628/C/Der Spiegel (2019-06-01) 23_20 - Spiegel_7628.pdf"
 
 	return result, nil
 } // dbQuery()
@@ -242,23 +237,22 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	case SortByAuthor:
 		result += "b.author_sort, b.pubdate "
 	case SortByLanguage:
-		result += "language "
+		result += "language, b.author_sort, b.sort "
 	case SortByPublisher:
-		result += "b.author_sort, b.sort "
+		result += "publisher, b.author_sort, b.sort "
 	case SortByRating:
-		result += "b.rating, b.author_sort "
-	case SortBySize:
-		result += "b.size, b.author_sort "
+		result += "rating, b.author_sort, b.sort "
 	case SortBySeries:
-		result += "series, b.series_index "
+		result += "series, b.series_index, b.sort "
+	case SortBySize:
+		result += "size, b.author_sort "
 	case SortByTags:
-		result += "tags "
+		result += "tags, b.author_sort, b.sort "
 	case SortByTime:
 		result += "b.pubdate, b.sort "
 	case SortByTitle:
 		result += "b.sort, b.pubdate "
 	default:
-		// result += "b.id "
 		return ""
 	}
 	if aDescending {
@@ -317,8 +311,6 @@ func prepFormats(aFormat tCSVstring) *tFormatList {
 } // prepFormats()
 
 func prepIdentifiers(aIdentifier tCSVstring) *tIdentifierList {
-	// amazon_de|25139|1783988029, barnesnoble|25138|w/go-programming-blueprints-mat-ryer/1120876061, google|25137|op4crgEACAAJ, isbn|25136|9781783988020
-
 	list := strings.Split(aIdentifier, ", ")
 	result := make(tIdentifierList, 0, len(list))
 	for _, val := range list {
@@ -430,31 +422,6 @@ func QeueryBy(aOption *TQueryOptions) (*TDocList, error) {
 	return dbDocListQuery(query)
 } // orderBy()
 
-/*
-// QueryAuthor returns a list of documents of the author
-// identified by `aID`.
-//
-// `aID` the author's ID.
-// `aStart` starting number of query LIMIT.
-// `aLength` number of documents to retrieve.
-// `aDescending` if `true` the query result is sorted in DESCending order.
-func QueryAuthor(aID TID, aStart, aLength uint, aDescending bool) (*TDocList, error) {
-	query := baseQueryString +
-		fmt.Sprintf(having["author"], aID) +
-		orderBy(SortByTitle, aDescending) +
-		limit(aStart, aLength)
-
-	return dbDocListQuery(query)
-} // QueryAuthor()
-*/
-
-// `queryAuthor()` returns a list of documents of the author
-// defined by `aOption`.
-func queryAuthor(aOption *TQueryOptions) (*TDocList, error) {
-	aOption.Entity = "author"
-	return queryEntity(aOption)
-} // QueryAuthor()
-
 const (
 	miniQueryString = `SELECT IFNULL((SELECT group_concat(d.format, ", ")
 	FROM data d WHERE d.book = b.id), "") formats,
@@ -490,10 +457,7 @@ func QueryDocMini(aID TID) *TDocument {
 
 // `queryDocument()` returns the `TDocument` identified by `aID`.
 func queryDocument(aID TID) *TDocument {
-	query := baseQueryString +
-		fmt.Sprintf("WHERE b.id=%d ", aID)
-
-	list, _ := dbDocListQuery(query)
+	list, _ := dbDocListQuery(baseQueryString + fmt.Sprintf("WHERE b.id=%d ", aID))
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
@@ -503,19 +467,13 @@ func queryDocument(aID TID) *TDocument {
 	return nil
 } // queryDocument()
 
+// `queryEntity()` returns a list of documents as defined by `aOption`.
 func queryEntity(aOption *TQueryOptions) (*TDocList, error) {
 	return dbDocListQuery(baseQueryString +
 		fmt.Sprintf(having[aOption.Entity], aOption.ID) +
 		orderBy(aOption.SortBy, aOption.Descending) +
 		limit(aOption.LimitStart, aOption.LimitLength))
 } // queryEntity()
-
-// `querySeries()` returns a list of documents in the series
-// defined by `aOption`.
-func queryLanguage(aOption *TQueryOptions) (*TDocList, error) {
-	aOption.Entity = "lang"
-	return queryEntity(aOption)
-} // querySeries()
 
 // QueryLimit returns a list of `TDocument` objects.
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
@@ -524,79 +482,5 @@ func QueryLimit(aStart, aLength uint) (*TDocList, error) {
 
 	return dbDocListQuery(query)
 } // QueryLimit()
-/*
-// QueryPublisher returns a list of documents by the publisher
-// identified by `aID`.
-//
-// `aID` the publisher's ID.
-// `aStart` starting number of query LIMIT.
-// `aLength` number of documents to retrieve.
-// `aDescending` if `true` the query result is sorted in DESCending order.
-func QueryPublisher(aID TID, aStart, aLength uint, aDescending bool) (*TDocList, error) {
-	query := baseQueryString +
-		fmt.Sprintf(having["publisher"], aID) +
-		orderBy(SortByAuthor, aDescending) +
-		limit(aStart, aLength)
-
-	return dbDocListQuery(query)
-} // QueryPublisher()
-*/
-
-// `queryPublisher()` returns a list of documents by the publisher
-// defined by `aOption`.
-func queryPublisher(aOption *TQueryOptions) (*TDocList, error) {
-	aOption.Entity = "publisher"
-	return queryEntity(aOption)
-} // QueryPublisher()
-
-/*
-// QuerySeries returns a list of documents with the series
-// identified by `aID`.
-//
-// `aID` the series's ID.
-// `aStart` starting number of query LIMIT.
-// `aLength` number of documents to retrieve.
-// `aDescending` if `true` the query result is sorted in DESCending order.
-func QuerySeries(aID TID, aStart, aLength uint, aDescending bool) (*TDocList, error) {
-	query := baseQueryString +
-		fmt.Sprintf(having["series"], aID) +
-		orderBy(SortByTime, aDescending) +
-		limit(aStart, aLength)
-
-	return dbDocListQuery(query)
-} // QuerySeries()
-*/
-
-// `querySeries()` returns a list of documents in the series
-// defined by `aOption`.
-func querySeries(aOption *TQueryOptions) (*TDocList, error) {
-	aOption.Entity = "series"
-	return queryEntity(aOption)
-} // querySeries()
-
-/*
-// QueryTag returns a list of documents with the tag
-// identified by `aID`.
-//
-// `aID` the tag's ID.
-// `aStart` starting number of query LIMIT.
-// `aLength` number of documents to retrieve.
-// `aDescending` if `true` the query result is sorted in DESCending order.
-func QueryTag(aID TID, aStart, aLength uint, aDescending bool) (*TDocList, error) {
-	query := baseQueryString +
-		fmt.Sprintf(having["tag"], aID) +
-		orderBy(SortByAuthor, aDescending) +
-		limit(aStart, aLength)
-
-	return dbDocListQuery(query)
-} // QueryTag()
-*/
-
-// `queryTag()` returns a list of documents with the tag
-// defined by `aOption`.
-func queryTag(aOption *TQueryOptions) (*TDocList, error) {
-	aOption.Entity = "tag"
-	return queryEntity(aOption)
-} // QueryTag()
 
 /* _EoF_ */

@@ -7,7 +7,7 @@
 package kaliber
 
 /*
- * This file provides some template/views related functions and methods.
+ * This file provides some template/view related functions and methods.
  */
 
 import (
@@ -74,8 +74,7 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 	}
 	files = append(files, bd+"/"+aName+".gohtml")
 
-	templ, err := template.New(aName).
-		ParseFiles(files...)
+	templ, err := template.New(aName).ParseFiles(files...)
 	if nil != err {
 		return nil, err
 	}
@@ -222,7 +221,6 @@ func initWSre() int {
 		whitespaceREs[idx].regEx = regexp.MustCompile(re.search)
 		result++
 	}
-	result++
 
 	return result
 } // initWSre()

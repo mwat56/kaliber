@@ -50,23 +50,18 @@ func (al *tAguments) Get(aKey string) (string, error) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-var (
+const (
 	// Name of the `Calibre` database
 	calibreDatabaseName = "metadata.db"
+)
 
+var (
 	// Pathname to the `Calibre` database
 	calibreLibraryPath = ""
 )
 
 // CalibreDatabaseName returns the name of the `Calibre` database.
 func CalibreDatabaseName() string {
-	return calibreDatabaseName
-} // CalibreDatabaseName()
-
-// SetCalibreDatabaseName sets the name of the `Calibre` database.
-func SetCalibreDatabaseName(aFilename string) string {
-	calibreDatabaseName = aFilename
-
 	return calibreDatabaseName
 } // CalibreDatabaseName()
 

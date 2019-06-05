@@ -223,7 +223,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			return
 		}
 		aRequest.URL.Path = file
-		// log.Printf("head: `%s` | tail: `%s` | path: `%s`", path, tail, aRequest.URL.Path) //FIXME REMOVE
+		// log.Printf("head: `%s` | tail: `%s` | path: `%s`", path, tail, file) //FIXME REMOVE
 		ph.dh.ServeHTTP(aWriter, aRequest)
 
 	case "css":
@@ -281,69 +281,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "imprint", "impressum":
 		ph.viewList.Render("imprint", aWriter, pageData)
-		/*
-			case "lang":
-				var (
-					id    TID
-					dummy string
-				)
-				fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-				qo.ID = id
-				qo.Entity = path
-				doclist, _ := queryEntity(qo)
-				pageData.
-					Set("Documents", doclist).
-					Set("QOS", qo.CGI())
-				ph.viewList.Render("index", aWriter, pageData)
-		*/
+
 	case "licence", "license", "lizenz":
 		ph.viewList.Render("licence", aWriter, pageData)
 
 	case "privacy", "datenschutz":
 		ph.viewList.Render("privacy", aWriter, pageData)
-		/*
-			case "publisher":
-				var (
-					id        TID
-					publisher string
-				)
-				fmt.Sscanf(tail, "%d/%s", &id, &publisher)
-				qo.ID = id
-				qo.Entity = path
-				doclist, _ := queryEntity(qo)
-				pageData.
-					Set("Documents", doclist).
-					Set("QOS", qo.CGI())
-				ph.viewList.Render("index", aWriter, pageData)
 
-			case "series":
-				var (
-					id    TID
-					dummy string
-				)
-				fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-				qo.ID = id
-				qo.Entity = path
-				doclist, _ := queryEntity(qo)
-				pageData.
-					Set("Documents", doclist).
-					Set("QOS", qo.CGI())
-				ph.viewList.Render("index", aWriter, pageData)
-
-			case "tag":
-				var (
-					id    TID
-					dummy string
-				)
-				fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-				qo.ID = id
-				qo.Entity = path
-				doclist, _ := queryEntity(qo)
-				pageData.
-					Set("Documents", doclist).
-					Set("QOS", qo.CGI())
-				ph.viewList.Render("index", aWriter, pageData)
-		*/
 	case "views": // this files are handled internally
 		http.Redirect(aWriter, aRequest, "/n/", http.StatusMovedPermanently)
 
@@ -405,49 +349,20 @@ func (ph *TPageHandler) handleSearch(aTerm string, aData *TDataList, aWriter htt
 // NeedAuthentication returns `true` if authentication is needed,
 // or `false` otherwise.
 //
-// `aURL` is the URL to check.
+// `aRequest` is the request to check.
 func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
-	//TODO
-	// return TRUE if there's a password/user list
-
-	path, _ := URLparts(aRequest.URL.Path)
-	switch path {
-	case "a", "ap", // add new post
-		"d", "dp", // change post's date
-		"e", "ep", // edit post
-		"r", "rp", // remove post
-		"share",    // share another URL
-		"si", "ss": // store images, store static data
-		return true
-	}
-
-	if s := aRequest.FormValue("share"); 0 < len(s) {
-		return true
-	}
-	if s := aRequest.FormValue("si"); 0 < len(s) {
-		return true
-	}
-	if s := aRequest.FormValue("ss"); 0 < len(s) {
-		return true
-	}
-
-	return false
+	return (nil != ph.ul)
 } // NeedAuthentication()
 
 // ServeHTTP handles the incoming HTTP requests.
 func (ph TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Request) {
-	/*
-		if ph.NeedAuthentication(aRequest) {
-			if nil == ph.ul {
-				passlist.Deny(ph.realm, aWriter)
-				return
-			}
-			if !ph.ul.IsAuthenticated(aRequest) {
-				passlist.Deny(ph.realm, aWriter)
-				return
-			}
+	if ph.NeedAuthentication(aRequest) {
+		if !ph.ul.IsAuthenticated(aRequest) {
+			passlist.Deny(ph.realm, aWriter)
+			return
 		}
-	*/
+	}
+
 	switch aRequest.Method {
 	case "GET":
 		ph.handleGET(aWriter, aRequest)
