@@ -7,6 +7,7 @@
 package kaliber
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -101,5 +102,12 @@ func initConfig() {
 	*/
 
 } // initConfig()
+
+// ShowHelp lists the commandline options to `Stderr`.
+func ShowHelp() {
+	fmt.Fprintf(os.Stderr, "\n  Usage: %s [OPTIONS]\n\n", os.Args[0])
+	flag.PrintDefaults()
+	fmt.Fprintln(os.Stderr, "\n  Most options can be set in an INI file to keep the command-line short ;-)")
+} // ShowHelp()
 
 /* _EoF_ */
