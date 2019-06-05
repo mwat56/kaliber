@@ -1,0 +1,71 @@
+{{- define "header" -}}
+<h2 class="left">Kaliber</h2>
+<form method="post" action="/ad{{.QOS}}" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<header>
+<p id="logo"><img alt="calibre" src="/img/calibre.png"></p>
+<div id="search_box">
+	<!-- input id="qo" name="qo" type="hidden" value="{{if .QO}}{{.QO}}{{end}}" form="pageform" -->
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	{{- if eq $lang "de" -}}
+	<label for="limitlength">Zeige</label>
+	{{- else -}}
+	<label for="limitlength">Show</label>
+	{{- end -}}
+	&nbsp;<select id="limitlength" name="limitlength" form="pageform">
+		<option value="10">10</option>
+		<option SELECTED value="25">25</option>
+		<option value="50">50</option>
+		<option value="100">100</option>
+	</select>
+<!--
+	{{- if eq $lang "de" -}}
+	<label for="matching">Bücher enthalten</label>
+	{{- else -}}
+	<label for="matching">books matching</label>
+	{{- end -}}
+	&nbsp;<input id="matching" name="matching" type="search" value="" name="search" form="pageform">
+ -->
+	{{- if eq $lang "de" -}}
+	<label for="sortby">sortiert nach</label>
+	{{- else -}}
+	<label for="sortby">sorted by</label>
+	{{- end -}}
+	&nbsp;<select id="sortby" name="sortby" form="pageform">
+	{{- if eq $lang "de" -}}
+		<option SELECTED value="date">Datum</option>
+		<option value="author">AutorIn</option>
+		<option value="rating">Bewertung</option>
+		<option value="size">Größe</option>
+		<option value="series">Serie</option>
+		<option value="language">Sprache</option>
+		<option value="tags">Stichwörter</option>
+		<option value="title">Titel</option>
+	{{- else -}}
+		<option value="author">author</option>
+		<option SELECTED value="date">date</option>
+		<option value="language">language</option>
+		<option value="rating">rating</option>
+		<option value="title">title</option>
+		<option value="series">series</option>
+		<option value="size">size</option>
+		<option value="tags">tags</option>
+	{{- end -}}
+	</select>
+	&nbsp;<select id="order" name="order" form="pageform">
+	{{- if eq $lang "de" -}}
+		<option value="ascending">aufsteigend</option>
+		<option SELECTED value="descending">absteigend</option>
+	{{- else -}}
+		<option value="ascending">ascending</option>
+		<option SELECTED value="descending">descending</option>
+	{{- end -}}
+	</select>
+	{{- if eq $lang "de" -}}
+	<input id="header" name="header" type="submit" value="Suche" form="pageform">
+	{{- else -}}
+	<input id="header" name="header" type="submit" value="Search" form="pageform">
+	{{- end -}}
+</div>
+</header>
+{{- end -}}

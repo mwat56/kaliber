@@ -1,0 +1,24 @@
+{{- define "htmlpage" -}}
+<!DOCTYPE html>
+<html {{- if .Lang}} lang="{{.Lang}}"{{end}}>
+<head>
+	<meta charset="UTF-8">
+	<meta name="Generator" content="/bin/cat" />
+	<meta http-equiv="Window-target" content="_top">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	{{- template "htmlhead" . -}}
+	<script language="JavaScript" type="text/javascript">if(top!=self)top.location=self.location</script>
+	<link rel="Shortcut icon" type="image/gif" href="/img/favicon.ico" />
+</head><body>
+<h1 class="left">Kaliber</h1>
+{{template "header" .}}
+<div id="main">
+	{{- if .Headline}}<h1>{{.Headline}}</h1>{{end -}}
+	<div id="bodypage">
+		{{- template "bodypage" . -}}
+	</div>
+</div>
+<footer>{{template "footer" .}}</footer>
+</body></html>
+{{- end -}}

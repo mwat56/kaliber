@@ -1,0 +1,121 @@
+{{- define "document" -}}
+{{template "htmlpage" .}}
+{{- end -}}
+
+{{- define "bodypage" -}}
+{{- $doc := $.Document -}}
+<article class="document">
+	<table class="meta">
+	<tr>
+		<td colspan="2"><h2>{{$doc.Title}}</h2></td>
+	</tr><tr>
+		<td>Author:</td><td>
+		{{- range $i, $author := $doc.Authors -}}
+			{{- $name := $author.Name -}}
+			{{- $url := $author.URL -}}
+			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		{{- end -}}
+		</td>
+	</tr>
+	{{- if $doc.Formats -}}
+	<tr>
+		<td>Formats:</td><td>
+		{{- range $i, $format := $doc.Formats -}}
+			{{- $name := $format.Name -}}
+			{{- $url := $format.URL -}}
+			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		{{- end -}}
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.Series -}}
+	<tr>
+		<td>Series:</td><td>
+		{{- $series := $doc.Series -}}
+		{{- $name := $series.Name -}}
+		{{- $url := $series.URL -}}
+		<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		{{- $doc.SeriesIndex -}} &nbsp;
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.Publisher -}}
+	<tr>
+		<td>Publisher:</td><td>
+		{{- $pub := $doc.Publisher -}}
+		{{- $name := $pub.Name -}}
+		{{- $url := $pub.URL -}}
+		<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.PubDate -}}
+	<tr>
+		<td>Published:</td><td>
+			{{- $doc.PubDate -}}
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.Pages -}}
+	<tr>
+		<td>Pages:</td><td>
+		{{- if lt 0 $doc.Pages}}{{$doc.Pages}}{{end -}}
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.Identifiers -}}
+	<tr>
+		<td>Identifiers:</td><td>
+		{{- range $i, $ident := $doc.Identifiers -}}
+			{{- $name := $ident.Name -}}
+			{{- $url := $ident.URL -}}
+			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		{{- end -}}
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.Tags -}}
+	<tr>
+		<td>Tags:</td><td>
+		{{- range $i, $tag := $doc.Tags -}}
+			{{- $name := $tag.Name -}}
+			{{- $url := $tag.URL -}}
+			<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		{{- end -}}
+		</td>
+	</tr>
+	{{- end -}}
+
+	{{- if $doc.Language -}}
+	<tr>
+		<td>Language:</td><td>
+		{{- $lang := $doc.Language -}}
+		{{- $name := $lang.Name -}}
+		{{- $url := $lang.URL -}}
+		<a class="button" href="{{$url}}{{.QOS}}">{{$name}}</a> &nbsp;
+		</td>
+	</tr>
+	{{- end -}}
+
+	<!-- TODO integrate custom columns -->
+
+	{{- if $doc.Comment -}}
+	<tr>
+		<td colspan="2"><div class="comment">
+		{{- $doc.Comment -}}
+		</div></td>
+	</tr>
+	{{- end -}}
+
+	</table>
+	<div class="cover">
+		<p class="cover"><img alt="" src="{{$doc.Cover}}"></p>
+	</div>
+</article>
+{{- end -}}

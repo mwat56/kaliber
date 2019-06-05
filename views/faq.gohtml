@@ -1,0 +1,21 @@
+{{- define "faq" -}}
+{{template "htmlpage" .}}
+{{- end -}}
+
+{{- define "bodypage" -}}
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	{{- if eq $lang "de" -}}
+		<h3>Häufig Angesprochene Fragen</h3>
+		<dl>
+		<dt></dt>
+		<dd></dd>
+		</dl>
+	{{- else -}}
+		<h3>Frequently Asked Questions</h3>
+		<dl>
+		<dt></dt>
+		<dd></dd>
+		</dl>
+	{{- end -}}
+{{- end -}}

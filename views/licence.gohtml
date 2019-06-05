@@ -1,0 +1,23 @@
+{{- define "licence" -}}
+{{template "htmlpage" .}}
+{{- end -}}
+
+{{- define "bodypage" -}}
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	{{- if eq $lang "de" -}}
+		<h3 class="centered">Die Artikel dieser Web-Präsentation<br>
+			werden publiziert unter der OPL v1.0</h3>
+		<blockquote class="centered">
+			<p><a target="extern" href="http://opencontent.org/openpub/" lang="en">Open Publication Lizenz</a></p>
+			<p><a target="extern" href="http://opencontent.org/definition/" lang="en">OPL Definition</a></p>
+		</blockquote>
+	{{- else -}}
+		<h3 class="centered">The articles/posts of this site<br>
+			are published under the OPL v1.0</h3>
+		<blockquote class="centered">
+			<p><a target="extern" href="http://opencontent.org/openpub/" lang="en">Open Publication License</a></p>
+			<p><a target="extern" href="http://opencontent.org/definition/" lang="en">OPL definition</a></p>
+		</blockquote>
+	{{- end -}}
+{{- end -}}

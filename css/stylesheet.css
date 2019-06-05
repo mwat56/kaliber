@@ -1,0 +1,363 @@
+/* Reset all page elements to a reasonable default, see:
+* http://meyerweb.com/eric/thoughts/2007/04/18/reset-reasoning/
+*/
+html,body,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video {
+margin:0;
+padding:0;
+border:0;
+font:inherit;
+font-size:100%;
+font-weight:normal;
+line-height:1.3;
+vertical-align:baseline; }
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section { display:block; }
+ol,ul { list-style:none; }
+blockquote,q { quotes:none; }
+blockquote:before,blockquote:after,q:before,q:after { content:none; }
+table { border-collapse:collapse;border-spacing:0.1ex; }
+
+/* individual site styles */
+html, body {
+	font-family: serif, sans-serif, monospace;
+	font-size: 13pt;
+}
+a:link, a[href] {
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+a.idlink {
+	color: inherit;
+}
+blockquote {
+	display: block;
+	font-size: 98%;
+	line-height: 1.23;
+	margin: 0.5ex 1ex 0.5ex 2ex;
+	padding: 0.3ex;
+	text-align: left;
+	text-indent: 0;
+}
+b, .bold, strong, .strong, .strong p {
+	color: inherit;
+	font-weight: 900;
+	line-height: inherit;
+}
+br, div {
+	border: 0;
+	display: block;
+	margin: 0;
+	padding: 0;
+	text-indent: 0;
+}
+code, .code, input, kbd, pre, textarea, tt, xmp {
+	color: inherit;
+	font-family: monospace;
+	font-size: 0.987em;
+	font-weight: inherit;
+	letter-spacing: normal;
+	line-height: 1.123;
+	padding: 0.1ex 0.3ex;
+	white-space: normal;
+}
+dl, ol, ul {
+	font-size: 1em;
+	margin: 1ex 0 1ex 1ex;
+	page-break-before: avoid;
+}
+dl, dd {
+	margin-left: 2.6ex;
+	line-height: 1.4;
+	text-align: justify;
+}
+dt {
+	font-weight: 600;
+	margin: 1ex 0 0.6ex 0;
+	padding-top: 0.3ex;
+}
+dl.posting {
+	margin:1ex auto;
+	text-align: center;
+	max-width:100ex;
+}
+dl.posting dt {
+	font-weight: 600;
+	margin:1em auto 1ex auto;
+	padding: 0 1ex 0 0;
+	text-align: right;
+	max-width: 98%;
+}
+dl.posting dd {
+	border-radius: 1ex;
+	margin: 1ex 0 2ex 0;
+	max-height: 26ex;
+	max-width: 99.88%;
+	overflow: auto;
+	padding: 0.3ex 0.3ex 0.5ex 0.5ex;
+	text-align: left;
+}
+dl.posting dd#manuscript {
+	max-height: 90%;
+}
+dl.posting dd blockquote {
+	border-radius: 1ex;
+	margin-left: 2ex;
+}
+em, .em, i, .italic {
+	color: inherit;
+	font-style: italic;
+}
+footer {
+	border-radius: 1ex;
+	clear: both;
+	margin: 1em 0 0 0;
+}
+footer, footer p {
+	text-align: right;
+}
+h1, h2, h3, h4, h5, h6 {
+	border: 0;
+	font-weight: 600;
+	padding: 0;
+	page-break-after: avoid;
+	page-break-inside: avoid;
+}
+h6 {
+	font-size: 1em;
+	margin-bottom: 0.6em;
+}
+h5 {
+	font-size: 1.1em;
+	font-style: italic;
+}
+h4 {
+	font-size: 1.2em;
+	margin-top: 1.1em;
+}
+h3 {
+	font-size: 1.4em;
+	letter-spacing: 0.1ex;
+}
+h2 {
+	font-size: 1.6em;
+	letter-spacing: 0.2ex;
+}
+h1 {
+	font-size: 1.9em;
+	letter-spacing: 0.3ex;
+	page-break-before: always;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin: 1em auto;
+}
+h1+h2, h2+h3, h3+h4, h4+h5, h5+h6 {
+	margin-top: -1ex;
+}
+header {
+	border-radius: 1ex;
+	margin: 0 1ex 1em 0;
+	text-align: right;
+}
+hr {
+	border-style: inset;
+	border-width: 1pt 0 0 0;
+	clear: both;
+	display: block;
+	max-height: 1pt;
+	max-width: 46%;
+	margin: 1em auto;
+	padding: 0;
+	text-align: center;
+	text-indent: 0;
+}
+img, svg {
+	vertical-align: middle;
+	max-width: 99%;
+	max-height: 99%;
+	height: auto;
+	width: auto;
+}
+input[type="reset"], input[type="submit"] {
+	font-size: 75%;
+	font-weight: 600;
+	padding: 0.3ex;
+}
+ol {
+	list-style-type: decimal;
+}
+p {
+	font-family: serif;
+	font-size: 1em;
+	hyphens: auto;
+	line-height: 1.4;
+	margin: 0.2ex 0;
+	padding: 0.2ex 0;
+	text-align: inherit;
+	text-indent: 2ex;
+}
+blockquote p {
+	line-height: 1.16;
+	margin: 0.4ex 0;
+	padding: 0.4ex 0;
+	text-align: inherit;
+	text-indent: inherit;
+}
+p:first-of-type, blockquote+p,h1+p, h2+p, h3+p, h4+p, h5+p, h6+p dl+p, ol+p, ul+p {
+	text-indent: 0;
+}
+pre, textarea, xmp {
+	border-radius: 1ex;
+	display: block;
+	font-family: monospace;
+	font-size: 88%;
+	font-weight: inherit;
+	letter-spacing: normal;
+	line-height: 1.36;
+	margin: 2ex 1ex 2ex 0;
+	padding: 0.5ex 1ex;
+	overflow: visible;
+	text-align: left;
+	text-indent: 0;
+	white-space: pre-wrap;
+}
+pre + p {
+	text-indent: 0;
+}
+small, .small {
+	color: inherit;
+	font-size: 79%;
+	font-weight: inherit;
+}
+textarea {
+	padding: 0.5ex;
+}
+textarea#manuscript {
+	height: 94ex;
+	max-height: 45em;
+	width: 99.88%;
+}
+u, .underline {
+	text-decoration: underline;
+}
+ul, menu, dir {
+	list-style-type: disc;
+}
+ul li ul {
+	list-style-type: circle;
+}
+ul li ul li ul {
+	list-style-type: square;
+}
+ul li {
+	display: list-item;
+	margin-left: 2.6ex; /* matching P text-indent */
+}
+
+#bodypage {
+	float: left;
+	margin: 1ex 0;
+	min-height: 3em;
+	max-width: 74%;
+	min-width: 72%;
+}
+#imprint, #imprint p {
+	hyphens: none;
+	text-indent: 0;
+}
+#leftbar {
+	max-width: 30%;
+	text-align: left;
+}
+#main {
+	margin: 0 auto;
+	padding: 0;
+	max-width: 90ex;
+}
+p#next {
+	text-align: right;
+}
+p#next a {
+	font-size: 89%;
+}
+pre#preview {
+	overflow: auto;
+	max-height: 90%;
+}
+#rightbar {
+	border-left: thin dotted #ccc;
+	float: right;
+	max-width: 24%;
+	text-align: right;
+}
+
+.centered, .error {
+	margin: 0 auto;
+	text-align: center;
+}
+.error {
+	padding: 1em 0 1em 0;
+}
+a.idlink {
+	clear: left;
+	float: left;
+	font-size: 89%;
+	margin: 1.8ex 1ex 0 0;
+}
+.justified {
+	text-align: justify;
+}
+.left {
+	text-align: left;
+}
+p.matches {
+	border-radius: 1ex;
+	clear: left;
+	float: left;
+	font-style: italic;
+	margin: -1.3ex 0 0 0;
+	padding: 0.5ex 1ex 0.5ex 1ex;
+}
+.right {
+	text-align: right;
+	margin-right: 1ex;
+}
+.smaller {
+	color: inherit;
+	font-size: 89%;
+	font-weight: inherit;
+}
+.tc {
+	hyphens: none;
+	margin: 6ex 0 3ex 0;
+}
+.tc5, .tc25, .tc50, .tc99 {
+	display: inline-block;
+	font-family: monospace;
+	hyphens: none;
+	margin: 0.2ex 0;
+}
+.tc5 {
+	font-size: 68%;
+	font-style: normal;
+}
+.tc25 {
+	font-size: 86%;
+	font-style: italic;
+}
+.tc50 {
+	font-size: 97%;
+	font-style: normal;
+	font-weight: bold;
+}
+.tc99 {
+	font-size: 108%;
+	font-style: italic;
+	font-weight: bold;
+}
+.tc5, .tc25, .tc50, .tc99 {
+	border-radius: 0.5ex;
+	padding: 0.2ex 0.5ex;
+}
+
+/* _EoF_ */

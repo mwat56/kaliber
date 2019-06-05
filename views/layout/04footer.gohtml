@@ -1,0 +1,30 @@
+{{- define "footer" -}}
+<footer>
+	<p><small>
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	{{- if eq $lang "de" -}}
+<img src="/img/favicon.ico" alt="*">
+– <a href="/">Startseite</a>
+– <a href="{{.weekURL}}" title="passende Woche">Woche</a>
+– <a href="{{.monthURL}}" title="passender Monat">Monat</a>
+– <a href="/impressum/">Impressum</a>
+– <a href="/datenschutz/">Datenschutz</a>
+– <a href="/faq/">FAQ</a>
+– <a href="/lizenz/">Lizenz</a>
+– <img src="/img/favicon.ico" alt="*">
+	{{- else -}}
+<img src="/img/favicon.ico" alt="*">
+– <a href="/">Startpage</a>
+– <a href="{{.weekURL}}" title="matching week">Week</a>
+– <a href="{{.monthURL}}" title="matching month">Month</a>
+– <a href="/imprint/">Imprint</a>
+– <a href="/privacy/">Privacy</a>
+– <a href="/faq/">FAQ</a>
+– <a href="/licence/">Licence</a>
+– <img src="/img/favicon.ico" alt="*">
+	{{- end -}}
+	</small></p>
+</footer>
+</form><!-- opened in 03heaer.gohtml -->
+{{- end -}}

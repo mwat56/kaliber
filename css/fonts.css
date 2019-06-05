@@ -1,0 +1,100 @@
+/* fonts (keep at bottom) */
+
+@font-face {
+	font-family: "Noto Serif";
+	font-weight: normal;
+	font-style: normal;
+	src: url(/fonts/NotoSerif-Regular.ttf);
+}
+@font-face {
+	font-family: "Noto Serif Bold";
+	font-style: normal;
+	font-weight: bold;
+	src: url(/fonts/NotoSerif-Bold.ttf);
+}
+@font-face {
+	font-family: "Noto Serif BoldItal";
+	font-weight: bold;
+	font-style: italic;
+	src: url(/fonts/NotoSerif-BoldItalic.ttf);
+}
+@font-face {
+	font-family: "Noto Serif Ital";
+	font-weight: normal;
+	font-style: italic;
+	src: url(/fonts/NotoSerif-Italic.ttf);
+}
+@font-face {
+	font-family: "Hack Mono";
+	font-weight: normal;
+	font-style: normal;
+	src: url(/fonts/Hack-Regular.ttf);
+}
+@font-face {
+	font-family: "Hack Mono Bold";
+	font-style: normal;
+	font-weight: bold;
+	src: url(/fonts/Hack-Bold.ttf);
+}
+@font-face {
+	font-family: "Hack Mono BoldItal";
+	font-weight: bold;
+	font-style: italic;
+	src: url(/fonts/Hack-BoldItalic.ttf);
+}
+@font-face {
+	font-family: "Hack Mono Ital";
+	font-weight: normal;
+	font-style: italic;
+	src: url(/fonts/Hack-Italic.ttf);
+}
+
+html, body {
+	font-family: "Noto Serif", serif;
+	font-size: 12pt;
+	line-height: 1.3;
+}
+b, .bold, strong, .strong, .strong p {
+	font-family: "Noto Serif Bold", serif;
+}
+code, .code, input, kbd, pre, textarea, tt, xmp {
+	font-family: "Hack Mono", monospace;
+}
+dt, dl.posting dt {
+	font-family: "Noto Serif Bold", serif;
+}
+em, .em, i, .italic {
+	font-family: "Noto Serif Ital", serif;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-family: "Noto Serif Bold", serif;
+}
+h5 {
+	font-family: "Noto Serif BoldItal", serif;
+}
+p {
+	font-family: "Noto Serif", serif;
+}
+p.matches {
+	font-family: "Noto Serif Ital", serif;
+}
+pre em, pre .em, pre i, pre.italic {
+	font-family: "Hack Mono Ital", monospace;
+}
+pre b, pre.bold, pre strong, pre.strong {
+	font-family: "Hack Mono Bold", monospace;
+}
+.tc5, .tc25, .tc50, .tc99 {
+	font-family: "Hack Mono", monospace;
+}
+.tc25 {
+	font-family: "Hack Mono Ital", monospace;
+}
+.tc50 {
+	font-family: "Hack Mono Bold", monospace;
+}
+.tc99 {
+	font-family: "Hack Mono BoldItal", monospace;
+}
+
+/* _EoF_ */

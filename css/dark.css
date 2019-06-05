@@ -1,0 +1,71 @@
+html,body,a,abbr,acronym,address,applet,article,aside,audio,b,big,blockquote,canvas,caption,center,cite,code,dd,del,details,dfn,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hgroup,i,iframe,img,ins,kbd,label,legend,li,mark,menu,nav,object,ol,output,p,pre,q,ruby,s,samp,section,small,span,strike,strong,sub,summary,sup,table,tbody,td,tfoot,th,thead,time,tr,tt,u,ul,var,video {
+	color: #fffff0;
+}
+body {
+	background: #161010;
+}
+a:link, a[href] {
+	color: #06f;
+}
+a:hover {
+	color: #cc0;
+}
+a:visited {
+	color: #f30;
+}
+code, .code, kbd, pre, textarea, tt, xmp {
+	background: #333;
+	color: #ccc;
+}
+del {
+	color: #999;
+}
+dl dd {
+	background: #111100;
+}
+dl.posting dd {
+	border: thin outset #630;
+	border-left: 0;
+	border-right: 0;
+}
+dl.posting dd blockquote {
+	background: #161619;
+	border: thin solid #1f1f10;
+}
+footer {
+	border-top: thin solid #ccc;
+}
+h1, h2, h3, h4, h5, h6 {
+	color: #ffeedd;
+}
+h3, h2, h1 {
+	text-shadow: -0.1ex -0.1ex 0.1ex #fff;
+}
+header {
+	background: #111100;
+	border-bottom: thin solid #ccc;
+	color: #fff;
+}
+hr {
+	border-color: #ffc;
+	color: #ffc;
+}
+pre, xmp {
+	border-left: thick solid #666;
+}
+p.matches {
+	background: #333;
+	border: thin solid #666;
+}
+p#next a {
+	border-bottom: thin dotted #06f;
+}
+a.tc5, a.tc25, a.tc50, a.tc99 {
+	background: #ffc;
+	border: 0.3ex outset #cc9;
+	color: #036;
+}
+a.tc5:hover, a.tc25:hover, a.tc50:hover, a.tc99:hover {
+	border: 0.3ex inset #cc9;
+}
+/* _EoF_ */

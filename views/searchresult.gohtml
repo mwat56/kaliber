@@ -1,0 +1,43 @@
+{{- define "searchresult" -}}
+{{template "htmlpage" .}}
+{{- end -}}
+
+{{- define "bodypage" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+{{- $matches := 0 -}}
+{{- if .Matches}}{{$matches = .Matches}}{{end -}}
+{{- if gt $matches 0 -}}
+	<p class="matches">
+		{{- if eq $lang "de" -}}
+			{{- $matches}} Suchtreffer
+		{{- else -}}
+			{{- if lt 1 $matches -}}
+				{{- $matches}} search hits
+			{{- else -}}
+				1 search hit
+			{{- end -}}
+		{{- end -}}
+	</p>
+	<dl class="posting">
+		{{- $lastDate := change -}}
+		{{- range $i, $post := $.Postings -}}
+			{{$date := $post.Date -}}
+			{{if $lastDate.Changed $date -}}
+				<dt>{{$date}}</dt>
+			{{- end -}}
+			{{- $ID := $post.ID -}}
+			<dd><a class="idlink" id="p{{$ID}}" href="/p/{{$ID}}">[*]</a>
+			{{- $post.Post -}}</dd>
+		{{- end -}}
+	</dl>
+{{- else -}}
+	<p class="italic matches">
+		{{- if eq $lang "de" -}}
+			keine Suchtreffer
+		{{- else -}}
+			no search hits
+		{{- end -}}
+	</p>
+{{- end -}}
+{{- end -}}

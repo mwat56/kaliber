@@ -1,0 +1,28 @@
+{{- define "index" -}}
+{{template "htmlpage" .}}
+{{- end -}}
+
+{{- define "bodypage" -}}
+<dl class="posting">
+	{{- range $i, $doc := $.Documents -}}
+	<article class="document">
+		<div class="cover">
+			<p class="cover"><img alt="" src="{{$doc.Cover}}"></p>
+		</div>
+		<div class="meta">
+		<p><strong>{{$doc.Title}}</strong> by <span class="author"></span></p>
+		<p> </p>
+		<p> </p>
+		<p> </p>
+		<p> </p>
+		<p> </p>
+		<p> </p>
+
+		</div>
+	</article>
+	{{- end -}}
+</dl>
+{{- if .nextLink -}}
+	<p id="next"><a href="{{.nextLink}}">&raquo;&raquo;</a></p>
+{{- end -}}
+{{- end -}}
