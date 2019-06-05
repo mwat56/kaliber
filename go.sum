@@ -1,5 +1,9 @@
 github.com/mattn/go-sqlite3 v1.10.0 h1:jbhqpg7tQe4SupckyijYiy0mJJ/pRyHvXf7JdWK860o=
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
+github.com/mwat56/apachelogger v1.1.1 h1:qQSCPN59dmvzZwW1q8GU/w2EYRPNFjK+Ci1/CUDOF4k=
+github.com/mwat56/apachelogger v1.1.1/go.mod h1:45zInWy72WRwZCCl0dphgXIHjlzR3qQvxsXEZoMatFQ=
+github.com/mwat56/errorhandler v1.0.2 h1:mlvQaV6A40YAnu6uTBxfdAuXWqLuuvdS5sPkoH+5dFo=
+github.com/mwat56/errorhandler v1.0.2/go.mod h1:NFz8HNMovjavnhZLyJOR/muQJnrLl1jHbkHp2lbz+/o=
 github.com/mwat56/ini v1.3.0 h1:Cy0MSGAdjHLG8LcJLjoVUiSP5/esLlKvZUGKWKM/EpQ=
 github.com/mwat56/ini v1.3.0/go.mod h1:8o0vuCi7Vq9rKy5JRuPN5HLMcKMB58mqhc/fYhVmpWo=
 github.com/mwat56/passlist v1.0.1 h1:K5zhIsOBWb7FgfN9yNiMz6Kr3rT/7699p075CrfMvBo=
@@ -13,6 +17,7 @@ golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c/go.mod h1:t9HGtf8HONx5eT2rtn
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20190508100423-12bbe5a7a520 h1:5/ojcKo2vQ2eroPDFcBB9tuc4N42a5njs7UWP2jk3KU=
 golang.org/x/sys v0.0.0-20190508100423-12bbe5a7a520/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
