@@ -13,14 +13,16 @@
 	<script type="text/javascript">if(top!=self)top.location=self.location</script>
 	<link rel="Shortcut icon" type="image/gif" href="/img/favicon.ico" />
 </head><body>
-<h1 class="left">Kaliber</h1>
+<div id="body">
+<h1 class="left"><img alt="calibre" id="logo" src="/img/calibre.gif">{{.LibraryName}}</h1>
+
 {{- template "header" . -}}
-<div id="main">
-	{{- if .Headline}}<h1>{{.Headline}}</h1>{{end -}}
-	<div id="bodypage">
-		{{- template "bodypage" . -}}
-	</div>
+
+<div id="bodypage">
+	{{- template "bodypage" . -}}
 </div>
+
 {{- template "footer" . -}}
-</body></html>
+
+</div></body></html>
 {{- end -}}

@@ -1,9 +1,8 @@
 {{- define "header" -}}
-<h2 class="left">Kaliber</h2>
-<form method="post" action="/post{{.QOS}}" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<form method="post" action="/post{{.QOC}}" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
 <input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
 <header>
-<p id="logo"><img alt="calibre" src="/img/calibre.png"></p>
+{{- if .ShowForm -}}
 <div id="search_box">
 	{{- $lang := "de" -}}
 	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
@@ -13,11 +12,11 @@
 	<label for="limitlength">Show</label>
 	{{- end -}}
 	&nbsp;<select id="limitlength" name="limitlength" form="pageform">
-		<option value="10">10</option>
-		<option SELECTED value="25">25</option>
-		<option value="50">50</option>
-		<option value="100">100</option>
-	</select>
+		{{ selectOption .LSO "10" }}10</option>
+		{{ selectOption .LSO "25" }}25</option>
+		{{ selectOption .LSO "50" }}50</option>
+		{{ selectOption .LSO "100" }}100</option>
+	</select> &nbsp;
 <!--
 	{{- if eq $lang "de" -}}
 	<label for="matching">Bücher enthalten</label>
@@ -33,39 +32,43 @@
 	{{- end -}}
 	&nbsp;<select id="sortby" name="sortby" form="pageform">
 	{{- if eq $lang "de" -}}
-		<option SELECTED value="time">Datum</option>
-		<option value="author">AutorIn</option>
-		<option value="rating">Bewertung</option>
-		<option value="size">Größe</option>
-		<option value="series">Serie</option>
-		<option value="language">Sprache</option>
-		<option value="tags">Stichwörter</option>
-		<option value="title">Titel</option>
+		{{ htmlSafe .SSO.author }}AutorIn</option>
+		{{ htmlSafe .SSO.rating }}Bewertung</option>
+		{{ htmlSafe .SSO.time }}Datum</option>
+		{{ htmlSafe .SSO.size }}Größe</option>
+		{{ htmlSafe .SSO.series }}Serie</option>
+		{{ htmlSafe .SSO.language }}Sprache</option>
+		{{ htmlSafe .SSO.tags }}Stichwörter</option>
+		{{ htmlSafe .SSO.title }}Titel</option>
+		{{ htmlSafe .SSO.publisher }}Verlag</option>
 	{{- else -}}
-		<option value="author">author</option>
-		<option SELECTED value="time">date</option>
-		<option value="language">language</option>
-		<option value="rating">rating</option>
-		<option value="title">title</option>
-		<option value="series">series</option>
-		<option value="size">size</option>
-		<option value="tags">tags</option>
+		{{ htmlSafe .SSO.author }}author</option>
+		{{ htmlSafe .SSO.time }}date</option>
+		{{ htmlSafe .SSO.language }}language</option>
+		{{ htmlSafe .SSO.publisher }}publisher</option>
+		{{ htmlSafe .SSO.rating }}rating</option>
+		{{ htmlSafe .SSO.series }}series</option>
+		{{ htmlSafe .SSO.size }}size</option>
+		{{ htmlSafe .SSO.tags }}tag</option>
+		{{ htmlSafe .SSO.title }}title</option>
+		tags</option>
 	{{- end -}}
-	</select>
-	&nbsp;<select id="order" name="order" form="pageform">
+	</select> &nbsp;
+	<select id="order" name="order" form="pageform">
 	{{- if eq $lang "de" -}}
-		<option value="ascending">aufsteigend</option>
-		<option SELECTED value="descending">absteigend</option>
+		{{ htmlSafe .DSO.ascending }}aufsteigend</option>
+		{{ htmlSafe .DSO.descending }}absteigend</option>
 	{{- else -}}
-		<option value="ascending">ascending</option>
-		<option SELECTED value="descending">descending</option>
+		{{ htmlSafe .DSO.ascending }}ascending</option>
+		{{ htmlSafe .DSO.descending }}descending</option>
 	{{- end -}}
-	</select>
+	</select> &nbsp;
 	{{- if eq $lang "de" -}}
 	<input id="search" name="search" type="submit" value="Suche" form="pageform">
 	{{- else -}}
 	<input id="search" name="search" type="submit" value="Search" form="pageform">
 	{{- end -}}
 </div>
+{{- end -}}
 </header>
 {{- end -}}

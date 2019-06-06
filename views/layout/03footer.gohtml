@@ -1,11 +1,19 @@
 {{- define "footer" -}}
-<footer>
-	<p><small>
-	{{- $lang := "de" -}}
-	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+{{- if $.HasNext -}}
+	<p class="next">
+	{{- if eq $lang "de" -}}
+	<input class="next" form="pageform" id="next" name="next" type="submit" value="Nächste">
+	{{- else -}}
+	<input class="next" form="pageform" id="next" name="next" type="submit" value="Next">
+	{{- end -}}
+	</p>
+{{- end -}}
+<footer><p><small>
 	{{- if eq $lang "de" -}}
 <img src="/img/favicon.ico" alt="*">
-– <a href="/{{.QOC}}">Startseite</a>
+– <a href="/">Startseite</a>
 – <a href="/impressum{{.QOC}}">Impressum</a>
 – <a href="/datenschutz{{.QOC}}">Datenschutz</a>
 – <img src="/img/favicon.ico" alt="*">
@@ -16,16 +24,6 @@
 – <a href="/privacy{{.QOC}}">Privacy</a>
 – <img src="/img/favicon.ico" alt="*">
 	{{- end -}}
-	</small></p>
-</footer>
-{{- if $.HasNext -}}
-	<p class="next">
-	{{- if eq $lang "de" -}}
-	<input form="pageform" id="next" name="next" type="submit" value="Nächste">
-	{{- else -}}
-	<input form="pageform" id="next" name="next" type="submit" value="Next">
-	{{- end -}}
-	</p>
-{{- end -}}
+</small></p></footer>
 </form><!-- FORM opened in 03header.gohtml -->
 {{- end -}}

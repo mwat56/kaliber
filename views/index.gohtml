@@ -3,24 +3,66 @@
 {{- end -}}
 
 {{- define "bodypage" -}}
-<dl class="posting">
-	{{- range $i, $doc := $.Documents -}}
-	<article class="document">
-		<div class="cover">
-			<p class="cover"><img alt="" src="{{$doc.Cover}}"></p>
-		</div>
-		<div class="meta">
-		<p><strong>{{$doc.Title}}</strong> by <span class="author"></span></p>
-		<p> </p>
-		<p> </p>
-		<p> </p>
-		<p> </p>
-		<p> </p>
-		<p> </p>
+{{- $class := " even" -}}<!-- CSS class for even rows -->
+{{- $qoc := $.QOC -}}<!-- query options container -->
+{{- $row := 1 -}}<!-- record row indicator -->
+{{- range $i, $doc := $.Documents -}}
+{{- if eq 1 $row -}}
+	{{- $class = "odd" -}}
+	{{- $row = 0 -}}
+{{- else -}}
+	{{- $class = " even" -}}
+	{{- $row = 1 -}}
+{{- end -}}
+<article class="overview {{$class}}">
+	<div class="cover">
+		<p class="cover"><a href="{{.DocLink}}{{$qoc}}">
+		<img alt="Cover" class="cover" src="{{$doc.Cover}}"></a></p>
+	</div><div class="meta">
+		<p><!-- small>[{{$doc.ID}}]</small -->
+		<strong>{{$doc.Title}}</strong>
 
-		</div>
-	</article>
-	{{- end -}}
-</dl>
+		{{- if $doc.Authors -}}
+			&nbsp; by &nbsp;
+			{{- range $i, $author := $doc.Authors -}}
+				{{- $name := $author.Name -}}
+				{{- $url := $author.URL -}}
+				<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+			{{- end -}}
+		{{- end -}}
+		</p>
 
+		{{- if $doc.Series -}}
+			{{- $series := $doc.Series -}}
+			{{- $name := $series.Name -}}
+			{{- $url := $series.URL -}}
+			<p><em>{{$doc.SeriesIndex}}</em> of <em><a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a></em>
+			</p>
+		{{- end -}}
+
+		{{- if $doc.Tags -}}
+		<p><small>{{range $i, $tag := $doc.Tags -}}
+			{{- $name := $tag.Name -}}
+			{{- $url := $tag.URL -}}
+			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a>, &nbsp;
+			{{- end -}}
+		</small></p>
+		{{- end -}}
+
+		{{- if $doc.Publisher -}}
+			<p>Published &nbsp; {{$doc.PubDate}} &nbsp;
+			{{- $pub := $doc.Publisher -}}
+			{{- $name := $pub.Name -}}
+			{{- $url := $pub.URL -}}
+			<em>by</em> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a>
+			</p>
+		{{- end -}}
+
+		{{- if $doc.Comment -}}
+			<blockquote class="comment">{{$doc.Comment}}</blockquote>
+		{{- end -}}
+	</div>
+</article>
+{{- end -}}
 {{- end -}}

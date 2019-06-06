@@ -4,26 +4,30 @@
 
 {{- define "bodypage" -}}
 {{- $doc := $.Document -}}
+{{- $qoc := $.QOC -}}
 <article class="document">
+<h2>{{$doc.Title}}</h2>
+<div class="meta">
 	<table class="meta">
+	{{- if $doc.Authors -}}
 	<tr>
-		<td colspan="2"><h2>{{$doc.Title}}</h2></td>
-	</tr><tr>
-		<td>Author:</td><td>
+		<td class="label">Author:</td><td>
 		{{- range $i, $author := $doc.Authors -}}
 			{{- $name := $author.Name -}}
 			{{- $url := $author.URL -}}
-			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
+	{{- end -}}
+
 	{{- if $doc.Formats -}}
 	<tr>
-		<td>Formats:</td><td>
+		<td class="label">Formats:</td><td>
 		{{- range $i, $format := $doc.Formats -}}
 			{{- $name := $format.Name -}}
 			{{- $url := $format.URL -}}
-			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -31,11 +35,11 @@
 
 	{{- if $doc.Series -}}
 	<tr>
-		<td>Series:</td><td>
+		<td class="label">Series:</td><td>
 		{{- $series := $doc.Series -}}
 		{{- $name := $series.Name -}}
 		{{- $url := $series.URL -}}
-		<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		{{- $doc.SeriesIndex -}} &nbsp;
 		</td>
 	</tr>
@@ -43,18 +47,18 @@
 
 	{{- if $doc.Publisher -}}
 	<tr>
-		<td>Publisher:</td><td>
+		<td class="label">Publisher:</td><td>
 		{{- $pub := $doc.Publisher -}}
 		{{- $name := $pub.Name -}}
 		{{- $url := $pub.URL -}}
-		<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		</td>
 	</tr>
 	{{- end -}}
 
 	{{- if $doc.PubDate -}}
 	<tr>
-		<td>Published:</td><td>
+		<td class="label">Published:</td><td>
 			{{- $doc.PubDate -}}
 		</td>
 	</tr>
@@ -62,7 +66,7 @@
 
 	{{- if $doc.Pages -}}
 	<tr>
-		<td>Pages:</td><td>
+		<td class="label">Pages:</td><td>
 		{{- if lt 0 $doc.Pages}}{{$doc.Pages}}{{end -}}
 		</td>
 	</tr>
@@ -70,11 +74,11 @@
 
 	{{- if $doc.Identifiers -}}
 	<tr>
-		<td>Identifiers:</td><td>
+		<td class="label">Identifiers:</td><td>
 		{{- range $i, $ident := $doc.Identifiers -}}
 			{{- $name := $ident.Name -}}
 			{{- $url := $ident.URL -}}
-			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -82,11 +86,11 @@
 
 	{{- if $doc.Tags -}}
 	<tr>
-		<td>Tags:</td><td>
+		<td class="label">Tags:</td><td>
 		{{- range $i, $tag := $doc.Tags -}}
 			{{- $name := $tag.Name -}}
 			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -94,11 +98,11 @@
 
 	{{- if $doc.Language -}}
 	<tr>
-		<td>Language:</td><td>
+		<td class="label">Language:</td><td>
 		{{- $lang := $doc.Language -}}
 		{{- $name := $lang.Name -}}
 		{{- $url := $lang.URL -}}
-		<a class="button" href="{{$url}}{{.QOC}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
 		</td>
 	</tr>
 	{{- end -}}
@@ -114,8 +118,9 @@
 	{{- end -}}
 
 	</table>
-	<div class="cover">
-		<p class="cover"><img alt="" src="{{$doc.Cover}}"></p>
-	</div>
+</div>
+<div class="cover">
+	<p class="cover"><img alt="" class="cover" src="{{$doc.Cover}}"></p>
+</div>
 </article>
 {{- end -}}
