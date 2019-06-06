@@ -20,8 +20,8 @@ const (
 	SortByLanguage
 	SortByPublisher
 	SortByRating
-	SortBySize
 	SortBySeries
+	SortBySize
 	SortByTags
 	SortByTime
 	SortByTitle
@@ -48,8 +48,36 @@ type (
 // CGI returns the object's query escaped string representation
 // fit for use as the `qos` CGI argument.
 func (qo *TQueryOptions) CGI() string {
-	return "?qo=" + url.QueryEscape(qo.String())
+	return `?qo="` + url.QueryEscape(qo.String()) + `"`
 } // CGI()
+
+// DescendSelectOptions returns a list of SELECT/OPTIONs.
+func (qo *TQueryOptions) DescendSelectOptions() *TStringMap {
+	result := make(TStringMap, 2)
+	if qo.Descending {
+		result["ascending"] = `<option value="ascending">`
+		result["descending"] = `<option SELECTED value="descending">`
+	} else {
+		result["ascending"] = `<option SELECTED value="ascending">`
+		result["descending"] = `<option alue="descending">`
+	}
+
+	return &result
+} // ()
+
+// DecLimit decrements the LIMIT values.
+func (qo *TQueryOptions) DecLimit() *TQueryOptions {
+	if 0 < qo.LimitStart {
+		if qo.LimitStart == qo.LimitLength {
+			qo.LimitStart = 0
+		} else {
+			qo.LimitStart -= qo.LimitLength
+		}
+	}
+	qo.NextStart += qo.LimitLength
+
+	return qo
+} // DecLimit()
 
 // IncLimit increments the LIMIT values.
 func (qo *TQueryOptions) IncLimit() *TQueryOptions {
@@ -57,7 +85,50 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 	qo.NextStart += qo.LimitLength
 
 	return qo
-} // IncLimit()
+} // decLimit()
+
+func (qo *TQueryOptions) limitSelectOptionsPrim(aMap *TStringMap, aLimit uint, aIndex string) {
+	if aLimit == qo.LimitLength {
+		(*aMap)[aIndex] = `<option SELECTED value="` + aIndex + `">`
+	} else {
+		(*aMap)[aIndex] = `<option value="` + aIndex + `">`
+	}
+} // limitSelectOptionsPrim()
+
+// LimitSelectOptions returns a list of SELECT/OPTIONs.
+func (qo *TQueryOptions) LimitSelectOptions() *TStringMap {
+	result := make(TStringMap, 4)
+	qo.limitSelectOptionsPrim(&result, 10, "10")
+	qo.limitSelectOptionsPrim(&result, 25, "25")
+	qo.limitSelectOptionsPrim(&result, 50, "50")
+	qo.limitSelectOptionsPrim(&result, 100, "100")
+
+	return &result
+} // LimitSelectOptions()
+
+func (qo *TQueryOptions) sortSelectOptionsPrim(aMap *TStringMap, aSort uint8, aIndex string) {
+	if aSort == qo.SortBy {
+		(*aMap)[aIndex] = `<option SELECTED value="` + aIndex + `">`
+	} else {
+		(*aMap)[aIndex] = `<option value="` + aIndex + `">`
+	}
+} // sortSelectOptionsPrim()
+
+// SortSelectOptions returns a list of SELECT/OPTIONs.
+func (qo *TQueryOptions) SortSelectOptions() *TStringMap {
+	result := make(TStringMap, 9)
+	qo.sortSelectOptionsPrim(&result, SortByAuthor, "author")
+	qo.sortSelectOptionsPrim(&result, SortByLanguage, "language")
+	qo.sortSelectOptionsPrim(&result, SortByPublisher, "publisher")
+	qo.sortSelectOptionsPrim(&result, SortByRating, "rating")
+	qo.sortSelectOptionsPrim(&result, SortBySeries, "series")
+	qo.sortSelectOptionsPrim(&result, SortBySize, "size")
+	qo.sortSelectOptionsPrim(&result, SortByTags, "tags")
+	qo.sortSelectOptionsPrim(&result, SortByTime, "time")
+	qo.sortSelectOptionsPrim(&result, SortByTitle, "title")
+
+	return &result
+} // SortSelectOptions()
 
 // String returns the options as a `|` delimited string.
 func (qo *TQueryOptions) String() string {
@@ -135,6 +206,7 @@ func getQueryOptions(aRequest *http.Request) *TQueryOptions {
 func NewQueryOptions() *TQueryOptions {
 	result := TQueryOptions{
 		Descending:  true,
+		Entity:      "all",
 		LimitLength: 25,
 		SortBy:      SortByTime,
 	}

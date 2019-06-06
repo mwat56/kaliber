@@ -23,7 +23,7 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		NextStart:   25,
 		SortBy:      SortByAuthor,
 	}
-	w1 := "?qo=" + url.QueryEscape(`|3524|true|"author"|25|0|""|25|1|`)
+	w1 := `?qo="` + url.QueryEscape(`|3524|true|"author"|25|0|""|25|1|`) + `"`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -34,7 +34,7 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		NextStart:   50,
 		SortBy:      SortByLanguage,
 	}
-	w2 := "?qo=" + url.QueryEscape(`|1|false|"lang"|50|0|""|50|2|`)
+	w2 := `?qo="` + url.QueryEscape(`|1|false|"lang"|50|0|""|50|2|`) + `"`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -101,6 +101,54 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		})
 	}
 } // TestTQueryOptions_Scan()
+
+func TestTQueryOptions_SortSelectOptions(t *testing.T) {
+	o1 := TQueryOptions{
+		SortBy: SortByAuthor,
+	}
+	w1 := TStringMap{
+		"author":    `SELECTED value="author"`,
+		`language`:  `value="language"`,
+		`publisher`: `value="publisher"`,
+		`rating`:    `value="rating"`,
+		`series`:    `value="series"`,
+		`size`:      `value="size"`,
+		`tags`:      `value="tags"`,
+		`time`:      `value="time"`,
+		`title`:     `value="title"`,
+	}
+	o2 := TQueryOptions{
+		SortBy: SortByTime,
+	}
+	w2 := TStringMap{
+		"author":    `value="author"`,
+		`language`:  `value="language"`,
+		`publisher`: `value="publisher"`,
+		`rating`:    `value="rating"`,
+		`series`:    `value="series"`,
+		`size`:      `value="size"`,
+		`tags`:      `value="tags"`,
+		`time`:      `SELECTED value="time"`,
+		`title`:     `value="title"`,
+	}
+	tests := []struct {
+		name   string
+		fields TQueryOptions
+		want   TStringMap
+	}{
+		// TODO: Add test cases.
+		{" 1", o1, w1},
+		{" 2", o2, w2},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qo := &tt.fields
+			if got := qo.SortSelectOptions(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TQueryOptions.SortSelectOptions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // TestTQueryOptions_SortSelectOptions()
 
 func TestTQueryOptions_String(t *testing.T) {
 	o1 := TQueryOptions{
