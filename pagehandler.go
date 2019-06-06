@@ -23,12 +23,12 @@ type (
 	// TPageHandler provides the handling of HTTP request/response.
 	TPageHandler struct {
 		addr     string              // listen address ("1.2.3.4:5678")
-		bn       string              // the library's name
 		dd       string              // datadir: base dir for data
-		dh       http.Handler        // document file handler
+		dfs      http.Handler        // document file server
 		lang     string              // default language
+		ln       string              // the library's name
 		realm    string              // host/domain to secure by BasicAuth
-		sh       http.Handler        // static file handler
+		sfs      http.Handler        // static file server
 		theme    string              // `dark` or `light` display theme
 		ul       *passlist.TPassList // user/password list
 		viewList *TViewList          // list of template/views
@@ -43,19 +43,19 @@ func NewPageHandler() (*TPageHandler, error) {
 	)
 	result := new(TPageHandler)
 
-	if s, err = AppArguments.Get("libname"); nil == err {
-		result.bn = s
-	}
-
 	if s, err = AppArguments.Get("datadir"); nil != err {
 		return nil, err
 	}
 	result.dd = s
 
-	result.dh = http.FileServer(http.Dir(calibreLibraryPath + "/"))
+	result.dfs = http.FileServer(http.Dir(calibreLibraryPath))
 
 	if s, err = AppArguments.Get("lang"); nil == err {
 		result.lang = s
+	}
+
+	if s, err = AppArguments.Get("libraryname"); nil == err {
+		result.ln = s
 	}
 
 	if s, err = AppArguments.Get("listen"); nil != err {
@@ -68,7 +68,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.addr += ":" + s
 
-	result.sh = http.FileServer(http.Dir(result.dd + "/"))
+	result.sfs = http.FileServer(http.Dir(result.dd))
 
 	if s, err = AppArguments.Get("uf"); nil != err {
 		log.Printf("NewPageHandler(): %v\nAUTHENTICATION DISABLED!", err)
@@ -100,8 +100,8 @@ func NewPageHandler() (*TPageHandler, error) {
 // implementing the `TErrorPager` interface.
 func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 	var empty []byte
-
-	pageData := ph.basicTemplateData()
+	pageData := ph.basicTemplateData().
+		Set("ShowForm", false)
 
 	switch aStatus {
 	case 404:
@@ -153,14 +153,14 @@ func (ph *TPageHandler) Address() string {
 // `basicTemplateData()` returns a list of common Head entries.
 func (ph *TPageHandler) basicTemplateData() *TemplateData {
 	y, m, d := time.Now().Date()
-	result := NewTemplateData().
-		Set("Blogname", ph.bn).
+
+	return NewTemplateData().
 		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+ph.theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
+		Set("HasNext", false).
 		Set("Lang", ph.lang).
+		Set("LibraryName", ph.ln).
 		Set("Robots", "noindex,nofollow").
 		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d))
-
-	return result
 } // basicTemplateData()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -168,34 +168,34 @@ func (ph *TPageHandler) basicTemplateData() *TemplateData {
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
 	qo := getQueryOptions(aRequest) // in `queryoptions.go`
-	pageData := ph.basicTemplateData()
+	pageData := ph.basicTemplateData().
+		Set("DSO", qo.DescendSelectOptions()).
+		Set("LSO", qo.LimitSelectOptions()).
+		Set("SSO", qo.SortSelectOptions())
 	path, tail := URLparts(aRequest.URL.Path)
 	// log.Printf("head: `%s`: tail: `%s`", path, tail) //FIXME REMOVE
 	switch path {
 
-	case "author", "lang", "publisher", "series", "tag":
+	case "all", "author", "lang", "publisher", "series", "tag":
 		var (
 			id    TID
 			dummy string
 		)
-		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		qo.ID = id
+		if _, err := fmt.Sscanf(tail, "%d/%s", &id, &dummy); nil == err {
+			qo.ID = id
+		}
 		qo.Entity = path
-		qo.IncLimit()
-		doclist, _ := queryEntity(qo)
-		pageData.
-			Set("Documents", doclist).
-			Set("HasNext", true).
-			Set("QOS", qo.String()).
-			Set("QOC", qo.CGI())
-		ph.viewList.Render("index", aWriter, pageData)
+		ph.handleRoot(qo, aWriter, aRequest)
 
 	case "certs": // these files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "cover":
-		var id TID
-		fmt.Sscanf(tail, "%d/cover.jpg", &id)
+		var (
+			id    TID
+			dummy string
+		)
+		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		doc := QueryDocMini(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
@@ -206,36 +206,42 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
+		if 0 >= len(file) {
+			http.NotFound(aWriter, aRequest)
+			return
+		}
 		aRequest.URL.Path = file
-		// log.Printf("head: `%s` | tail: `%s` | path: `%s`", path, tail, file) //FIXME REMOVE
-		ph.dh.ServeHTTP(aWriter, aRequest)
+		ph.dfs.ServeHTTP(aWriter, aRequest)
 
 	case "css":
-		ph.sh.ServeHTTP(aWriter, aRequest)
+		ph.sfs.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
 		var (
-			id   TID
-			book string
+			id    TID
+			dummy string
 		)
-		fmt.Sscanf(tail, "%d/%s", &id, &book)
+		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
-		doc := queryDocument(id)
+		doc := QueryDocument(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
 		}
 		pageData.
 			Set("Document", doc).
-			Set("HasNext", false).
-			Set("QOS", qo.CGI())
+			Set("QOC", qo.CGI())
 		ph.viewList.Render("document", aWriter, pageData)
 
 	case "favicon.ico":
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
+	case "file":
+
+		//FIXME TODO
+
 	case "fonts":
-		ph.sh.ServeHTTP(aWriter, aRequest)
+		ph.sfs.ServeHTTP(aWriter, aRequest)
 
 	case "format":
 		/*FIXME
@@ -257,31 +263,33 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
+		if 0 >= len(file) {
+			http.NotFound(aWriter, aRequest)
+			return
+		}
 		aRequest.URL.Path = file
-		// log.Printf("head: `%s` | tail: `%s` | path: `%s`", path, tail, aRequest.URL.Path) //FIXME REMOVE
-		ph.dh.ServeHTTP(aWriter, aRequest)
+		ph.dfs.ServeHTTP(aWriter, aRequest)
 
 	case "img":
-		ph.sh.ServeHTTP(aWriter, aRequest)
+		ph.sfs.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
-		pageData.Set("HasNext", false)
 		ph.viewList.Render("imprint", aWriter, pageData)
 
 	case "licence", "license", "lizenz":
-		pageData.Set("HasNext", false)
 		ph.viewList.Render("licence", aWriter, pageData)
 
+	case "post":
+		ph.handleRoot(qo, aWriter, aRequest)
+
 	case "privacy", "datenschutz":
-		pageData.Set("HasNext", false)
 		ph.viewList.Render("privacy", aWriter, pageData)
 
 	case "views": // this files are handled internally
-		http.Redirect(aWriter, aRequest, "/n/", http.StatusMovedPermanently)
+		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
-		//FIXME provide *TQueryOptions
-		ph.handleRoot(nil, pageData, aWriter, aRequest)
+		ph.handleRoot(qo, aWriter, aRequest)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -304,10 +312,11 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 				return
 			}
 		}
+		if search := aRequest.FormValue("next"); 0 < len(search) {
+			qo.DecLimit()
+		}
+		ph.handleRoot(qo, aWriter, aRequest)
 
-		//TODO call `handleRoot()`?
-
-		http.Redirect(aWriter, aRequest, "/", http.StatusSeeOther)
 	default:
 		// if nothing matched (above) reply to the request
 		// with an HTTP 404 "not found" error.
@@ -316,14 +325,28 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleRoot()` serves the logical web-root directory.
-func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aData *TemplateData, aWriter http.ResponseWriter, aRequest *http.Request) {
-
-	doclist, _ := QeueryBy(aQueryOption)
-	// aQueryOption.LimitStart += aQueryOption.LimitLength
-	aData.
+func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aWriter http.ResponseWriter, aRequest *http.Request) {
+	doclist, err := QueryBy(aQueryOption)
+	if nil != err {
+		//TODO better error handling
+		log.Printf("handleRoot() QeueryBy: %v\n", err)
+	}
+	aQueryOption.IncLimit()
+	pageData := ph.basicTemplateData().
 		Set("Documents", doclist).
-		Set("QOS", aQueryOption.CGI())
-	ph.viewList.Render("index", aWriter, aData)
+		Set("HasNext", true).
+		Set("QOC", aQueryOption.CGI()).
+		Set("QOS", aQueryOption.String()).
+		Set("DSO", aQueryOption.DescendSelectOptions()).
+		Set("LSO", aQueryOption.LimitSelectOptions()).
+		Set("SSO", aQueryOption.SortSelectOptions()).
+		Set("ShowForm", true)
+	err = ph.viewList.Render("index", aWriter, pageData)
+	if nil != err {
+		//TODO better error handling
+		log.Printf("handleRoot() Render: %v\n", err)
+	}
+	// log.Printf("handleRoot()\n") //FIXME REMOVE
 } // handleRoot()
 
 // `handleSearch()` serves the search results.
