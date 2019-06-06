@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/mwat56/apachelogger"
@@ -40,15 +39,17 @@ func setupSinals(aServer *http.Server) {
 // Actually run the program …
 func main() {
 	var (
-		err       error
-		handler   http.Handler
-		ph        *kaliber.TPageHandler
-		ck, cp, s string
+		err           error
+		handler       http.Handler
+		ph            *kaliber.TPageHandler
+		ck, cp, fn, s string
 	)
-	Me, _ := filepath.Abs(os.Args[0])
+	if err = kaliber.DBopen(kaliber.CalibreDatabasePath()); nil != err {
+		kaliber.ShowHelp()
+		log.Fatalf("%s: %v", os.Args[0], err)
+	}
 
-	if s, err = kaliber.AppArguments.Get("uf"); (nil == err) && (0 < len(s)) {
-		fn := s
+	if fn, err = kaliber.AppArguments.Get("uf"); (nil == err) && (0 < len(fn)) {
 		if s, err = kaliber.AppArguments.Get("ua"); (nil == err) && (0 < len(s)) {
 			kaliber.AddUser(s, fn)
 		}
@@ -68,7 +69,7 @@ func main() {
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
 		kaliber.ShowHelp()
-		log.Fatalf("%s: %v", Me, err)
+		log.Fatalf("%s: %v", os.Args[0], err)
 	}
 	handler = errorhandler.Wrap(ph, ph)
 
@@ -85,16 +86,16 @@ func main() {
 	cp, _ = kaliber.AppArguments.Get("certPem")
 
 	if 0 < len(ck) && (0 < len(cp)) {
-		log.Printf("%s listening HTTPS at: %s", Me, ph.Address())
+		log.Printf("%s listening HTTPS at: %s", os.Args[0], ph.Address())
 		if err = server.ListenAndServeTLS(cp, ck); nil != err {
-			log.Fatalf("%s: %v", Me, err)
+			log.Fatalf("%s: %v", os.Args[0], err)
 		}
 		return
 	}
 
-	log.Printf("%s listening HTTP at: %s", Me, ph.Address())
+	log.Printf("%s listening HTTP at: %s", os.Args[0], ph.Address())
 	if err = server.ListenAndServe(); nil != err {
-		log.Fatalf("%s: %v", Me, err)
+		log.Fatalf("%s: %v", os.Args[0], err)
 	}
 } // main()
 
