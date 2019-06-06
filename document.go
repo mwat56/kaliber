@@ -53,9 +53,12 @@ type (
 	// a single language code
 	tLanguage = TEntity
 
+	// TStringMap is a map of strings indexed by string.
+	TStringMap map[string]string
+
 	// TPathList is a map of document formats holding the
 	// respective library file.
-	TPathList map[string]string
+	TPathList TStringMap
 
 	// a single publisher
 	tPublisher = TEntity
@@ -126,7 +129,7 @@ func (doc *TDocument) Comment() template.HTML {
 
 // Cover returns the relative path-filename of the document's cover image.
 func (doc *TDocument) Cover() string {
-	return fmt.Sprintf("/cover/%d/cover.jpg", doc.ID)
+	return fmt.Sprintf("/cover/%d/cover.gif", doc.ID)
 } // Cover()
 
 // `cover()` returns the absolute path-filename of the document's cover image.
@@ -134,6 +137,7 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	dir := filepath.Join(calibreLibraryPath, doc.path)
 	filenames, err := filepath.Glob(dir + "/cover.*")
 	if (nil != err) || (1 > len(filenames)) {
+		//TODO better error handling
 		return "", err
 	}
 	if !aRelative {
@@ -141,11 +145,17 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	}
 	dir, err = filepath.Rel(calibreLibraryPath, filenames[0])
 	if nil != err {
+		//TODO better error handling
 		return "", err
 	}
 
 	return dir, nil
 } // coverAbs()
+
+// DocLink returns a link to this document's page.
+func (doc *TDocument) DocLink() string {
+	return fmt.Sprintf("/doc/%d/doc.html", doc.ID)
+} // DocLink()
 
 // Filename returns the path-/filename od `aFormat`.
 func (doc *TDocument) Filename(aFormat string, aRelative bool) string {
@@ -234,8 +244,11 @@ func (doc *TDocument) Identifiers() *TEntityList {
 		}
 		result = append(result, ent)
 	}
+	if 0 < len(result) {
+		return &result
+	}
 
-	return &result
+	return nil
 } // Identifiers()
 
 // Language returns an ID/Name series struct.
@@ -254,7 +267,12 @@ func (doc *TDocument) Language() *TEntity {
 
 // PubDate returns the formatted `pubdate` property.
 func (doc *TDocument) PubDate() string {
-	return doc.pubdate.Format("2006-01")
+	y, m, _ := doc.pubdate.Date()
+	if 101 == y {
+		return ""
+	}
+
+	return fmt.Sprintf("%d-%02d", y, m)
 } // PubDate()
 
 // Publisher returns an ID/Name publisher struct.
@@ -287,7 +305,7 @@ func (doc *TDocument) Series() *TEntity {
 
 // SeriesIndex returns the document's series index as formatted string.
 func (doc *TDocument) SeriesIndex() string {
-	return fmt.Sprintf("%f", doc.seriesindex)
+	return fmt.Sprintf("%.2f", doc.seriesindex)
 } // SeriesIndex()
 
 var (
@@ -331,8 +349,11 @@ func (doc *TDocument) Tags() *TEntityList {
 		}
 		result = append(result, ent)
 	}
+	if 0 < len(result) {
+		return &result
+	}
 
-	return &result
+	return nil
 } // Tags()
 
 // Timestamp returns the formatted `timestamp` property.
