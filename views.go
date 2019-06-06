@@ -20,6 +20,26 @@ import (
 	"regexp"
 )
 
+// `htmlSafe()` returns `aText` as template.HTML.
+func htmlSafe(aText string) template.HTML {
+	return template.HTML(aText)
+} // htmlSafe()
+
+func selectOption(aMap *TStringMap, aValue string) template.HTML {
+	if result, ok := (*aMap)[aValue]; ok {
+		return template.HTML(result)
+	}
+
+	return ""
+} // selectOption()
+
+var (
+	fMap = template.FuncMap{
+		"htmlSafe":     htmlSafe,     // returns `aText` as template.HTML
+		"selectOption": selectOption, //  Select Options
+	}
+)
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // TView combines a template and its logical name.
@@ -48,7 +68,9 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 	}
 	files = append(files, bd+"/"+aName+".gohtml")
 
-	templ, err := template.New(aName).ParseFiles(files...)
+	templ, err := template.New(aName).
+		Funcs(fMap).
+		ParseFiles(files...)
 	if nil != err {
 		return nil, err
 	}
@@ -67,7 +89,7 @@ func (v *TView) render(aWriter io.Writer, aData *TemplateData) (rErr error) {
 	if page, rErr = v.RenderedPage(aData); nil != rErr {
 		return
 	}
-	page = RemoveWhiteSpace(page)
+	// _, rErr = aWriter.Write(RemoveWhiteSpace(page))
 	_, rErr = aWriter.Write(page)
 
 	return
@@ -228,19 +250,23 @@ var (
 		// comments
 		{`(?s)<!--.*?-->`, ``, nil},
 		// HTML and HEAD elements:
-		{`(?i)\s*(</?(body|\!DOCTYPE|head|html|link|meta|script|style|title)[^>]*>)\s*`, `$1`, nil},
+		{`(?si)\s*(</?(body|\!DOCTYPE|head|html|link|meta|script|style|title)[^>]*>)\s*`, `$1`, nil},
 		// block elements:
-		{`(?i)\s*(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)\s*`, `$1`, nil},
+		{`(?si)\s+(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)`, `$1`, nil},
+		{`(?si)(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)\s+`, `$1`, nil},
 		// lists:
-		{`(?i)\s*(</?([dou]l|li|d[dt])[^>]*>)\s*`, `$1`, nil},
-		// table:
-		{`(?i)\s*(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)\s*`, `$1`, nil},
-		// forms:
-		{`(?i)\s*(</?(form|fieldset|legend|opt(group|ion))[^>]*>)\s*`, `$1`, nil},
+		{`(?si)\s+(</?([dou]l|li|d[dt])[^>]*>)`, `$1`, nil},
+		{`(?si)(</?([dou]l|li|d[dt])[^>]*>)\s+`, `$1`, nil},
+		// table elements:
+		{`(?si)\s+(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)`, `$1`, nil},
+		{`(?si)(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)\s+`, `$1`, nil},
+		// form elements:
+		{`(?si)\s+(</?(form|fieldset|legend|opt(group|ion))[^>]*>)`, `$1`, nil},
+		{`(?si)(</?(form|fieldset|legend|opt(group|ion))[^>]*>)\s+`, `$1`, nil},
 		// BR / HR:
 		{`(?i)\s*(<[bh]r[^>]*>)\s*`, `$1`, nil},
 		// whitespace after opened anchor:
-		{`(?i)(<a\s+[^>]*>)\s+`, `$1`, nil},
+		{`(?si)(<a\s+[^>]*>)\s+`, `$1`, nil},
 		// preserve empty table cells:
 		{`(?i)(<td(\s+[^>]*)?>)\s+(</td>)`, `$1&#160;$3`, nil},
 		// remove empty paragraphs:
