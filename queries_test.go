@@ -308,15 +308,24 @@ func Test_queryDocument(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := queryDocument(tt.args.aID); (nil != got) != tt.want {
+			if got := QueryDocument(tt.args.aID); (nil != got) != tt.want {
 				t.Errorf("QueryDocument() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 } // Test_queryDocument()
 
-func Test_queryEntity(t *testing.T) {
+func TestQeueryBy(t *testing.T) {
 	openDB()
+	o0 := &TQueryOptions{
+		ID:          0,
+		Descending:  false,
+		Entity:      "",
+		LimitLength: 1000,
+		LimitStart:  0,
+		Matching:    "",
+		SortBy:      SortByAuthor,
+	}
 	o1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  false,
@@ -372,6 +381,7 @@ func Test_queryEntity(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{" 0", args{o0}, 1000, false},
 		{" 1", args{o1}, 14, false},
 		{" 2", args{o2}, 50, false},
 		{" 3", args{o3}, 42, false},
@@ -380,17 +390,17 @@ func Test_queryEntity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := queryEntity(tt.args.aOption)
+			got, err := QueryBy(tt.args.aOption)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("queryEntity() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("QeueryBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if len(*got) != tt.want {
-				t.Errorf("queryEntity() = %d, want %d", len(*got), tt.want)
+				t.Errorf("QeueryBy() = %d, want %d", len(*got), tt.want)
 			}
 		})
 	}
-} // Test_queryEntity()
+} // TestQeueryBy()
 
 func TestQueryLimit(t *testing.T) {
 	openDB()
@@ -415,7 +425,7 @@ func TestQueryLimit(t *testing.T) {
 		// {" 7", args{3500, 500}, 500, false},
 		// {" 8", args{4000, 500}, 500, false},
 		// {" 9", args{4500, 500}, 500, false},
-		{"10", args{5000, 500}, 438, false},
+		{"10", args{5000, 500}, 440, false},
 		{"11", args{5500, 500}, 0, false},
 	}
 	for _, tt := range tests {

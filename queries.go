@@ -85,6 +85,7 @@ FROM books b `
 
 var (
 	having = map[string]string{
+		"all":       ``,
 		"author":    `, books_authors_link a WHERE ((a.book = b.id) AND (a.author = %d)) `,
 		"lang":      `, books_languages_link l WHERE ((l.book = b.id) AND (l.lang_code = %d))`,
 		"publisher": `, books_publishers_link p WHERE ((p.book = b.id) AND (p.publisher = %d)) `,
@@ -147,6 +148,15 @@ func docListQuery(aQuery string) (*TDocList, error) {
 	return result, nil
 } // docListQuery()
 
+// `havIng()` returns a string limiting the query to the gieben `aID`.
+func havIng(aEntity string, aID TID) string {
+	if (0 == len(aEntity)) || ("all" == aEntity) || (0 == aID) {
+		return ""
+	}
+
+	return fmt.Sprintf(having[aEntity], aID)
+} // havIng()
+
 // `limit()` returns a LIMIT clause defined by `aStart` and `aLength`.
 func limit(aStart, aLength uint) string {
 	return fmt.Sprintf("LIMIT %d, %d ", aStart, aLength)
@@ -169,31 +179,32 @@ func limit(aStart, aLength uint) string {
 //
 // `aDescending` if `true` the query result is sorted in DESCending order.
 func orderBy(aOrder uint8, aDescending bool) string {
+	desc := ""
+	if aDescending {
+		desc = " DESC"
+	}
 	result := "ORDER BY "
 	switch aOrder { // constants defined in `queryoptions.go`
 	case SortByAuthor:
-		result += "b.author_sort, b.pubdate "
+		result += "b.author_sort" + desc + ", b.pubdate" + desc + " "
 	case SortByLanguage:
-		result += "language, b.author_sort, b.sort "
+		result += "language" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
 	case SortByPublisher:
-		result += "publisher, b.author_sort, b.sort "
+		result += "publisher" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
 	case SortByRating:
-		result += "rating, b.author_sort, b.sort "
+		result += "rating" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
 	case SortBySeries:
-		result += "series, b.series_index, b.sort "
+		result += "series" + desc + ", b.series_index" + desc + ", b.sort" + desc + " "
 	case SortBySize:
-		result += "size, b.author_sort "
+		result += "size" + desc + ", b.author_sort" + desc + " "
 	case SortByTags:
-		result += "tags, b.author_sort, b.sort "
+		result += "tags" + desc + ", b.author_sort" + desc + " "
 	case SortByTime:
-		result += "b.pubdate, b.sort "
+		result += "b.pubdate" + desc + ", b.author_sort" + desc + " "
 	case SortByTitle:
-		result += "b.sort, b.pubdate "
+		result += "b.sort" + desc + ", b.author_sort" + desc + " "
 	default:
 		return ""
-	}
-	if aDescending {
-		return result + "DESC "
 	}
 
 	return result // " ASC " is default
@@ -350,14 +361,13 @@ func prepTags(aTag tCSVstring) *tTagList {
 	return &result
 } // prepTags()
 
-// QeueryBy returns all documents according to `aOption`.
-func QeueryBy(aOption *TQueryOptions) (*TDocList, error) {
-	query := baseQueryString +
+// QueryBy returns all documents according to `aOption`.
+func QueryBy(aOption *TQueryOptions) (*TDocList, error) {
+	return docListQuery(baseQueryString +
+		havIng(aOption.Entity, aOption.ID) +
 		orderBy(aOption.SortBy, aOption.Descending) +
-		limit(aOption.LimitStart, aOption.LimitLength)
-
-	return docListQuery(query)
-} // orderBy()
+		limit(aOption.LimitStart, aOption.LimitLength))
+} // QueryBy()
 
 const (
 	miniQueryString = `SELECT IFNULL((SELECT group_concat(d.format, ", ")
@@ -392,8 +402,8 @@ func QueryDocMini(aID TID) *TDocument {
 	return nil
 } // QueryDocMini()
 
-// `queryDocument()` returns the `TDocument` identified by `aID`.
-func queryDocument(aID TID) *TDocument {
+// QueryDocument returns the `TDocument` identified by `aID`.
+func QueryDocument(aID TID) *TDocument {
 	list, _ := docListQuery(baseQueryString + fmt.Sprintf("WHERE b.id=%d ", aID))
 	if 0 < len(*list) {
 		doc := (*list)[0]
@@ -402,22 +412,11 @@ func queryDocument(aID TID) *TDocument {
 	}
 
 	return nil
-} // queryDocument()
-
-// `queryEntity()` returns a list of documents as defined by `aOption`.
-func queryEntity(aOption *TQueryOptions) (*TDocList, error) {
-	return docListQuery(baseQueryString +
-		fmt.Sprintf(having[aOption.Entity], aOption.ID) +
-		orderBy(aOption.SortBy, aOption.Descending) +
-		limit(aOption.LimitStart, aOption.LimitLength))
-} // queryEntity()
+} // QueryDocument()
 
 // QueryLimit returns a list of `TDocument` objects.
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
-	query := baseQueryString +
-		limit(aStart, aLength)
-
-	return docListQuery(query)
+	return docListQuery(baseQueryString + limit(aStart, aLength))
 } // QueryLimit()
 
 /* _EoF_ */
