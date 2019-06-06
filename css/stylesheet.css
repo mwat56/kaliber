@@ -20,6 +20,7 @@ table { border-collapse:collapse;border-spacing:0.1ex; }
 html, body {
 	font-family: serif, sans-serif, monospace;
 	font-size: 13pt;
+	padding: 0 0.3ex;
 }
 a:link, a[href] {
 	text-decoration: none;
@@ -157,6 +158,7 @@ h1+h2, h2+h3, h3+h4, h4+h5, h5+h6 {
 header {
 	border-radius: 1ex;
 	margin: 0 1ex 1em 0;
+	padding: 0 0 1ex 0;
 	text-align: right;
 }
 hr {
@@ -229,6 +231,16 @@ small, .small {
 	font-size: 79%;
 	font-weight: inherit;
 }
+table {
+	border-collapse: collapse;
+	border-spacing: 1pt;
+	display: table;
+	line-height: 1.23;
+	text-align: left;
+	text-indent: 0;
+	vertical-align: middle;
+	width: 100%
+}
 textarea {
 	padding: 0.5ex;
 }
@@ -254,12 +266,15 @@ ul li {
 	margin-left: 2.6ex; /* matching P text-indent */
 }
 
+#body {
+	margin: 0 auto;
+	padding: 0;
+	max-width: 99ex;
+}
 #bodypage {
-	float: left;
 	margin: 1ex 0;
 	min-height: 3em;
-	max-width: 74%;
-	min-width: 72%;
+	width: 100%;
 }
 #imprint, #imprint p {
 	hyphens: none;
@@ -269,10 +284,9 @@ ul li {
 	max-width: 30%;
 	text-align: left;
 }
-#main {
-	margin: 0 auto;
-	padding: 0;
-	max-width: 90ex;
+img#logo {
+	max-height: 64px;
+	max-width: 64px;
 }
 p#next {
 	text-align: right;
@@ -291,9 +305,46 @@ pre#preview {
 	text-align: right;
 }
 
+article.document {
+	width: 100%;
+}
+article.document h2 {
+	text-align: center;
+	margin: 1em auto;
+}
 .centered, .error {
 	margin: 0 auto;
 	text-align: center;
+}
+blockquote.comment {
+	margin: 1ex 0;
+	max-height: 12em;
+	overflow: auto;
+}
+div.comment {
+	margin: 1em 1ex 0 0;
+	max-height: 60em;
+	overflow: auto;
+}
+div.cover {
+	display: inline-block;
+	vertical-align: top;
+}
+div.cover img.cover {
+	max-height: 98%;
+	max-width: 98%;
+}
+article.document div.cover {
+	width: 39%;
+}
+article.overview div.cover {
+	width: 22%;
+}
+article.overview:hover div.cover img.cover,
+article.overview div.cover:hover img.cover,
+article.overview div.cover img.cover:hover {
+	border: thick outset #666;
+	max-width: 94%;
 }
 .error {
 	padding: 1em 0 1em 0;
@@ -307,6 +358,9 @@ a.idlink {
 .justified {
 	text-align: justify;
 }
+td.label {
+	width: 20%;
+}
 .left {
 	text-align: left;
 }
@@ -318,6 +372,37 @@ p.matches {
 	margin: -1.3ex 0 0 0;
 	padding: 0.5ex 1ex 0.5ex 1ex;
 }
+div.meta {
+	display: inline-block;
+	vertical-align: top;
+}
+article.document div.meta {
+	width: 60%;
+}
+article.overview div.meta {
+	max-height: 38ex;
+	width: 78%;
+}
+p.next, input.next {
+	text-align: right;
+}
+article.overview {
+	height: 20em;
+	overflow: hidden;
+	width: 100ex;
+	/* padding: 0 0 1ex 0; /* */
+}
+article.overview {
+	border-bottom: thin solid #ccc;
+}
+article.even {
+	background: #eeeeee;
+}
+/*
+article.odd {
+	background: #fff;
+}
+ */
 .right {
 	text-align: right;
 	margin-right: 1ex;
