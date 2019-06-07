@@ -153,6 +153,35 @@ func Test_prepIdentifiers(t *testing.T) {
 	}
 } // Test_prepIdentifiers()
 
+func Test_prepPages(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre/")
+	d1 := TDocument{
+		path: "Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+	}
+	d2 := TDocument{
+		path: "John Scalzi/Zoe's Tale (6730)",
+	}
+	type args struct {
+		aPath string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		// TODO: Add test cases.
+		{" 1", args{d1.path}, 130},
+		{" 2", args{d2.path}, 569},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := prepPages(tt.args.aPath); got != tt.want {
+				t.Errorf("prepPages() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // Test_prepPages()
+
 func Test_prepPublisher(t *testing.T) {
 	p1 := ""
 	var w1 *tPublisher

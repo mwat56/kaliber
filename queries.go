@@ -9,7 +9,9 @@ package kaliber
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -88,11 +90,12 @@ FROM books b `
 var (
 	having = map[string]string{
 		"all":       ``,
-		"author":    `, books_authors_link a WHERE ((a.book = b.id) AND (a.author = %d)) `,
-		"lang":      `, books_languages_link l WHERE ((l.book = b.id) AND (l.lang_code = %d))`,
-		"publisher": `, books_publishers_link p WHERE ((p.book = b.id) AND (p.publisher = %d)) `,
-		"series":    `, books_series_link s WHERE ((s.book = b.id) AND (s.series = %d)) `,
-		"tag":       `, books_tags_link t WHERE ((t.book = b.id) AND (t.tag = %d)) `,
+		"author":    `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
+		"format":    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
+		"lang":      `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
+		"publisher": `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
+		"series":    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
+		"tag":       `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
 	}
 )
 
@@ -172,10 +175,10 @@ func docListQuery(aQuery string) (*TDocList, error) {
 		doc.formats = prepFormats(formats)
 		doc.identifiers = prepIdentifiers(identifiers)
 		doc.language = prepLanguage(language)
+		doc.Pages = prepPages(doc.path)
 		doc.publisher = prepPublisher(publisher)
 		doc.series = prepSeries(series)
 		doc.tags = prepTags(tags)
-		doc.setPages()
 
 		*result = append(*result, *doc)
 	}
@@ -336,6 +339,27 @@ func prepLanguage(aLanguage tCSVstring) *tLanguage {
 	return nil
 } // prepLanguage()
 
+func prepPages(aPath string) int {
+	fName := filepath.Join(calibreLibraryPath, aPath, "metadata.opf")
+	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
+		return 0
+	}
+	metadata, err := ioutil.ReadFile(fName)
+	if nil != err {
+		return 0
+	}
+	match := pagesRE.FindSubmatch(metadata)
+	if (nil == match) || (1 > len(match)) {
+		return 0
+	}
+	num, err := strconv.Atoi(string(match[1]))
+	if nil != err {
+		return 0
+	}
+
+	return num
+} // prepPages()
+
 func prepPublisher(aPublisher tCSVstring) *tPublisher {
 	list := strings.Split(aPublisher, ", ")
 	for _, val := range list {
@@ -430,6 +454,7 @@ func QueryDocMini(aID TID) *TDocument {
 		doc.ID = aID
 		rows.Scan(&formats, &doc.path, &doc.authorSort, &doc.Title)
 		doc.formats = prepFormats(formats)
+		//doc.Pages = prepPages(doc.path)
 
 		return doc
 	}
