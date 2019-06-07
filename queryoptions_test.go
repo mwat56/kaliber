@@ -106,35 +106,35 @@ func TestTQueryOptions_SortSelectOptions(t *testing.T) {
 	o1 := TQueryOptions{
 		SortBy: SortByAuthor,
 	}
-	w1 := TStringMap{
-		"author":    `SELECTED value="author"`,
-		`language`:  `value="language"`,
-		`publisher`: `value="publisher"`,
-		`rating`:    `value="rating"`,
-		`series`:    `value="series"`,
-		`size`:      `value="size"`,
-		`tags`:      `value="tags"`,
-		`time`:      `value="time"`,
-		`title`:     `value="title"`,
+	w1 := &TStringMap{
+		`author`:    `<option SELECTED value="author">`,
+		`language`:  `<option value="language">`,
+		`publisher`: `<option value="publisher">`,
+		`rating`:    `<option value="rating">`,
+		`series`:    `<option value="series">`,
+		`size`:      `<option value="size">`,
+		`tags`:      `<option value="tags">`,
+		`time`:      `<option value="time">`,
+		`title`:     `<option value="title">`,
 	}
 	o2 := TQueryOptions{
 		SortBy: SortByTime,
 	}
-	w2 := TStringMap{
-		"author":    `value="author"`,
-		`language`:  `value="language"`,
-		`publisher`: `value="publisher"`,
-		`rating`:    `value="rating"`,
-		`series`:    `value="series"`,
-		`size`:      `value="size"`,
-		`tags`:      `value="tags"`,
-		`time`:      `SELECTED value="time"`,
-		`title`:     `value="title"`,
+	w2 := &TStringMap{
+		`author`:    `<option value="author">`,
+		`language`:  `<option value="language">`,
+		`publisher`: `<option value="publisher">`,
+		`rating`:    `<option value="rating">`,
+		`series`:    `<option value="series">`,
+		`size`:      `<option value="size">`,
+		`tags`:      `<option value="tags">`,
+		`time`:      `<option SELECTED value="time">`,
+		`title`:     `<option value="title">`,
 	}
 	tests := []struct {
 		name   string
 		fields TQueryOptions
-		want   TStringMap
+		want   *TStringMap
 	}{
 		// TODO: Add test cases.
 		{" 1", o1, w1},
@@ -144,7 +144,7 @@ func TestTQueryOptions_SortSelectOptions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			qo := &tt.fields
 			if got := qo.SortSelectOptions(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TQueryOptions.SortSelectOptions() = %v, want %v", got, tt.want)
+				t.Errorf("TQueryOptions.SortSelectOptions() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}

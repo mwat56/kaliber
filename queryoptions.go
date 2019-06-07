@@ -184,6 +184,8 @@ func getQueryOptions(aRequest *http.Request) *TQueryOptions {
 			result.SortBy = SortByAuthor
 		case "language":
 			result.SortBy = SortByLanguage
+		case "publisher":
+			result.SortBy = SortByPublisher
 		case "rating":
 			result.SortBy = SortByRating
 		case "series":
