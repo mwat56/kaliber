@@ -19,8 +19,7 @@
 		<p class="cover"><a href="{{.DocLink}}{{$qoc}}">
 		<img alt="Cover" class="cover" src="{{$doc.Cover}}"></a></p>
 	</div><div class="meta">
-		<p><!-- small>[{{$doc.ID}}]</small -->
-		<strong>{{$doc.Title}}</strong>
+		<p><strong>{{$doc.Title}}</strong>
 
 		{{- if $doc.Authors -}}
 			&nbsp; by &nbsp;
@@ -47,6 +46,14 @@
 			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a>, &nbsp;
 			{{- end -}}
 		</small></p>
+		{{- end -}}
+
+		{{- if $doc.Files -}}
+			{{- range $i, $file := $doc.Files -}}
+				{{- $name := $file.Name -}}
+				{{- $url := $file.URL -}}
+				<a class="button" title="download {{$name}} file" href="{{$url}}" target="_extern">{{$name}}</a> &nbsp;
+			{{- end -}}
 		{{- end -}}
 
 		{{- if $doc.Publisher -}}
