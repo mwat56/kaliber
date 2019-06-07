@@ -196,6 +196,9 @@ func (doc *TDocument) Files() *TEntityList {
 	}
 	result := make(TEntityList, 0, len(*doc.formats))
 	for _, file := range *doc.formats {
+		if "ORIGINAL_EPUB" == file.Name {
+			continue
+		}
 		ent := TEntity{
 			ID:   file.ID,
 			Name: file.Name,
@@ -203,8 +206,11 @@ func (doc *TDocument) Files() *TEntityList {
 		}
 		result = append(result, ent)
 	}
+	if 0 < len(result) {
+		return &result
+	}
 
-	return &result
+	return nil
 } // Files()
 
 // Formats returns a list of ID/Name/URL fields for doc formats.
@@ -214,6 +220,9 @@ func (doc *TDocument) Formats() *TEntityList {
 	}
 	result := make(TEntityList, 0, len(*doc.formats))
 	for _, format := range *doc.formats {
+		if "ORIGINAL_EPUB" == format.Name {
+			continue
+		}
 		ent := TEntity{
 			ID:   format.ID,
 			Name: format.Name,
@@ -221,8 +230,11 @@ func (doc *TDocument) Formats() *TEntityList {
 		}
 		result = append(result, ent)
 	}
+	if 0 < len(result) {
+		return &result
+	}
 
-	return &result
+	return nil
 } // Formats()
 
 // Identifiers returns a list of ID/Name/URL identifier fields.
