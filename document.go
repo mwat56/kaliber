@@ -9,12 +9,9 @@ package kaliber
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -114,7 +111,7 @@ func (doc *TDocument) Authors() *TEntityList {
 		ent := TEntity{
 			ID:   author.ID,
 			Name: author.Name,
-			URL:  fmt.Sprintf("/author/%d/%s", doc.ID, url.PathEscape(author.Name)),
+			URL:  fmt.Sprintf("/author/%d/%s", author.ID, url.PathEscape(author.Name)),
 		}
 		result = append(result, ent)
 	}
@@ -192,7 +189,25 @@ func (doc *TDocument) Filenames() *TPathList {
 	return &result
 } // Filenames()
 
-// Formats returns a list of ID/Name author fields.
+// Files returns a list of ID/Name/URL fields for doc format files.
+func (doc *TDocument) Files() *TEntityList {
+	if nil == doc.formats {
+		return nil
+	}
+	result := make(TEntityList, 0, len(*doc.formats))
+	for _, file := range *doc.formats {
+		ent := TEntity{
+			ID:   file.ID,
+			Name: file.Name,
+			URL:  fmt.Sprintf("/file/%d/%s", doc.ID, file.Name),
+		}
+		result = append(result, ent)
+	}
+
+	return &result
+} // Files()
+
+// Formats returns a list of ID/Name/URL fields for doc formats.
 func (doc *TDocument) Formats() *TEntityList {
 	if nil == doc.formats {
 		return nil
@@ -202,7 +217,7 @@ func (doc *TDocument) Formats() *TEntityList {
 		ent := TEntity{
 			ID:   format.ID,
 			Name: format.Name,
-			URL:  fmt.Sprintf("/format/%d/%s", doc.ID, format.Name),
+			URL:  fmt.Sprintf("/format/%d/%s", format.ID, format.Name),
 		}
 		result = append(result, ent)
 	}
@@ -283,7 +298,7 @@ func (doc *TDocument) Publisher() *TEntity {
 	result := TEntity{
 		ID:   doc.publisher.ID,
 		Name: doc.publisher.Name,
-		URL:  fmt.Sprintf("/publisher/%d/%s", doc.publisher.ID, doc.publisher.Name),
+		URL:  fmt.Sprintf("/publisher/%d/%s", doc.publisher.ID, url.PathEscape(doc.publisher.Name)),
 	}
 
 	return &result
@@ -297,7 +312,7 @@ func (doc *TDocument) Series() *TEntity {
 	result := TEntity{
 		ID:   doc.series.ID,
 		Name: doc.series.Name,
-		URL:  fmt.Sprintf("/series/%d/%s", doc.series.ID, doc.series.Name),
+		URL:  fmt.Sprintf("/series/%d/%s", doc.series.ID, url.PathEscape(doc.series.Name)),
 	}
 
 	return &result
@@ -313,28 +328,6 @@ var (
 	pagesRE = regexp.MustCompile(`(?si)<meta name="calibre:user_metadata:#pages" .*?, &quot;#value#&quot;: (\d+),`)
 )
 
-func (doc *TDocument) setPages() int {
-	fName := filepath.Join(calibreLibraryPath, doc.path, "metadata.opf")
-	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
-		return 0
-	}
-	metadata, err := ioutil.ReadFile(fName)
-	if nil != err {
-		return 0
-	}
-	match := pagesRE.FindSubmatch(metadata)
-	if (nil == match) || (1 > len(match)) {
-		return 0
-	}
-	num, err := strconv.Atoi(string(match[1]))
-	if nil != err {
-		return 0
-	}
-	doc.Pages = num
-
-	return num
-} // setPages()
-
 // Tags returns a list of ID/Name tag fields.
 func (doc *TDocument) Tags() *TEntityList {
 	if nil == doc.tags {
@@ -345,7 +338,7 @@ func (doc *TDocument) Tags() *TEntityList {
 		ent := TEntity{
 			ID:   tag.ID,
 			Name: tag.Name,
-			URL:  fmt.Sprintf("/tag/%d/%s", tag.ID, tag.Name),
+			URL:  fmt.Sprintf("/tag/%d/%s", tag.ID, url.PathEscape(tag.Name)),
 		}
 		result = append(result, ent)
 	}

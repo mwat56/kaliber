@@ -18,12 +18,12 @@ func TestTDocument_Cover(t *testing.T) {
 		ID:   7628,
 		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
-	w1 := "/cover/7628/cover.jpg"
+	w1 := "/cover/7628/cover.gif"
 	d2 := TDocument{
 		ID:   6730,
 		path: calibreLibraryPath + "/John Scalzi/Zoe's Tale (6730)",
 	}
-	w2 := "/cover/6730/cover.jpg"
+	w2 := "/cover/6730/cover.gif"
 	tests := []struct {
 		name   string
 		fields TDocument
@@ -180,7 +180,7 @@ func TestTDocument_Filenames(t *testing.T) {
 	}
 } // TestTDocument_Filenames()
 
-func TestTDocument_Formats(t *testing.T) {
+func TestTDocument_Files(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
 	d1 := TDocument{
 		ID: 1,
@@ -196,7 +196,7 @@ func TestTDocument_Formats(t *testing.T) {
 		TEntity{
 			ID:   2,
 			Name: "PDF",
-			URL:  "/format/1/PDF",
+			URL:  "/file/1/PDF",
 		},
 	}
 	tests := []struct {
@@ -210,36 +210,9 @@ func TestTDocument_Formats(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			doc := &tt.fields
-			if got := doc.Formats(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TDocument.Formats() = %v,\nwant %v", got, tt.want)
+			if got := doc.Files(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TDocument.Files() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}
-} // TestTDocument_Formats()
-
-func TestTDocument_setPages(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre/")
-	d1 := TDocument{
-		path: "Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
-	}
-	d2 := TDocument{
-		path: "John Scalzi/Zoe's Tale (6730)",
-	}
-	tests := []struct {
-		name   string
-		fields TDocument
-		want   int
-	}{
-		// TODO: Add test cases.
-		{" 1", d1, 130},
-		{" 2", d2, 569},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			doc := &tt.fields
-			if got := doc.setPages(); got != tt.want {
-				t.Errorf("TDocument.setPages() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // TestTDocument_setPages()
+} // TestTDocument_Files()
