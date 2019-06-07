@@ -1,5 +1,5 @@
 {{- define "header" -}}
-<form method="post" action="/post{{.QOC}}" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<form method="post" action="/post" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
 <input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
 <header>
 {{- if .ShowForm -}}
@@ -12,10 +12,10 @@
 	<label for="limitlength">Show</label>
 	{{- end -}}
 	&nbsp;<select id="limitlength" name="limitlength" form="pageform">
-		{{ selectOption .LSO "10" }}10</option>
-		{{ selectOption .LSO "25" }}25</option>
-		{{ selectOption .LSO "50" }}50</option>
-		{{ selectOption .LSO "100" }}100</option>
+		{{ selectOption .SLL "10" }}10</option>
+		{{ selectOption .SLL "25" }}25</option>
+		{{ selectOption .SLL "50" }}50</option>
+		{{ selectOption .SLL "100" }}100</option>
 	</select> &nbsp;
 <!--
 	{{- if eq $lang "de" -}}
@@ -32,35 +32,35 @@
 	{{- end -}}
 	&nbsp;<select id="sortby" name="sortby" form="pageform">
 	{{- if eq $lang "de" -}}
-		{{ htmlSafe .SSO.author }}AutorIn</option>
-		{{ htmlSafe .SSO.rating }}Bewertung</option>
-		{{ htmlSafe .SSO.time }}Datum</option>
-		{{ htmlSafe .SSO.size }}Größe</option>
-		{{ htmlSafe .SSO.series }}Serie</option>
-		{{ htmlSafe .SSO.language }}Sprache</option>
-		{{ htmlSafe .SSO.tags }}Stichwörter</option>
-		{{ htmlSafe .SSO.title }}Titel</option>
-		{{ htmlSafe .SSO.publisher }}Verlag</option>
+		{{ htmlSafe .SSB.author }}AutorIn</option>
+		{{ htmlSafe .SSB.rating }}Bewertung</option>
+		{{ htmlSafe .SSB.time }}Datum</option>
+		{{ htmlSafe .SSB.size }}Größe</option>
+		{{ htmlSafe .SSB.series }}Serie</option>
+		{{ htmlSafe .SSB.language }}Sprache</option>
+		{{ htmlSafe .SSB.tags }}Stichwörter</option>
+		{{ htmlSafe .SSB.title }}Titel</option>
+		{{ htmlSafe .SSB.publisher }}Verlag</option>
 	{{- else -}}
-		{{ htmlSafe .SSO.author }}author</option>
-		{{ htmlSafe .SSO.time }}date</option>
-		{{ htmlSafe .SSO.language }}language</option>
-		{{ htmlSafe .SSO.publisher }}publisher</option>
-		{{ htmlSafe .SSO.rating }}rating</option>
-		{{ htmlSafe .SSO.series }}series</option>
-		{{ htmlSafe .SSO.size }}size</option>
-		{{ htmlSafe .SSO.tags }}tag</option>
-		{{ htmlSafe .SSO.title }}title</option>
+		{{ htmlSafe .SSB.author }}author</option>
+		{{ htmlSafe .SSB.time }}date</option>
+		{{ htmlSafe .SSB.language }}language</option>
+		{{ htmlSafe .SSB.publisher }}publisher</option>
+		{{ htmlSafe .SSB.rating }}rating</option>
+		{{ htmlSafe .SSB.series }}series</option>
+		{{ htmlSafe .SSB.size }}size</option>
+		{{ htmlSafe .SSB.tags }}tag</option>
+		{{ htmlSafe .SSB.title }}title</option>
 		tags</option>
 	{{- end -}}
 	</select> &nbsp;
 	<select id="order" name="order" form="pageform">
 	{{- if eq $lang "de" -}}
-		{{ htmlSafe .DSO.ascending }}aufsteigend</option>
-		{{ htmlSafe .DSO.descending }}absteigend</option>
+		{{ htmlSafe .SOO.ascending }}aufsteigend</option>
+		{{ htmlSafe .SOO.descending }}absteigend</option>
 	{{- else -}}
-		{{ htmlSafe .DSO.ascending }}ascending</option>
-		{{ htmlSafe .DSO.descending }}descending</option>
+		{{ htmlSafe .SOO.ascending }}ascending</option>
+		{{ htmlSafe .SOO.descending }}descending</option>
 	{{- end -}}
 	</select> &nbsp;
 	{{- if eq $lang "de" -}}

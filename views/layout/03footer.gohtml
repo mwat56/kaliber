@@ -1,27 +1,38 @@
 {{- define "footer" -}}
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
-{{- if $.HasNext -}}
-	<p class="next">
+<div id="prevnext">
+{{- if $.HasPrev -}}
+	<p id="prev">
 	{{- if eq $lang "de" -}}
-	<input class="next" form="pageform" id="next" name="next" type="submit" value="Nächste">
+	<input class="button" form="pageform" id="prev" name="prev" type="submit" value="Vorige">
 	{{- else -}}
-	<input class="next" form="pageform" id="next" name="next" type="submit" value="Next">
+	<input class="button" form="pageform" id="prev" name="prev" type="submit" value="Prev">
 	{{- end -}}
 	</p>
 {{- end -}}
+{{- if $.HasNext -}}
+	<p id="next">
+	{{- if eq $lang "de" -}}
+	<input class="button" form="pageform" id="next" name="next" type="submit" value="Nächste">
+	{{- else -}}
+	<input class="button" form="pageform" id="next" name="next" type="submit" value="Next">
+	{{- end -}}
+	</p>
+{{- end -}}
+</div>
 <footer><p><small>
 	{{- if eq $lang "de" -}}
 <img src="/img/favicon.ico" alt="*">
 – <a href="/">Startseite</a>
-– <a href="/impressum{{.QOC}}">Impressum</a>
-– <a href="/datenschutz{{.QOC}}">Datenschutz</a>
+– <a href="/impressum">Impressum</a>
+– <a href="/datenschutz">Datenschutz</a>
 – <img src="/img/favicon.ico" alt="*">
 	{{- else -}}
 <img src="/img/favicon.ico" alt="*">
-– <a href="/{{.QOC}}">Startpage</a>
-– <a href="/imprint{{.QOC}}">Imprint</a>
-– <a href="/privacy{{.QOC}}">Privacy</a>
+– <a href="/">Startpage</a>
+– <a href="/imprint">Imprint</a>
+– <a href="/privacy">Privacy</a>
 – <img src="/img/favicon.ico" alt="*">
 	{{- end -}}
 </small></p></footer>
