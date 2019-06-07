@@ -40,6 +40,7 @@ type (
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
 		SortBy      uint8  // display order of documents
+		QueryCount  uint   // number of DB records matching the query option
 	}
 )
 

@@ -154,6 +154,7 @@ func (ph *TPageHandler) basicTemplateData() *TemplateData {
 
 	return NewTemplateData().
 		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+ph.theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
+		Set("HasLast", false).
 		Set("HasNext", false).
 		Set("HasPrev", false).
 		Set("Lang", ph.lang).
@@ -188,6 +189,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			qo.ID = id
 		}
 		qo.Entity = path
+		if qc := CountBy(qo); 0 < qc {
+			qo.QueryCount = uint(qc)
+		} else {
+			qo.QueryCount = 0
+		}
 		ph.handleQuery(qo, aWriter, aRequest)
 
 	case "certs": // these files are handled internally
@@ -285,6 +291,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
+		if qc := CountBy(qo); 0 < qc {
+			qo.QueryCount = uint(qc)
+		} else {
+			qo.QueryCount = 0
+		}
 		ph.handleQuery(qo, aWriter, aRequest)
 
 	default:
@@ -303,6 +314,11 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		if qos := aRequest.FormValue("qos"); 0 < len(qos) {
 			qo.Scan(qos).Update(aRequest)
 		}
+		if qc := CountBy(qo); 0 < qc {
+			qo.QueryCount = uint(qc)
+		} else {
+			qo.QueryCount = 0
+		}
 
 		if search := aRequest.FormValue("search"); 0 < len(search) {
 			qo.DecLimit()
@@ -310,6 +326,12 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			qo.DecLimit().DecLimit()
 		} else if next := aRequest.FormValue("next"); 0 < len(next) {
 			//TODO
+		} else if last := aRequest.FormValue("last"); 0 < len(last) {
+			if ls := int(qo.QueryCount) - int(qo.LimitLength); 0 < ls {
+				qo.LimitStart = uint(ls)
+			} else {
+				qo.LimitStart = 0
+			}
 		}
 		ph.handleQuery(qo, aWriter, aRequest)
 
@@ -327,9 +349,17 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		//TODO better error handling
 		log.Printf("handleQuery() QeueryBy: %v\n", err)
 	}
+	BFirst := aOption.LimitStart + 1 // zero-based to one-based
+	BLast := BFirst + uint(len(*doclist)) - 1
+	BCount := aOption.QueryCount
+	hasLast := aOption.QueryCount > aOption.LimitStart+aOption.LimitLength
 	aOption.IncLimit()
 	pageData := ph.basicTemplateData().
+		Set("BFirst", BFirst).
+		Set("BLast", BLast).
+		Set("BCount", BCount).
 		Set("Documents", doclist).
+		Set("HasLast", hasLast).
 		Set("HasNext", true).
 		Set("HasPrev", aOption.LimitStart > aOption.LimitLength).
 		Set("QOC", aOption.CGI()).
@@ -338,6 +368,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("SOO", aOption.SelectOrderOptions()).
 		Set("SSB", aOption.SelectSortByOptions()).
 		Set("ShowForm", true)
+	// log.Printf("handleQuery: `%v`", pageData) //FIXME REMOVE
 	if err = ph.viewList.Render("index", aWriter, pageData); nil != err {
 		//TODO better error handling
 		log.Printf("handleQuery() Render: %v\n", err)

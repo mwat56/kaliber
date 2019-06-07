@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -148,6 +149,27 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 
 	return db.DB.Query(aQuery, args...)
 } // Query()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+const (
+	countQuery = `SELECT COUNT(b.id) FROM books b `
+)
+
+// CountBy returns the number of records matching `aOption`.
+func CountBy(aOption *TQueryOptions) int {
+	result := -1
+	rows, err := sqliteDatabase.Query(countQuery + havIng(aOption.Entity, aOption.ID))
+	if nil != err {
+		log.Printf("CountBy: `%v`", err) //FIXME REMOVE
+		return result
+	}
+	if rows.Next() {
+		rows.Scan(&result)
+	}
+
+	return result
+} // CountBy()
 
 // DBopen establishes a new database connection.
 //
@@ -449,7 +471,7 @@ func QueryDocMini(aID TID) *TDocument {
 	if nil != err {
 		return nil
 	}
-	for rows.Next() {
+	if rows.Next() {
 		var formats tCSVstring
 		doc := newDocument()
 		doc.ID = aID
