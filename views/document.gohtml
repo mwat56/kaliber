@@ -78,7 +78,7 @@
 		{{- range $i, $ident := $doc.Identifiers -}}
 			{{- $name := $ident.Name -}}
 			{{- $url := $ident.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
