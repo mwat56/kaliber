@@ -9,9 +9,11 @@ package kaliber
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3" // anonymous import
 )
@@ -96,27 +98,60 @@ var (
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-var (
-	// The active Database instance set by `DBopen()`.
-	sqliteDatabase *sql.DB
+type (
+	tDataBase struct {
+		*sql.DB                // the embedded database connection
+		fileName     string    // the SQLite database file
+		lastModified time.Time // modified time of SQLite database file
+	}
 )
 
-// DBopen returns a new database connection.
+var (
+	// The active `tDatabase` instance initialised by `DBopen()`.
+	// sqliteDatabase *sql.DB
+	sqliteDatabase tDataBase
+)
+
+// `fileTime()` checks whether the SQLite database file has changed
+// since the last access. If so, the current database connection is
+// closed and a new one is established.
 //
-// The returned DB is safe for concurrent use by multiple goroutines
-// and maintains its own pool of idle connections. Thus, the Open
-// function should be called just once. It is rarely necessary to
-// close a DB.
+func (db *tDataBase) fileTime() error {
+	fi, err := os.Stat(db.fileName)
+	if (nil != err) || (!db.lastModified.Before(fi.ModTime())) {
+		return nil
+	}
+	if nil != db.DB {
+		sqliteDatabase.DB.Close()
+	}
+	if sqliteDatabase.DB, err = sql.Open("sqlite3", db.fileName); nil != err {
+		return err
+	}
+	if err = db.DB.Ping(); nil != err {
+		return err
+	}
+	db.lastModified = fi.ModTime()
+
+	return nil
+} // fileTime()
+
+// Query executes a query that returns rows, typically a SELECT.
+// The `args` are for any placeholder parameters in the query.
+func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error) {
+	if err := db.fileTime(); nil != err {
+		return nil, err
+	}
+
+	return db.DB.Query(aQuery, args...)
+} // Query()
+
+// DBopen establishes a new database connection.
 //
 // `aFilename` is the path-/filename of the SQLite database
 func DBopen(aFilename string) error {
-	var err error
+	sqliteDatabase.fileName = aFilename
 
-	if sqliteDatabase, err = sql.Open("sqlite3", aFilename); nil != err {
-		return err
-	}
-
-	return sqliteDatabase.Ping()
+	return sqliteDatabase.fileTime()
 } // DBopen()
 
 // `docListQuery()` returns a list of documents.
