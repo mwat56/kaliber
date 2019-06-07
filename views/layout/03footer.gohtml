@@ -1,26 +1,12 @@
 {{- define "footer" -}}
+
+{{- if .ShowForm -}}
+	{{- template "naviline" . -}}
+{{- end -}}
+
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
-<div id="prevnext">
-{{- if $.HasPrev -}}
-	<p id="prev">
-	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" id="prev" name="prev" type="submit" value="Vorige">
-	{{- else -}}
-	<input class="button" form="pageform" id="prev" name="prev" type="submit" value="Prev">
-	{{- end -}}
-	</p>
-{{- end -}}
-{{- if $.HasNext -}}
-	<p id="next">
-	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" id="next" name="next" type="submit" value="Nächste">
-	{{- else -}}
-	<input class="button" form="pageform" id="next" name="next" type="submit" value="Next">
-	{{- end -}}
-	</p>
-{{- end -}}
-</div>
+
 <footer><p><small>
 	{{- if eq $lang "de" -}}
 <img src="/img/favicon.ico" alt="*">

@@ -262,24 +262,9 @@ img#logo {
 	max-height: 96px;
 	max-width: 96px;
 }
-p#next {
-	clear: right;
-	float: right;
-	text-align: right;
-}
-/*
-p#next a {
-	font-size: 89%;
-}
- */
-p#prev {
-	clear: left;
-	float: left;
-	text-align: left;
-}
-div#prevnext {
-	height: 2em;
-	width:100%;
+div#search_box {
+	border-radius: 0.5ex;
+	padding: 0.1ex 0 0.5ex 0;
 }
 a.button,
 img.button {
@@ -311,7 +296,7 @@ article.document h2 {
 }
 blockquote.comment {
 	margin: 1ex 0;
-	max-height: 12em;
+	max-height: 13em;
 	overflow: auto;
 }
 div.comment {
@@ -378,8 +363,29 @@ article.overview div.meta {
 table.meta tr td {
 	line-height: 1.6; /* to make room for the buttons */
 }
-p.next, input.next {
+div.naviline {
+	min-height: 2em;
+}
+p.naviline {
+	padding: 0.2ex 0 0.3ex 0;
+	letter-spacing: 0.3ex;
+	text-align: center;
+}
+table.prevnext {
+	margin: 0 auto;
+	width: 99%;
+}
+table.prevnext tr td {
+	width: 33%;
+}
+p.last, input.last {
 	text-align: right;
+}
+p.next, input.next {
+	text-align: center;
+}
+p.prev, input.prev {
+	text-align: left;
 }
 article.overview {
 	height: 20em;

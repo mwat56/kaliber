@@ -17,10 +17,9 @@ a:visited {
 article.overview {
 	border-bottom: thin solid #ccc;
 }
-article.even {
+article.even, div.naviline {
 	background: #201010;
 }
-
 article.overview:hover div.cover img.cover,
 article.overview div.cover:hover img.cover,
 article.overview div.cover img.cover:hover {
@@ -37,14 +36,15 @@ a:hover img.button {
 	background: #333 none;
 	color: #fff;
 }
-
-
 code, .code, kbd, pre, textarea {
 	background: #333;
 	color: #ccc;
 }
 del {
 	color: #999;
+}
+div#search_box {
+	border-bottom: thin solid #ffc;
 }
 dl dd {
 	background: #111100;
@@ -60,7 +60,7 @@ h3, h2, h1 {
 }
 header {
 	background: #111100;
-	border-bottom: thin solid #ccc;
+	border-bottom: thin solid #ffc;
 	color: #fff;
 }
 hr {

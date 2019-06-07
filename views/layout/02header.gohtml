@@ -11,12 +11,14 @@
 	{{- else -}}
 	<label for="limitlength">Show</label>
 	{{- end -}}
-	&nbsp;<select id="limitlength" name="limitlength" form="pageform">
+	&nbsp;
+	<select id="limitlength" name="limitlength" form="pageform">
 		{{ selectOption .SLL "10" }}10</option>
 		{{ selectOption .SLL "25" }}25</option>
 		{{ selectOption .SLL "50" }}50</option>
 		{{ selectOption .SLL "100" }}100</option>
-	</select> &nbsp;
+	</select>
+	&nbsp;
 <!--
 	{{- if eq $lang "de" -}}
 	<label for="matching">Bücher enthalten</label>
@@ -30,7 +32,8 @@
 	{{- else -}}
 	<label for="sortby">sorted by</label>
 	{{- end -}}
-	&nbsp;<select id="sortby" name="sortby" form="pageform">
+	&nbsp;
+	<select id="sortby" name="sortby" form="pageform">
 	{{- if eq $lang "de" -}}
 		{{ htmlSafe .SSB.author }}AutorIn</option>
 		{{ htmlSafe .SSB.rating }}Bewertung</option>
@@ -51,9 +54,15 @@
 		{{ htmlSafe .SSB.size }}size</option>
 		{{ htmlSafe .SSB.tags }}tag</option>
 		{{ htmlSafe .SSB.title }}title</option>
-		tags</option>
 	{{- end -}}
-	</select> &nbsp;
+	</select>
+	&nbsp;
+	{{- if eq $lang "de" -}}
+	<label for="order">Reihenfolge</label>
+	{{- else -}}
+	<label for="order">order</label>
+	{{- end -}}
+	&nbsp;
 	<select id="order" name="order" form="pageform">
 	{{- if eq $lang "de" -}}
 		{{ htmlSafe .SOO.ascending }}aufsteigend</option>
@@ -62,13 +71,17 @@
 		{{ htmlSafe .SOO.ascending }}ascending</option>
 		{{ htmlSafe .SOO.descending }}descending</option>
 	{{- end -}}
-	</select> &nbsp;
+	</select>
+	&nbsp;
 	{{- if eq $lang "de" -}}
 	<input id="search" name="search" type="submit" value="Suche" form="pageform">
 	{{- else -}}
 	<input id="search" name="search" type="submit" value="Search" form="pageform">
 	{{- end -}}
 </div>
+
+{{- template "naviline" . -}}
+
 {{- end -}}
 </header>
 {{- end -}}

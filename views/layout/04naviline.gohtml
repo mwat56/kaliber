@@ -1,0 +1,44 @@
+{{- define "naviline" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+<div class="naviline">
+
+{{- if eq $lang "de" -}}
+<p class="naviline">Bücher {{if .BFirst}}{{.BFirst}}{{end}} bis {{if .BLast}}{{.BLast}}{{end}} von {{if .BCount}}{{.BCount}}{{end}}</p>
+{{- else -}}
+<p class="naviline">Books {{if .BFirst}}{{.BFirst}}{{end}} to {{if .BLsst}}{{.BLast}}{{end}} of {{if .BCount}}{{.BCount}}{{end}}</p>
+{{- end -}}
+
+<table class="prevnext"><tr><td>
+{{- if $.HasPrev -}}
+	<p class="prev">
+	{{- if eq $lang "de" -}}
+	<input class="button" form="pageform" name="prev" type="submit" value="Vorige">
+	{{- else -}}
+	<input class="button" form="pageform" name="prev" type="submit" value="Prev">
+	{{- end -}}
+	</p>
+{{- end -}}
+</td><td>
+{{- if $.HasNext -}}
+	<p class="next">
+	{{- if eq $lang "de" -}}
+	<input class="button" form="pageform" name="next" type="submit" value="Nächste">
+	{{- else -}}
+	<input class="button" form="pageform" name="next" type="submit" value="Next">
+	{{- end -}}
+	</p>
+{{- end -}}
+</td><td>
+{{- if $.HasLast -}}
+	<p class="last">
+	{{- if eq $lang "de" -}}
+	<input class="button" form="pageform" name="last" type="submit" value="Letzte">
+	{{- else -}}
+	<input class="button" form="pageform" name="last" type="submit" value="last">
+	{{- end -}}
+	</p>
+{{- end -}}
+</td></tr></table>
+</div>
+{{- end -}}

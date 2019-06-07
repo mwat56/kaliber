@@ -18,16 +18,14 @@ a:visited {
 article.overview {
 	border-bottom: thin solid #ccc;
 }
-article.even {
+article.even, div.naviline {
 	background: #eeeeee;
 }
-
 article.overview:hover div.cover img.cover,
 article.overview div.cover:hover img.cover,
 article.overview div.cover img.cover:hover {
 	border: thick outset #666;
 }
-
 a.button,
 img.button {
 	background-color: #f9f0e0;
@@ -39,14 +37,15 @@ a:hover img.button {
 	background: #fefeff none;
 	color: #003;
 }
-
-
 code, .code, kbd, pre, textarea {
 	background: #ebebeb;
 	color: #333;
 }
 del {
 	color: #666;
+}
+div#search_box {
+	border-bottom: thin solid #ccc;
 }
 dl dd {
 	background: #f9f9f0;
