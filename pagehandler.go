@@ -109,8 +109,6 @@ func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 			return page
 		}
 
-	//TODO implement other status codes
-
 	default:
 		pageData = pageData.Set("Error", template.HTML(aData))
 		if page, err := ph.viewList.RenderedPage("error", pageData); nil == err {
@@ -157,6 +155,7 @@ func (ph *TPageHandler) basicTemplateData() *TemplateData {
 	return NewTemplateData().
 		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+ph.theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
 		Set("HasNext", false).
+		Set("HasPrev", false).
 		Set("Lang", ph.lang).
 		Set("LibraryName", ph.ln).
 		Set("Robots", "noindex,nofollow").
@@ -167,11 +166,15 @@ func (ph *TPageHandler) basicTemplateData() *TemplateData {
 
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
-	qo := getQueryOptions(aRequest) // in `queryoptions.go`
+	qo := NewQueryOptions() // in `queryoptions.go`
+	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
+		qo.UnCGI(qoc) // page GET
+	}
+
 	pageData := ph.basicTemplateData().
-		Set("DSO", qo.DescendSelectOptions()).
-		Set("LSO", qo.LimitSelectOptions()).
-		Set("SSO", qo.SortSelectOptions())
+		Set("SLL", qo.SelectLimitOptions()).
+		Set("SSB", qo.SelectSortByOptions()).
+		Set("SOO", qo.SelectOrderOptions())
 	path, tail := URLparts(aRequest.URL.Path)
 	// log.Printf("head: `%s`: tail: `%s`", path, tail) //FIXME REMOVE
 	switch path {
@@ -296,9 +299,17 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
 	case "post": // query options
-		qo := getQueryOptions(aRequest)
+		qo := NewQueryOptions()
+		if qos := aRequest.FormValue("qos"); 0 < len(qos) {
+			qo.Scan(qos).Update(aRequest)
+		}
+
 		if search := aRequest.FormValue("search"); 0 < len(search) {
 			qo.DecLimit()
+		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
+			qo.DecLimit().DecLimit()
+		} else if next := aRequest.FormValue("next"); 0 < len(next) {
+			//TODO
 		}
 		ph.handleQuery(qo, aWriter, aRequest)
 
@@ -310,26 +321,26 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleQuery()` serves the logical web-root directory.
-func (ph *TPageHandler) handleQuery(aQueryOption *TQueryOptions, aWriter http.ResponseWriter, aRequest *http.Request) {
-	doclist, err := QueryBy(aQueryOption)
+func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.ResponseWriter, aRequest *http.Request) {
+	doclist, err := QueryBy(aOption)
 	if nil != err {
 		//TODO better error handling
 		log.Printf("handleQuery() QeueryBy: %v\n", err)
 	}
-	aQueryOption.IncLimit()
+	aOption.IncLimit()
 	pageData := ph.basicTemplateData().
 		Set("Documents", doclist).
 		Set("HasNext", true).
-		Set("QOC", aQueryOption.CGI()).
-		Set("QOS", aQueryOption.String()).
-		Set("DSO", aQueryOption.DescendSelectOptions()).
-		Set("LSO", aQueryOption.LimitSelectOptions()).
-		Set("SSO", aQueryOption.SortSelectOptions()).
+		Set("HasPrev", aOption.LimitStart > aOption.LimitLength).
+		Set("QOC", aOption.CGI()).
+		Set("QOS", aOption.String()).
+		Set("SLL", aOption.SelectLimitOptions()).
+		Set("SOO", aOption.SelectOrderOptions()).
+		Set("SSB", aOption.SelectSortByOptions()).
 		Set("ShowForm", true)
-	err = ph.viewList.Render("index", aWriter, pageData)
-	if nil != err {
+	if err = ph.viewList.Render("index", aWriter, pageData); nil != err {
 		//TODO better error handling
-		log.Printf("handleRoot() Render: %v\n", err)
+		log.Printf("handleQuery() Render: %v\n", err)
 	}
 } // handleQuery()
 
