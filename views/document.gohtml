@@ -106,15 +106,25 @@
 		</td>
 	</tr>
 	{{- end -}}
+	{{- if $doc.Files -}}
+	<tr>
+		<td class="label">Downloads:</td><td>
+		{{- range $i, $file := $doc.Files -}}
+			{{- $name := $file.Name -}}
+			{{- $url := $file.URL -}}
+		<a class="button" title="download {{$name}}" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+		{{- end -}}
+		</td>
+	</tr>
+	{{- end -}}
+
 
 	<!-- TODO integrate custom columns -->
 
 	{{- if $doc.Comment -}}
-	<tr>
-		<td colspan="2"><div class="comment">
+	<tr><td colspan="2"><div class="comment">
 		{{- $doc.Comment -}}
-		</div></td>
-	</tr>
+	</div></td></tr>
 	{{- end -}}
 
 	</table>
