@@ -20,6 +20,23 @@ import (
 	"regexp"
 )
 
+var (
+	// RegEx to HREF= tag attributes
+	hrefRE = regexp.MustCompile(` (href="http)`)
+)
+
+const (
+	// replacement text for `hrefRE`
+	hrefReplace = ` target="_extern" $1`
+)
+
+// `addExternURLtagets()` adds a TARGET attribute to HREFs.
+func addExternURLtagets(aPage []byte) []byte {
+	return hrefRE.ReplaceAll(aPage, []byte(hrefReplace))
+} // addExternURLtagets()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 // `htmlSafe()` returns `aText` as template.HTML.
 func htmlSafe(aText string) template.HTML {
 	return template.HTML(aText)
@@ -89,8 +106,8 @@ func (v *TView) render(aWriter io.Writer, aData *TemplateData) (rErr error) {
 	if page, rErr = v.RenderedPage(aData); nil != rErr {
 		return
 	}
-	// _, rErr = aWriter.Write(RemoveWhiteSpace(page))
-	_, rErr = aWriter.Write(page)
+	// _, rErr = aWriter.Write(addExternURLtagets(RemoveWhiteSpace(page)))
+	_, rErr = aWriter.Write(addExternURLtagets(page))
 
 	return
 } // render()
