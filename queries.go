@@ -127,7 +127,8 @@ func (db *tDataBase) fileTime() error {
 	if nil != db.DB {
 		sqliteDatabase.DB.Close()
 	}
-	if sqliteDatabase.DB, err = sql.Open("sqlite3", db.fileName); nil != err {
+	dsn := `file:` + db.fileName + `?mode=ro`
+	if sqliteDatabase.DB, err = sql.Open("sqlite3", dsn); nil != err {
 		return err
 	}
 	if err = db.DB.Ping(); nil != err {
