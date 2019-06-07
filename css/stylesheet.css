@@ -161,6 +161,7 @@ select, select option {
 	border-width: thin;
 	font-size: 89%;
 	font-weight: 600;
+	hyphens: none;
 	padding: 0.2ex 0.6ex 0.3ex 0.6ex;
 	vertical-align: baseline;
 }
@@ -262,16 +263,29 @@ img#logo {
 	max-width: 96px;
 }
 p#next {
+	clear: right;
+	float: right;
 	text-align: right;
 }
+/*
 p#next a {
 	font-size: 89%;
 }
-
+ */
+p#prev {
+	clear: left;
+	float: left;
+	text-align: left;
+}
+div#prevnext {
+	height: 2em;
+	width:100%;
+}
 a.button,
 img.button {
 	cursor: pointer;
 	font-size: 89%;
+	hyphens: none;
 	margin: 0 0.5ex;
 	padding: 0 0.5ex 0.2ex 0.5ex;
 	text-align: center;
