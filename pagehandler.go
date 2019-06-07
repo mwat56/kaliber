@@ -176,7 +176,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	// log.Printf("head: `%s`: tail: `%s`", path, tail) //FIXME REMOVE
 	switch path {
 
-	case "all", "author", "lang", "publisher", "series", "tag":
+	case "all", "author", "format", "lang", "publisher", "series", "tag":
 		var (
 			id    TID
 			dummy string
@@ -185,7 +185,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			qo.ID = id
 		}
 		qo.Entity = path
-		ph.handleRoot(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter, aRequest)
 
 	case "certs": // these files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
@@ -237,16 +237,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
 	case "file":
-
-		//FIXME TODO
-
-	case "fonts":
-		ph.sfs.ServeHTTP(aWriter, aRequest)
-
-	case "format":
-		/*FIXME
-		this URL should return all books of a FORMAT
-		*/
 		var (
 			id     TID
 			format string
@@ -270,6 +260,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		aRequest.URL.Path = file
 		ph.dfs.ServeHTTP(aWriter, aRequest)
 
+	case "fonts":
+		ph.sfs.ServeHTTP(aWriter, aRequest)
+
 	case "img":
 		ph.sfs.ServeHTTP(aWriter, aRequest)
 
@@ -280,7 +273,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.viewList.Render("licence", aWriter, pageData)
 
 	case "post":
-		ph.handleRoot(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter, aRequest)
 
 	case "privacy", "datenschutz":
 		ph.viewList.Render("privacy", aWriter, pageData)
@@ -289,7 +282,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
-		ph.handleRoot(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter, aRequest)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -304,18 +297,10 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 	switch path {
 	case "post": // query options
 		qo := getQueryOptions(aRequest)
-
-		if next := aRequest.FormValue("next"); 0 < len(next) {
-			switch qo.Entity { // we're following an established query
-			case "author", "lang", "publisher", "series", "tag":
-				http.Redirect(aWriter, aRequest, "/"+qo.Entity, http.StatusSeeOther)
-				return
-			}
-		}
-		if search := aRequest.FormValue("next"); 0 < len(search) {
+		if search := aRequest.FormValue("search"); 0 < len(search) {
 			qo.DecLimit()
 		}
-		ph.handleRoot(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter, aRequest)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -324,12 +309,12 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 	}
 } // handlePOST()
 
-// `handleRoot()` serves the logical web-root directory.
-func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aWriter http.ResponseWriter, aRequest *http.Request) {
+// `handleQuery()` serves the logical web-root directory.
+func (ph *TPageHandler) handleQuery(aQueryOption *TQueryOptions, aWriter http.ResponseWriter, aRequest *http.Request) {
 	doclist, err := QueryBy(aQueryOption)
 	if nil != err {
 		//TODO better error handling
-		log.Printf("handleRoot() QeueryBy: %v\n", err)
+		log.Printf("handleQuery() QeueryBy: %v\n", err)
 	}
 	aQueryOption.IncLimit()
 	pageData := ph.basicTemplateData().
@@ -346,8 +331,7 @@ func (ph *TPageHandler) handleRoot(aQueryOption *TQueryOptions, aWriter http.Res
 		//TODO better error handling
 		log.Printf("handleRoot() Render: %v\n", err)
 	}
-	// log.Printf("handleRoot()\n") //FIXME REMOVE
-} // handleRoot()
+} // handleQuery()
 
 // `handleSearch()` serves the search results.
 func (ph *TPageHandler) handleSearch(aTerm string, aData *TemplateData, aWriter http.ResponseWriter, aRequest *http.Request) {
