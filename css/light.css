@@ -13,7 +13,35 @@ a:hover {
 a:visited {
 	color: #300;
 }
-code, .code, kbd, pre, textarea, tt, xmp {
+
+
+article.overview {
+	border-bottom: thin solid #ccc;
+}
+article.even {
+	background: #eeeeee;
+}
+
+article.overview:hover div.cover img.cover,
+article.overview div.cover:hover img.cover,
+article.overview div.cover img.cover:hover {
+	border: thick outset #666;
+}
+
+a.button,
+img.button {
+	background-color: #f9f0e0;
+	border: thin outset #333;
+	color: #000;
+}
+a.button:hover,
+a:hover img.button {
+	background: #fefeff none;
+	color: #003;
+}
+
+
+code, .code, kbd, pre, textarea {
 	background: #ebebeb;
 	color: #333;
 }
@@ -22,15 +50,6 @@ del {
 }
 dl dd {
 	background: #f9f9f0;
-}
-dl.posting dd {
-	border: thin inset #960;
-	border-left: 0;
-	border-right: 0;
-}
-dl.posting dd blockquote {
-	background: #f6f6ec;
-	border: thin solid #f0f0e0;
 }
 footer {
 	border-top: thin solid #333;
@@ -50,22 +69,18 @@ hr {
 	border-color: #ccc;
 	color: #ccc;
 }
-pre, xmp {
+input[type="reset"], input[type="submit"],
+select {
+	background: #ccc;
+	color: #000;
+}
+input[type="reset"]:hover, input[type="submit"]:hover,
+select:hover {
+	border-style: inset;
+	background: #fff;
+}
+pre {
 	border-left: thick solid #999;
 }
-p.matches {
-	background: #ebebeb;
-	border: thin solid #ccc;
-}
-p#next a {
-	border-bottom: thin dotted #03c;
-}
-a.tc5, a.tc25, a.tc50, a.tc99 {
-	background: #036;
-	border: 0.3ex outset #69c;
-	color: #ffe;
-}
-a.tc5:hover, a.tc25:hover, a.tc50:hover, a.tc99:hover {
-	border: 0.3ex inset #69c;
-}
+
 /* _EoF_ */
