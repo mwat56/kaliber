@@ -7,6 +7,7 @@
 package kaliber
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -47,7 +48,8 @@ type (
 // CGI returns the object's query escaped string representation
 // fit for use as the `qos` CGI argument.
 func (qo *TQueryOptions) CGI() string {
-	return `?qo="` + url.QueryEscape(qo.String()) + `"`
+	return `?qo="` + base64.StdEncoding.EncodeToString([]byte(qo.String())) + `"`
+	// return `?qo="` + url.QueryEscape(qo.String()) + `"`
 } // CGI()
 
 // DecLimit decrements the LIMIT values.
@@ -146,6 +148,9 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 //
 // If there are errors during unescaping the current values remain unchanged.
 func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
+	if qosu, err := base64.StdEncoding.DecodeString(aCGI); nil == err {
+		return qo.Scan(string(qosu))
+	}
 	if qosu, err := url.QueryUnescape(aCGI); nil == err {
 		return qo.Scan(qosu)
 	}

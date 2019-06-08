@@ -7,7 +7,7 @@
 package kaliber
 
 import (
-	"net/url"
+	"encoding/base64"
 	"reflect"
 	"testing"
 )
@@ -22,7 +22,8 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		Matching:    "",
 		SortBy:      SortByAuthor,
 	}
-	w1 := `?qo="` + url.QueryEscape(`|3524|true|"author"|25|0|""|1|`) + `"`
+	// w1 := `?qo="` + url.QueryEscape(`|3524|true|"author"|25|0|""|1|`) + `"`
+	w1 := `?qo="` + base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|25|0|""|1|`)) + `"`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -32,7 +33,8 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		Matching:    "",
 		SortBy:      SortByLanguage,
 	}
-	w2 := `?qo="` + url.QueryEscape(`|1|false|"lang"|50|0|""|2|`) + `"`
+	// w2 := `?qo="` + url.QueryEscape(`|1|false|"lang"|50|0|""|2|`) + `"`
+	w2 := `?qo="` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|50|0|""|2|`)) + `"`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -188,7 +190,8 @@ func TestTQueryOptions_String(t *testing.T) {
 
 func TestTQueryOptions_UnCGI(t *testing.T) {
 	o1 := NewQueryOptions()
-	c1 := url.QueryEscape(`|3524|true|"author"|50|0|""|1|`)
+	// c1 := url.QueryEscape(`|3524|true|"author"|50|0|""|1|`)
+	c1 := base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|50|0|""|1|`))
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
@@ -198,7 +201,8 @@ func TestTQueryOptions_UnCGI(t *testing.T) {
 		Matching:    "",
 		SortBy:      SortByAuthor,
 	}
-	c2 := url.QueryEscape(`|1|false|"lang"|25|0|""|2|`)
+	// c2 := url.QueryEscape(`|1|false|"lang"|25|0|""|2|`)
+	c2 := base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|25|0|""|2|`))
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
