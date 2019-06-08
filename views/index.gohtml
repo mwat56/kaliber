@@ -11,7 +11,7 @@
 	{{- $class = "odd" -}}
 	{{- $row = 0 -}}
 {{- else -}}
-	{{- $class = " even" -}}
+	{{- $class = "even" -}}
 	{{- $row = 1 -}}
 {{- end -}}
 <article class="overview {{$class}}">
@@ -22,11 +22,11 @@
 		<p><strong>{{$doc.Title}}</strong>
 
 		{{- if $doc.Authors -}}
-			&nbsp; by &nbsp;
+			<br>by &nbsp;
 			{{- range $i, $author := $doc.Authors -}}
 				{{- $name := $author.Name -}}
 				{{- $url := $author.URL -}}
-				<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+				<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &nbsp;
 			{{- end -}}
 		{{- end -}}
 		</p>
@@ -35,24 +35,24 @@
 			{{- $series := $doc.Series -}}
 			{{- $name := $series.Name -}}
 			{{- $url := $series.URL -}}
-			<p><em>{{$doc.SeriesIndex}}</em> of <em><a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a></em>
+			<p><em>{{$doc.SeriesIndex}}</em> of <em><a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a></em>
 			</p>
 		{{- end -}}
 
 		{{- if $doc.Tags -}}
-		<p><small>{{range $i, $tag := $doc.Tags -}}
+		<p>{{range $i, $tag := $doc.Tags -}}
 			{{- $name := $tag.Name -}}
 			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a>, &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
 			{{- end -}}
-		</small></p>
+		</p>
 		{{- end -}}
 
 		{{- if $doc.Files -}}
 			{{- range $i, $file := $doc.Files -}}
 				{{- $name := $file.Name -}}
 				{{- $url := $file.URL -}}
-				<a class="button" title="download {{$name}} file" href="{{$url}}" target="_extern">{{$name}}</a> &nbsp;
+				<a class="button" href="{{$url}}" target="_extern" title="download {{$name}} file">{{$name}}</a>&nbsp;
 			{{- end -}}
 		{{- end -}}
 
@@ -62,7 +62,7 @@
 			{{- $name := $pub.Name -}}
 			{{- $url := $pub.URL -}}
 			<em>by</em> &nbsp;
-			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a>
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
 			</p>
 		{{- end -}}
 

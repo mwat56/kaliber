@@ -4,7 +4,7 @@
 <div class="naviline">
 
 {{- if eq $lang "de" -}}
-<p class="naviline">Bücher {{if .BFirst}}{{.BFirst}}{{end}} bis {{if .BLast}}{{.BLast}}{{end}} von {{if .BCount}}{{.BCount}}{{end}}</p>
+<p class="naviline">Bücher &nbsp; {{if .BFirst}}<strong>{{.BFirst}}</strong>{{end}} &nbsp; bis &nbsp; {{if .BLast}}<strong>{{.BLast}}</strong>{{end}} &nbsp; von &nbsp; {{if .BCount}}<strong>{{.BCount}}</strong>{{end}}</p>
 {{- else -}}
 <p class="naviline">Books {{if .BFirst}}{{.BFirst}}{{end}} to {{if .BLsst}}{{.BLast}}{{end}} of {{if .BCount}}{{.BCount}}{{end}}</p>
 {{- end -}}

@@ -15,19 +15,19 @@
 		{{- range $i, $author := $doc.Authors -}}
 			{{- $name := $author.Name -}}
 			{{- $url := $author.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &nbsp;
 		{{- end -}}
 		</td>
 	</tr>
 	{{- end -}}
 
-	{{- if $doc.Formats -}}
+	{{- if $doc.Files -}}
 	<tr>
-		<td class="label">Formats:</td><td>
-		{{- range $i, $format := $doc.Formats -}}
-			{{- $name := $format.Name -}}
-			{{- $url := $format.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+		<td class="label">Downloads:</td><td>
+		{{- range $i, $file := $doc.Files -}}
+			{{- $name := $file.Name -}}
+			{{- $url := $file.URL -}}
+		<a class="button" title="download {{$name}}" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -39,7 +39,7 @@
 		{{- $series := $doc.Series -}}
 		{{- $name := $series.Name -}}
 		{{- $url := $series.URL -}}
-		<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &nbsp;
 		{{- $doc.SeriesIndex -}} &nbsp;
 		</td>
 	</tr>
@@ -51,7 +51,7 @@
 		{{- $pub := $doc.Publisher -}}
 		{{- $name := $pub.Name -}}
 		{{- $url := $pub.URL -}}
-		<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
 		</td>
 	</tr>
 	{{- end -}}
@@ -78,7 +78,7 @@
 		{{- range $i, $ident := $doc.Identifiers -}}
 			{{- $name := $ident.Name -}}
 			{{- $url := $ident.URL -}}
-			<a class="button" href="{{$url}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a>&nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -90,7 +90,7 @@
 		{{- range $i, $tag := $doc.Tags -}}
 			{{- $name := $tag.Name -}}
 			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
 		{{- end -}}
 		</td>
 	</tr>
@@ -102,22 +102,22 @@
 		{{- $lang := $doc.Language -}}
 		{{- $name := $lang.Name -}}
 		{{- $url := $lang.URL -}}
-		<a class="button" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
-		</td>
-	</tr>
-	{{- end -}}
-	{{- if $doc.Files -}}
-	<tr>
-		<td class="label">Downloads:</td><td>
-		{{- range $i, $file := $doc.Files -}}
-			{{- $name := $file.Name -}}
-			{{- $url := $file.URL -}}
-		<a class="button" title="download {{$name}}" href="{{$url}}{{$qoc}}">{{$name}}</a> &nbsp;
-		{{- end -}}
+		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
 		</td>
 	</tr>
 	{{- end -}}
 
+	{{- if $doc.Formats -}}
+	<tr>
+		<td class="label">Formats:</td><td>
+		{{- range $i, $format := $doc.Formats -}}
+			{{- $name := $format.Name -}}
+			{{- $url := $format.URL -}}
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
+		{{- end -}}
+		</td>
+	</tr>
+	{{- end -}}
 
 	<!-- TODO integrate custom columns -->
 
@@ -130,7 +130,7 @@
 	</table>
 </div>
 <div class="cover">
-	<p class="cover"><img alt="" class="cover" src="{{$doc.Cover}}"></p>
+	<p class="cover"><img alt="Cover" class="cover" src="{{$doc.Cover}}"></p>
 </div>
 </article>
 {{- end -}}

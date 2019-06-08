@@ -81,12 +81,15 @@ em, .em, i, .italic {
 	color: inherit;
 	font-style: italic;
 }
-footer {
+footer, header {
 	border-radius: 1ex;
 	clear: both;
-	margin: 1em 0 0 0;
+	padding: 1ex 0.5ex 0.5ex 0;
 }
-footer, footer p {
+footer {
+	margin: 1em 0 1ex 0;
+}
+footer p {
 	text-align: right;
 }
 h1, h2, h3, h4, h5, h6 {
@@ -130,10 +133,7 @@ h1+h2, h2+h3, h3+h4, h4+h5, h5+h6 {
 }
 */
 header {
-	border-radius: 1ex;
-	margin: 0 1ex 1em 0;
-	padding: 0 0 1ex 0;
-	text-align: right;
+	margin: 0 0 1em 0;
 }
 hr {
 	border-style: inset;
@@ -263,8 +263,8 @@ img#logo {
 	max-width: 96px;
 }
 div#search_box {
-	border-radius: 0.5ex;
-	padding: 0.1ex 0 0.5ex 0;
+	padding: 0.1ex 0 1ex 0;
+	text-align: right;
 }
 a.button,
 img.button {
@@ -276,6 +276,7 @@ img.button {
 	text-align: center;
 	text-decoration: none;
 	vertical-align: baseline;
+	white-space: nowrap;
 }
 a.button:hover,
 a:hover img.button {
@@ -296,7 +297,7 @@ article.document h2 {
 }
 blockquote.comment {
 	margin: 1ex 0;
-	max-height: 13em;
+	max-height: 11em;
 	overflow: auto;
 }
 div.comment {
@@ -310,7 +311,7 @@ div.cover {
 }
 div.cover p {
 	margin: 0;
-	padding: 0;
+	padding: 1ex 0 0 0;
 	text-indent: 0;
 }
 div.cover img.cover {
@@ -319,6 +320,17 @@ div.cover img.cover {
 }
 article.document div.cover {
 	width: 43%;
+}
+article.overview {
+	height: 21em;
+	overflow: hidden;
+	width: 100ex;
+}
+article.overview {
+	border-radius: 1ex;
+	border: thin solid transparent;
+	margin: 0 0 1ex 0;
+	padding: 0 0 1ex 0;
 }
 article.overview div.cover {
 	width: 20%;
@@ -340,13 +352,8 @@ td.label {
 .left {
 	text-align: left;
 }
-p.matches {
-	border-radius: 1ex;
-	clear: left;
-	float: left;
-	font-style: italic;
-	margin: -1.3ex 0 0 0;
-	padding: 0.5ex 1ex 0.5ex 1ex;
+p.mainlinks {
+	margin: 1ex 0 0 0;
 }
 div.meta {
 	display: inline-block;
@@ -360,8 +367,13 @@ article.overview div.meta {
 	max-height: 38ex;
 	width: 78%;
 }
+article.overview div.meta p,
 table.meta tr td {
-	line-height: 1.6; /* to make room for the buttons */
+	line-height: 1.8; /* to make room for the buttons */
+}
+article.overview blockquote.comment,
+article.overview blockquote.comment p {
+	line-height: 1.3;
 }
 div.naviline {
 	min-height: 2em;
@@ -386,11 +398,6 @@ p.next, input.next {
 }
 p.prev, input.prev {
 	text-align: left;
-}
-article.overview {
-	height: 20em;
-	overflow: hidden;
-	width: 100ex;
 }
 .right {
 	text-align: right;

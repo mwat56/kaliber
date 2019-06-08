@@ -13,17 +13,18 @@ a:hover {
 a:visited {
 	color: #f30;
 }
-
-article.overview {
-	border-bottom: thin solid #ccc;
+article.document div.cover img.cover {
+	border: thick inset #330;
 }
-article.even, div.naviline {
+article.even, footer, header {
 	background: #201010;
 }
 article.overview:hover div.cover img.cover,
-article.overview div.cover:hover img.cover,
-article.overview div.cover img.cover:hover {
+article.overview div.cover:hover img.cover {
 	border: thick outset #999;
+}
+article.overview div.cover img.cover:hover {
+	border: thick inset #999;
 }
 a.button,
 img.button {
@@ -49,8 +50,11 @@ div#search_box {
 dl dd {
 	background: #111100;
 }
-footer {
-	border-top: thin solid #ccc;
+footer, header {
+	border-top: thin solid #ffc;
+	border-right: 0;
+	border-bottom: thin solid #ffc;
+	border-left: 0;
 }
 h1, h2, h3, h4, h5, h6 {
 	color: #ffeedd;
@@ -59,8 +63,6 @@ h3, h2, h1 {
 	text-shadow: -0.1ex -0.1ex 0.1ex #fff;
 }
 header {
-	background: #111100;
-	border-bottom: thin solid #ffc;
 	color: #fff;
 }
 hr {
@@ -71,6 +73,9 @@ input[type="reset"], input[type="submit"],
 select, select option {
 	background: #333;
 	color: #fff;
+}
+p.mainlinks {
+	border-top: thin solid #ffc;
 }
 pre {
 	border-left: thick solid #666;

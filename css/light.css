@@ -13,18 +13,18 @@ a:hover {
 a:visited {
 	color: #300;
 }
-
-
-article.overview {
-	border-bottom: thin solid #ccc;
+article.document div.cover img.cover {
+	border: thick inset #699;
 }
-article.even, div.naviline {
+article.even, footer, header {
 	background: #eeeeee;
 }
 article.overview:hover div.cover img.cover,
-article.overview div.cover:hover img.cover,
-article.overview div.cover img.cover:hover {
+article.overview div.cover:hover img.cover {
 	border: thick outset #666;
+}
+article.overview div.cover img.cover:hover {
+	border: thick inset #666;
 }
 a.button,
 img.button {
@@ -44,14 +44,19 @@ code, .code, kbd, pre, textarea {
 del {
 	color: #666;
 }
+
 div#search_box {
-	border-bottom: thin solid #ccc;
+	border-bottom: thin solid #333;
 }
+
 dl dd {
 	background: #f9f9f0;
 }
-footer {
+footer, header {
 	border-top: thin solid #333;
+	border-right: 0;
+	border-bottom: thin solid #333;
+	border-left: 0;
 }
 h1, h2, h3, h4, h5, h6 {
 	color: #033;
@@ -60,8 +65,6 @@ h3, h2, h1 {
 	text-shadow: -0.1ex -0.1ex 0.1ex #666;
 }
 header {
-	background: #f9f9f6;
-	border-bottom: thin solid #ccc;
 	color: #000;
 }
 hr {
@@ -77,6 +80,9 @@ input[type="reset"]:hover, input[type="submit"]:hover,
 select:hover {
 	border-style: inset;
 	background: #fff;
+}
+p.mainlinks {
+	border-top: thin solid #333;
 }
 pre {
 	border-left: thick solid #999;

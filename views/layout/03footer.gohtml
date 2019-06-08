@@ -1,13 +1,12 @@
 {{- define "footer" -}}
-
-{{- if .ShowForm -}}
-	{{- template "naviline" . -}}
-{{- end -}}
-
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
 
-<footer><p><small>
+<footer>
+{{- if .ShowForm -}}
+	{{- template "naviline" . -}}
+{{- end -}}
+<p class="mainlinks"><small>
 	{{- if eq $lang "de" -}}
 <img src="/img/favicon.ico" alt="*">
 – <a href="/">Startseite</a>
