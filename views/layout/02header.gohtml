@@ -25,7 +25,7 @@
 	{{- else -}}
 	<label for="matching">books matching</label>
 	{{- end -}}
-	&nbsp;<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" name="search" form="pageform">
+	&nbsp;<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform">
 	&nbsp;
 
 	{{- if eq $lang "de" -}}
