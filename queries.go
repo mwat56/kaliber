@@ -10,7 +10,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -155,21 +154,6 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 const (
 	countQuery = `SELECT COUNT(b.id) FROM books b `
 )
-
-// CountBy returns the number of records matching `aOption`.
-func CountBy(aOption *TQueryOptions) int {
-	result := -1
-	rows, err := sqliteDatabase.Query(countQuery + havIng(aOption.Entity, aOption.ID))
-	if nil != err {
-		log.Printf("CountBy: `%v`", err) //FIXME REMOVE
-		return result
-	}
-	if rows.Next() {
-		rows.Scan(&result)
-	}
-
-	return result
-} // CountBy()
 
 // DBopen establishes a new database connection.
 //
@@ -444,11 +428,21 @@ func prepTags(aTag tCSVstring) *tTagList {
 } // prepTags()
 
 // QueryBy returns all documents according to `aOption`.
-func QueryBy(aOption *TQueryOptions) (*TDocList, error) {
-	return docListQuery(baseQueryString +
-		havIng(aOption.Entity, aOption.ID) +
-		orderBy(aOption.SortBy, aOption.Descending) +
-		limit(aOption.LimitStart, aOption.LimitLength))
+func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+	if rows, err := sqliteDatabase.Query(countQuery +
+		havIng(aOption.Entity, aOption.ID)); nil == err {
+		if rows.Next() {
+			rows.Scan(&rCount)
+		}
+	}
+	if 0 < rCount {
+		rList, rErr = docListQuery(baseQueryString +
+			havIng(aOption.Entity, aOption.ID) +
+			orderBy(aOption.SortBy, aOption.Descending) +
+			limit(aOption.LimitStart, aOption.LimitLength))
+	}
+
+	return
 } // QueryBy()
 
 const (
@@ -501,5 +495,23 @@ func QueryDocument(aID TID) *TDocument {
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
 	return docListQuery(baseQueryString + limit(aStart, aLength))
 } // QueryLimit()
+
+// QuerySearch returns a list of documents
+func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+	where := NewSearch(aOption.Matching)
+	if rows, err := sqliteDatabase.Query(countQuery + where.Clause()); nil == err {
+		if rows.Next() {
+			rows.Scan(&rCount)
+		}
+	}
+	if 0 < rCount {
+		rList, rErr = docListQuery(baseQueryString +
+			where.Clause() +
+			orderBy(aOption.SortBy, aOption.Descending) +
+			limit(aOption.LimitStart, aOption.LimitLength))
+	}
+
+	return
+} // QuerySearch()
 
 /* _EoF_ */

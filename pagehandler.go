@@ -189,12 +189,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			qo.ID = id
 		}
 		qo.Entity = path
-		if qc := CountBy(qo); 0 < qc {
-			qo.QueryCount = uint(qc)
-		} else {
-			qo.QueryCount = 0
-		}
-		ph.handleQuery(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter)
 
 	case "certs": // these files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
@@ -282,7 +277,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.viewList.Render("licence", aWriter, pageData)
 
 	case "post":
-		ph.handleQuery(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter)
 
 	case "privacy", "datenschutz":
 		ph.viewList.Render("privacy", aWriter, pageData)
@@ -291,12 +286,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
-		if qc := CountBy(qo); 0 < qc {
-			qo.QueryCount = uint(qc)
-		} else {
-			qo.QueryCount = 0
-		}
-		ph.handleQuery(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -309,23 +299,19 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.Request) {
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
-	case "post": // query options
+	case "": // theonly POST destination
 		qo := NewQueryOptions()
 		if qos := aRequest.FormValue("qos"); 0 < len(qos) {
 			qo.Scan(qos).Update(aRequest)
 		}
-		if qc := CountBy(qo); 0 < qc {
-			qo.QueryCount = uint(qc)
-		} else {
-			qo.QueryCount = 0
-		}
 
+		// check which of the four possible SUBMIT buttons was activated
 		if search := aRequest.FormValue("search"); 0 < len(search) {
 			qo.DecLimit()
 		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
 			qo.DecLimit().DecLimit()
 		} else if next := aRequest.FormValue("next"); 0 < len(next) {
-			//TODO
+			next = "" // nothing to do here
 		} else if last := aRequest.FormValue("last"); 0 < len(last) {
 			if ls := int(qo.QueryCount) - int(qo.LimitLength); 0 < ls {
 				qo.LimitStart = uint(ls)
@@ -333,7 +319,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 				qo.LimitStart = 0
 			}
 		}
-		ph.handleQuery(qo, aWriter, aRequest)
+		ph.handleQuery(qo, aWriter)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -343,16 +329,31 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleQuery()` serves the logical web-root directory.
-func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.ResponseWriter, aRequest *http.Request) {
-	doclist, err := QueryBy(aOption)
+func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.ResponseWriter) {
+	var (
+		count   int
+		doclist *TDocList
+		err     error
+	)
+	if 0 < len(aOption.Matching) {
+		count, doclist, err = QuerySearch(aOption)
+	} else {
+		count, doclist, err = QueryBy(aOption)
+	}
 	if nil != err {
 		//TODO better error handling
-		log.Printf("handleQuery() QeueryBy: %v\n", err)
+		log.Printf("handleQuery() QeueryBy/QuerySearch: %v\n", err)
+	}
+	if 0 < count {
+		aOption.QueryCount = uint(count)
+	} else {
+		aOption.QueryCount = 0
 	}
 	BFirst := aOption.LimitStart + 1 // zero-based to one-based
 	BLast := BFirst + uint(len(*doclist)) - 1
 	BCount := aOption.QueryCount
-	hasLast := aOption.QueryCount > aOption.LimitStart+aOption.LimitLength
+	hasLast := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength + 1)
+	hasNext := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength)
 	aOption.IncLimit()
 	pageData := ph.basicTemplateData().
 		Set("BFirst", BFirst).
@@ -360,8 +361,9 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("BCount", BCount).
 		Set("Documents", doclist).
 		Set("HasLast", hasLast).
-		Set("HasNext", true).
+		Set("HasNext", hasNext).
 		Set("HasPrev", aOption.LimitStart > aOption.LimitLength).
+		Set("Matching", aOption.Matching).
 		Set("QOC", aOption.CGI()).
 		Set("QOS", aOption.String()).
 		Set("SLL", aOption.SelectLimitOptions()).
@@ -374,18 +376,6 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		log.Printf("handleQuery() Render: %v\n", err)
 	}
 } // handleQuery()
-
-// `handleSearch()` serves the search results.
-func (ph *TPageHandler) handleSearch(aTerm string, aData *TemplateData, aWriter http.ResponseWriter, aRequest *http.Request) {
-	/*
-		pl := SearchPostings(regexp.QuoteMeta(aTerm))
-		aData = check4lang(aData, aRequest).
-			Set("Robots", "noindex,follow").
-			Set("Matches", pl.Len()).
-			Set("Postings", pl.Sort())
-		ph.viewList.Render("searchresult", aWriter, aData)
-	*/
-} // handleSearch()
 
 // NeedAuthentication returns `true` if authentication is needed,
 // or `false` otherwise.

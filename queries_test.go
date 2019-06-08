@@ -344,7 +344,7 @@ func Test_queryDocument(t *testing.T) {
 	}
 } // Test_queryDocument()
 
-func TestQeueryBy(t *testing.T) {
+func TestQueryBy(t *testing.T) {
 	openDB()
 	o0 := &TQueryOptions{
 		ID:          0,
@@ -404,32 +404,36 @@ func TestQeueryBy(t *testing.T) {
 		aOption *TQueryOptions
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    int // *TDocList
-		wantErr bool
+		name       string
+		args       args
+		wantRCount int
+		wantRList  int //*TDocList
+		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 1000, false},
-		{" 1", args{o1}, 14, false},
-		{" 2", args{o2}, 50, false},
-		{" 3", args{o3}, 42, false},
-		{" 4", args{o4}, 50, false},
-		{" 5", args{o5}, 50, false},
+		{" 0", args{o0}, 5439, 1000, false},
+		{" 1", args{o1}, 14, 14, false},
+		{" 2", args{o2}, 4574, 50, false},
+		{" 3", args{o3}, 42, 42, false},
+		{" 4", args{o4}, 350, 50, false},
+		{" 5", args{o5}, 448, 50, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := QueryBy(tt.args.aOption)
+			gotRCount, gotRList, err := QueryBy(tt.args.aOption)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("QeueryBy() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("QueryBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if len(*got) != tt.want {
-				t.Errorf("QeueryBy() = %d, want %d", len(*got), tt.want)
+			if gotRCount != tt.wantRCount {
+				t.Errorf("QueryBy() gotRCount = %v, want %v", gotRCount, tt.wantRCount)
+			}
+			if len(*gotRList) != tt.wantRList {
+				t.Errorf("QueryBy() gotRList = %d, want %d", len(*gotRList), tt.wantRList)
 			}
 		})
 	}
-} // TestQeueryBy()
+} // TestQueryBy()
 
 func TestQueryLimit(t *testing.T) {
 	openDB()
@@ -444,17 +448,17 @@ func TestQueryLimit(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		// {" 1", args{0, 500}, 500, false},
-		// {" 2", args{500, 500}, 500, false},
-		// {" 3", args{1000, 500}, 500, false},
-		// {" 4", args{1500, 500}, 500, false},
-		// {" 5", args{2000, 500}, 500, false},
-		// {" 6", args{2500, 500}, 500, false},
-		// {" 7", args{3000, 500}, 500, false},
-		// {" 7", args{3500, 500}, 500, false},
-		// {" 8", args{4000, 500}, 500, false},
-		// {" 9", args{4500, 500}, 500, false},
-		{"10", args{5000, 500}, 440, false},
+		{" 1", args{0, 500}, 500, false},
+		{" 2", args{500, 500}, 500, false},
+		{" 3", args{1000, 500}, 500, false},
+		{" 4", args{1500, 500}, 500, false},
+		{" 5", args{2000, 500}, 500, false},
+		{" 6", args{2500, 500}, 500, false},
+		{" 7", args{3000, 500}, 500, false},
+		{" 7", args{3500, 500}, 500, false},
+		{" 8", args{4000, 500}, 500, false},
+		{" 9", args{4500, 500}, 500, false},
+		{"10", args{5000, 500}, 439, false},
 		{"11", args{5500, 500}, 0, false},
 	}
 	for _, tt := range tests {
@@ -470,3 +474,37 @@ func TestQueryLimit(t *testing.T) {
 		})
 	}
 } // TestQueryLimit()
+
+func TestQuerySearch(t *testing.T) {
+	openDB()
+	qo1 := NewQueryOptions()
+	qo1.Matching = `"Golang"`
+	type args struct {
+		aOption *TQueryOptions
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantRCount int
+		wantRList  int //*TDocList
+		wantErr    bool
+	}{
+		// TODO: Add test cases.
+		{" 1", args{qo1}, 24, 24, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRCount, gotRList, err := QuerySearch(tt.args.aOption)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("QuerySearch() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotRCount != tt.wantRCount {
+				t.Errorf("QuerySearch() gotRCount = %v, want %v", gotRCount, tt.wantRCount)
+			}
+			if len(*gotRList) != tt.wantRList {
+				t.Errorf("QuerySearch() gotRList = %d, want %d", len(*gotRList), tt.wantRList)
+			}
+		})
+	}
+} // TestQuerySearch()

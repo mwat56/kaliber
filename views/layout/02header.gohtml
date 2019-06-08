@@ -1,5 +1,5 @@
 {{- define "header" -}}
-<form method="post" action="/post" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<form method="post" action="/" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
 <input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
 <header>
 {{- if .ShowForm -}}
@@ -19,14 +19,15 @@
 		{{ selectOption .SLL "100" }}100</option>
 	</select>
 	&nbsp;
-<!--
+
 	{{- if eq $lang "de" -}}
 	<label for="matching">Bücher enthalten</label>
 	{{- else -}}
 	<label for="matching">books matching</label>
 	{{- end -}}
-	&nbsp;<input id="matching" name="matching" type="search" value="" name="search" form="pageform">
- -->
+	&nbsp;<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" name="search" form="pageform">
+	&nbsp;
+
 	{{- if eq $lang "de" -}}
 	<label for="sortby">sortiert nach</label>
 	{{- else -}}
@@ -58,7 +59,7 @@
 	</select>
 	&nbsp;
 	{{- if eq $lang "de" -}}
-	<label for="order">Reihenfolge</label>
+	<label for="order">Folge</label>
 	{{- else -}}
 	<label for="order">order</label>
 	{{- end -}}

@@ -263,6 +263,7 @@ img#logo {
 	max-width: 96px;
 }
 div#search_box {
+	font-size: 89%;
 	padding: 0.1ex 0 1ex 0;
 	text-align: right;
 }
@@ -275,7 +276,7 @@ img.button {
 	padding: 0 0.5ex 0.2ex 0.5ex;
 	text-align: center;
 	text-decoration: none;
-	vertical-align: baseline;
+	vertical-align: middle;
 	white-space: nowrap;
 }
 a.button:hover,
@@ -322,7 +323,7 @@ article.document div.cover {
 	width: 43%;
 }
 article.overview {
-	height: 21em;
+	max-height: 21em;
 	overflow: hidden;
 	width: 100ex;
 }

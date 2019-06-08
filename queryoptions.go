@@ -99,7 +99,7 @@ func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 		result["descending"] = `<option SELECTED value="descending">`
 	} else {
 		result["ascending"] = `<option SELECTED value="ascending">`
-		result["descending"] = `<option alue="descending">`
+		result["descending"] = `<option value="descending">`
 	}
 
 	return &result
@@ -174,6 +174,12 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		desc := ("descending" == fob)
 		if desc != qo.Descending {
 			qo.Descending = desc
+			qo.LimitStart = 0
+		}
+	}
+	if matching := aRequest.FormValue("matching"); 0 < len(matching) {
+		if matching != qo.Matching {
+			qo.Matching = matching
 			qo.LimitStart = 0
 		}
 	}
