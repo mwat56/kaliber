@@ -57,27 +57,48 @@ func (so *TSearch) Clause() string {
 } // Clause()
 
 var (
-	expressionRE = regexp.MustCompile(
-		`(?i)^\s*((!?)(\w+):([=~]))?(["']([^"']*)["'])(\s+(AND|OR)\s*)?`)
-	//           12   3     4       5    6            7   8
+	complexExpressionRE = regexp.MustCompile(
+		// 	`(?i)^\s*((!?)(\w+):([=~]))?(["']([^"']*)["'])(\s+(AND|OR)\s*)?`)
+		// //           12   3     4       5    6            7   8
+		`(?i)^\s*((!?)(\w+):)?"([=~])([^"]*)"(\s+(AND|OR)\s*)?`)
+	//           12   3        4     5      6    7
 
+	simpleExpressionRE = regexp.MustCompile(`(?i)^"?([^"]+)"?$`)
+	//                                              1------
 )
 
 func (so *TSearch) getExpression() *tExpression {
-	matches := expressionRE.FindStringSubmatch(so.raw)
-	if (nil == matches) || (0 == len(matches)) {
-		return nil
+	exp := &tExpression{}
+	matches := complexExpressionRE.FindStringSubmatch(so.raw)
+	if (nil == matches) || (0 == len(matches) || (0 == len(matches[0]))) {
+		// complex RegEx didn't match
+		match2 := simpleExpressionRE.FindStringSubmatch(so.raw)
+		if (nil == match2) || (0 == len(match2)) {
+			return nil
+		}
+		exp = &tExpression{
+			// entity:  strings.ToLower(matches[3]),
+			matcher: `~`,
+			term:    match2[1],
+			// op:      matches[8],
+			// not:     ("!" == matches[2]),
+		}
+		so.raw = so.raw[len(match2[0]):]
+	} else {
+		exp = &tExpression{
+			entity:  strings.ToLower(matches[3]),
+			matcher: matches[4],
+			term:    matches[5],
+			op:      matches[7],
+			not:     ("!" == matches[2]),
+		}
+		so.raw = so.raw[len(matches[0]):]
 	}
-	exp := &tExpression{
-		entity:  strings.ToLower(matches[3]),
-		matcher: matches[4],
-		term:    matches[6],
-		op:      matches[8],
-		not:     ("!" == matches[2]),
+	if 0 < len(exp.term) {
+		return exp
 	}
-	so.raw = so.raw[len(matches[0]):]
 
-	return exp
+	return nil
 } // getExpression()
 
 // Parse returns the parsed search term(s).
@@ -174,6 +195,13 @@ func (so *TSearch) parsePrim(aExpression *tExpression) {
 	}
 	so.next = aExpression.op
 } // parsePrim()
+
+// String returns a stringfied representation.
+func (so *TSearch) String() string {
+	return `raw: '` + so.raw +
+		`' | where: '` + so.where +
+		`' | next: '` + so.next + `'`
+} // String()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
