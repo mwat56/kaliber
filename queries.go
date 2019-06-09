@@ -9,6 +9,7 @@ package kaliber
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -85,6 +86,8 @@ b.flags,
 b.uuid,
 b.has_cover
 FROM books b `
+
+	countQuery = `SELECT COUNT(b.id) FROM books b `
 )
 
 var (
@@ -101,40 +104,105 @@ var (
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+const (
+	// Name of the `Calibre` database
+	calibreDatabaseName = "metadata.db"
+)
+
 type (
 	tDataBase struct {
-		*sql.DB                // the embedded database connection
-		fileName     string    // the SQLite database file
+		*sql.DB      // the embedded database connection
+		doCheck      chan bool
+		fileName     string // the SQLite database file
+		isDone       chan bool
 		lastModified time.Time // modified time of SQLite database file
 	}
 )
 
 var (
+	// Pathname to the cached `Calibre` database
+	calibreCachePath = ""
+
+	// Pathname to the original `Calibre` database
+	calibreLibraryPath = ""
+
 	// The active `tDatabase` instance initialised by `DBopen()`.
 	// sqliteDatabase *sql.DB
 	sqliteDatabase tDataBase
 )
+
+// CalibreCachePath returns the directory of the copied `Calibre` databse.
+func CalibreCachePath() string {
+	return calibreLibraryPath
+} // CalibreCachePath()
+
+// CalibreDatabaseName returns the name of the `Calibre` database.
+func CalibreDatabaseName() string {
+	return calibreDatabaseName
+} // CalibreDatabaseName()
+
+// CalibreLibraryPath returns the base directory of the `Calibre` library.
+func CalibreLibraryPath() string {
+	return calibreLibraryPath
+} // CalibreLibraryPath()
+
+// SetCalibreCachePath sets the directory of the `Calibre` database copy.
+func SetCalibreCachePath(aPath string) string {
+	if path, err := filepath.Abs(aPath); nil == err {
+		aPath = path
+	}
+	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
+		calibreCachePath = aPath
+	} else if err := os.MkdirAll(aPath, os.ModeDir|0775); nil == err {
+		calibreCachePath = aPath
+	}
+
+	return calibreCachePath
+} // SetCalibreCachePath()
+
+// SetCalibreLibraryPath sets the base directory of the `Calibre` library.
+func SetCalibreLibraryPath(aPath string) string {
+	if path, err := filepath.Abs(aPath); nil == err {
+		aPath = path
+	}
+	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
+		calibreLibraryPath = aPath
+	} else {
+		calibreLibraryPath = ""
+	}
+
+	return calibreLibraryPath
+} // CalibreLibraryPath()
+
+// CalibreDatabasePath returns rhe complete path-/filename of the `Calibre` library.
+func CalibreDatabasePath() string {
+	return filepath.Join(calibreLibraryPath, calibreDatabaseName)
+} // CalibreDatabasePath()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // `fileTime()` checks whether the SQLite database file has changed
 // since the last access. If so, the current database connection is
 // closed and a new one is established.
 //
 func (db *tDataBase) fileTime() error {
-	fi, err := os.Stat(db.fileName)
-	if (nil != err) || (!db.lastModified.Before(fi.ModTime())) {
+	// check whether the DB file changed:
+	select {
+	case <-db.isDone:
+		if nil != db.DB {
+			db.DB.Close()
+		}
+		dsn := `file:` + db.fileName + `?mode=ro`
+		var err error
+		if db.DB, err = sql.Open("sqlite3", dsn); nil != err {
+			return err
+		}
+		if err = db.DB.Ping(); nil != err {
+			return err
+		}
+	default:
 		return nil
 	}
-	if nil != db.DB {
-		sqliteDatabase.DB.Close()
-	}
-	dsn := `file:` + db.fileName + `?mode=ro`
-	if sqliteDatabase.DB, err = sql.Open("sqlite3", dsn); nil != err {
-		return err
-	}
-	if err = db.DB.Ping(); nil != err {
-		return err
-	}
-	db.lastModified = fi.ModTime()
 
 	return nil
 } // fileTime()
@@ -146,20 +214,74 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 		return nil, err
 	}
 
-	return db.DB.Query(aQuery, args...)
+	rows, err := db.DB.Query(aQuery, args...)
+	db.doCheck <- true
+
+	return rows, err
 } // Query()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-const (
-	countQuery = `SELECT COUNT(b.id) FROM books b `
-)
+func copyDatabaseFile(aSrc, aDst string) error {
+	var (
+		err          error
+		sFile, tFile *os.File
+		sFI, dFI     os.FileInfo
+	)
+	defer func() {
+		if nil != sFile {
+			sFile.Close()
+			sFile = nil
+		}
+		if nil != tFile {
+			tFile.Close()
+			tFile = nil
+		}
+	}()
+	if sFI, err = os.Stat(aSrc); nil != err {
+		return err
+	}
+	if dFI, err = os.Stat(aDst); nil == err {
+		if sFI.ModTime().Before(dFI.ModTime()) {
+			return nil
+		}
+	}
+
+	if sFile, err = os.Open(aSrc); err != nil {
+		return err
+	}
+
+	tName := aDst + `~`
+	if tFile, err = os.OpenFile(tName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+		return err
+	}
+
+	if _, err = io.Copy(tFile, sFile); nil != err {
+		return err
+	}
+
+	return os.Rename(tName, aDst)
+} // copyDatabaseFile()
 
 // DBopen establishes a new database connection.
 //
-// `aFilename` is the path-/filename of the SQLite database
+// `aFilename` is the path-/filename of the SQLite database to use.
 func DBopen(aFilename string) error {
-	sqliteDatabase.fileName = aFilename
+	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
+	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
+	sqliteDatabase.fileName = dName
+	sqliteDatabase.doCheck = make(chan bool, 32)
+	sqliteDatabase.isDone = make(chan bool, 32)
+
+	// prepare the local database copy:
+	if err := copyDatabaseFile(sName, dName); nil != err {
+		return err
+	}
+	// signal for `fileTime()`:
+	sqliteDatabase.isDone <- true
+
+	// start monitoring the original database file:
+	go goCheckFile(sqliteDatabase.doCheck, sqliteDatabase.isDone)
 
 	return sqliteDatabase.fileTime()
 } // DBopen()
@@ -192,6 +314,25 @@ func docListQuery(aQuery string) (*TDocList, error) {
 
 	return result, nil
 } // docListQuery()
+
+// `goCheckFile()` checks in the background whether the original database
+// file has changed. If so, that file is copied into the cache directory
+// from where it is read and used by the `sqliteDatabase` instance.
+func goCheckFile(aWork <-chan bool, aDone chan<- bool) {
+	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
+	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
+
+	for { // wait for a signal to arrive
+		select {
+		case <-aWork:
+			if err := copyDatabaseFile(sName, dName); nil == err {
+				aDone <- true
+			}
+		default:
+			time.Sleep(time.Second)
+		}
+	}
+} // goCheckFile()
 
 // `havIng()` returns a string limiting the query to the gieben `aID`.
 func havIng(aEntity string, aID TID) string {
