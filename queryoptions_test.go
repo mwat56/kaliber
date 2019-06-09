@@ -20,10 +20,10 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  100,
 		SortBy:      SortByAuthor,
 	}
-	// w1 := `?qo="` + url.QueryEscape(`|3524|true|"author"|25|0|""|1|`) + `"`
-	w1 := `?qo="` + base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|25|0|""|1|`)) + `"`
+	w1 := `?qo="` + base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|25|0|""|100|1|`)) + `"`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -31,10 +31,10 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  200,
 		SortBy:      SortByLanguage,
 	}
-	// w2 := `?qo="` + url.QueryEscape(`|1|false|"lang"|50|0|""|2|`) + `"`
-	w2 := `?qo="` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|50|0|""|2|`)) + `"`
+	w2 := `?qo="` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|50|0|""|200|2|`)) + `"`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -56,7 +56,7 @@ func TestTQueryOptions_CGI(t *testing.T) {
 
 func TestTQueryOptions_Scan(t *testing.T) {
 	o1 := NewQueryOptions()
-	s1 := `|3524|true|"author"|25|0|""|1|`
+	s1 := `|3524|true|"author"|25|0|""|100|1|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
@@ -64,10 +64,11 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  100,
 		SortBy:      SortByAuthor,
 	}
 	o2 := NewQueryOptions()
-	s2 := `|1|false|"lang"|50|0|""|2|`
+	s2 := `|1|false|"lang"|50|0|""|200|2|`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -75,6 +76,7 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  200,
 		SortBy:      SortByLanguage,
 	}
 	type args struct {
@@ -156,9 +158,10 @@ func TestTQueryOptions_String(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  100,
 		SortBy:      SortByAuthor,
 	}
-	w1 := `|3524|true|"author"|50|0|""|1|`
+	w1 := `|3524|true|"author"|50|0|""|100|1|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -166,9 +169,10 @@ func TestTQueryOptions_String(t *testing.T) {
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  200,
 		SortBy:      SortByLanguage,
 	}
-	w2 := `|1|false|"lang"|25|0|""|2|`
+	w2 := `|1|false|"lang"|25|0|""|200|2|`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -190,8 +194,7 @@ func TestTQueryOptions_String(t *testing.T) {
 
 func TestTQueryOptions_UnCGI(t *testing.T) {
 	o1 := NewQueryOptions()
-	// c1 := url.QueryEscape(`|3524|true|"author"|50|0|""|1|`)
-	c1 := base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|50|0|""|1|`))
+	c1 := base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|50|0|""|100|1|`))
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
@@ -199,10 +202,10 @@ func TestTQueryOptions_UnCGI(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  100,
 		SortBy:      SortByAuthor,
 	}
-	// c2 := url.QueryEscape(`|1|false|"lang"|25|0|""|2|`)
-	c2 := base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|25|0|""|2|`))
+	c2 := base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|25|0|""|200|2|`))
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -210,6 +213,7 @@ func TestTQueryOptions_UnCGI(t *testing.T) {
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
+		QueryCount:  200,
 		SortBy:      SortByLanguage,
 	}
 	type args struct {

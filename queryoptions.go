@@ -10,7 +10,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 )
 
@@ -49,7 +48,6 @@ type (
 // fit for use as the `qos` CGI argument.
 func (qo *TQueryOptions) CGI() string {
 	return `?qo="` + base64.StdEncoding.EncodeToString([]byte(qo.String())) + `"`
-	// return `?qo="` + url.QueryEscape(qo.String()) + `"`
 } // CGI()
 
 // DecLimit decrements the LIMIT values.
@@ -131,15 +129,15 @@ func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort uint8, aIndex 
 
 // String returns the options as a `|` delimited string.
 func (qo *TQueryOptions) String() string {
-	return fmt.Sprintf(`|%d|%t|%q|%d|%d|%q|%d|`,
+	return fmt.Sprintf(`|%d|%t|%q|%d|%d|%q|%d|%d|`,
 		qo.ID, qo.Descending, qo.Entity,
 		qo.LimitLength, qo.LimitStart,
-		qo.Matching, qo.SortBy)
+		qo.Matching, qo.QueryCount, qo.SortBy)
 } // String()
 
 // Scan returns the options read from `aString`.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
-	fmt.Sscanf(aString, `|%d|%t|%q|%d|%d|%q|%d|`, &qo.ID, &qo.Descending, &qo.Entity, &qo.LimitLength, &qo.LimitStart, &qo.Matching, &qo.SortBy)
+	fmt.Sscanf(aString, `|%d|%t|%q|%d|%d|%q|%d|%d|`, &qo.ID, &qo.Descending, &qo.Entity, &qo.LimitLength, &qo.LimitStart, &qo.Matching, &qo.QueryCount, &qo.SortBy)
 
 	return qo
 } // Scan()
@@ -150,9 +148,6 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
 	if qosu, err := base64.StdEncoding.DecodeString(aCGI); nil == err {
 		return qo.Scan(string(qosu))
-	}
-	if qosu, err := url.QueryUnescape(aCGI); nil == err {
-		return qo.Scan(qosu)
 	}
 
 	return qo
@@ -177,11 +172,10 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			qo.LimitStart = 0
 		}
 	}
-	if matching := aRequest.FormValue("matching"); 0 < len(matching) {
-		if matching != qo.Matching {
-			qo.Matching = matching
-			qo.LimitStart = 0
-		}
+	matching := aRequest.FormValue("matching")
+	if matching != qo.Matching {
+		qo.Matching = matching
+		qo.LimitStart = 0
 	}
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
 		var sb uint8
