@@ -224,6 +224,11 @@ func NewQueryOptions() *TQueryOptions {
 		LimitLength: 25,
 		SortBy:      SortByTime,
 	}
+	if s, _ := AppArguments.Get("booksperpage"); 0 < len(s) {
+		if _, err := fmt.Sscanf(s, "%d", &result.LimitLength); nil != err {
+			result.LimitLength = 25
+		}
+	}
 
 	return &result
 } // NewQueryOptions()
