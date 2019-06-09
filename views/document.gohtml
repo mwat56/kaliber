@@ -78,7 +78,7 @@
 		{{- range $i, $ident := $doc.Identifiers -}}
 			{{- $name := $ident.Name -}}
 			{{- $url := $ident.URL -}}
-			<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a>&nbsp;
+			<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		{{- end -}}
 		</td>
 	</tr>
@@ -90,7 +90,7 @@
 		{{- range $i, $tag := $doc.Tags -}}
 			{{- $name := $tag.Name -}}
 			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		{{- end -}}
 		</td>
 	</tr>
@@ -113,7 +113,7 @@
 		{{- range $i, $format := $doc.Formats -}}
 			{{- $name := $format.Name -}}
 			{{- $url := $format.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
 		{{- end -}}
 		</td>
 	</tr>
@@ -121,13 +121,13 @@
 
 	<!-- TODO integrate custom columns -->
 
-	{{- if $doc.Comment -}}
-	<tr><td colspan="2"><div class="comment">
-		{{- $doc.Comment -}}
-	</div></td></tr>
-	{{- end -}}
-
 	</table>
+
+	{{- if $doc.Comment -}}
+	<div class="comment">
+		{{- $doc.Comment -}}
+	</div>
+	{{- end -}}
 </div>
 <div class="cover">
 	<p class="cover"><img alt="Cover" class="cover" src="{{$doc.Cover}}"></p>

@@ -87,7 +87,7 @@ footer, header {
 	padding: 1ex 0.5ex 0.5ex 0;
 }
 footer {
-	margin: 1em 0 1ex 0;
+	margin: 1ex 0 1ex 0;
 }
 footer p {
 	text-align: right;
@@ -173,8 +173,12 @@ input[type="reset"]:hover, input[type="submit"]:hover,
 select:hover {
 	border-style: inset;
 }
-ol {
+ol, ul {
 	list-style-type: decimal;
+	list-style-position: inside;
+}
+dl dt, dl dd, ol li, ul li {
+	text-indent: 0.3ex;
 }
 p {
 	font-family: serif;
@@ -267,24 +271,23 @@ div#search_box {
 	padding: 0.1ex 0 1ex 0;
 	text-align: right;
 }
-a.button,
-img.button {
+
+a.button {
+	border: thin outset transparent;
 	cursor: pointer;
 	font-size: 89%;
 	hyphens: none;
-	margin: 0 0.5ex;
-	padding: 0 0.5ex 0.2ex 0.5ex;
+	margin: 0 1pt 0 0;
+	padding: 0 0.3ex 0.2ex 0.3ex;
 	text-align: center;
 	text-decoration: none;
 	vertical-align: middle;
 	white-space: nowrap;
 }
-a.button:hover,
-a:hover img.button {
+a.button:hover {
 	border-style: inset;
 	text-decoration: none;
 }
-
 article.document {
 	width: 100%;
 }
@@ -316,11 +319,14 @@ div.cover p {
 	text-indent: 0;
 }
 div.cover img.cover {
-	max-height: 98%;
-	max-width: 98%;
+	max-height: 99%;
+	max-width: 99%;
 }
 article.document div.cover {
-	width: 43%;
+	max-width: 40%;
+}
+article.document div.cover p.cover {
+	text-align: right;
 }
 article.overview {
 	max-height: 21em;
@@ -354,7 +360,7 @@ td.label {
 	text-align: left;
 }
 p.mainlinks {
-	margin: 1ex 0 0 0;
+	margin: 0.6ex 0 0 0;
 }
 div.meta {
 	display: inline-block;
@@ -362,7 +368,7 @@ div.meta {
 	vertical-align: top;
 }
 article.document div.meta {
-	width: 55%;
+	max-width: 58%;
 }
 article.overview div.meta {
 	max-height: 38ex;
@@ -370,17 +376,16 @@ article.overview div.meta {
 }
 article.overview div.meta p,
 table.meta tr td {
-	line-height: 1.8; /* to make room for the buttons */
+	line-height: 1.6; /* to make room for the buttons */
 }
 article.overview blockquote.comment,
 article.overview blockquote.comment p {
 	line-height: 1.3;
 }
 div.naviline {
-	min-height: 2em;
+	min-height: 1em;
 }
 p.naviline {
-	padding: 0.2ex 0 0.3ex 0;
 	letter-spacing: 0.3ex;
 	text-align: center;
 }

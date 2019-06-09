@@ -26,14 +26,12 @@ article.overview div.cover:hover img.cover {
 article.overview div.cover img.cover:hover {
 	border: thick inset #666;
 }
-a.button,
-img.button {
+a.button {
 	background-color: #f9f0e0;
-	border: thin outset #333;
 	color: #000;
 }
-a.button:hover,
-a:hover img.button {
+a.button:hover {
+	border: thin inset #333;
 	background: #fefeff none;
 	color: #003;
 }
@@ -44,18 +42,15 @@ code, .code, kbd, pre, textarea {
 del {
 	color: #666;
 }
-
 div#search_box {
 	border-bottom: thin solid #333;
 }
-
 dl dd {
 	background: #f9f9f0;
 }
 footer, header {
-	border-top: thin solid #333;
+	border: thin solid #333;
 	border-right: 0;
-	border-bottom: thin solid #333;
 	border-left: 0;
 }
 h1, h2, h3, h4, h5, h6 {
@@ -72,14 +67,15 @@ hr {
 	color: #ccc;
 }
 input[type="reset"], input[type="submit"],
-select {
+select, select option {
 	background: #ccc;
 	color: #000;
 }
 input[type="reset"]:hover, input[type="submit"]:hover,
 select:hover {
 	border-style: inset;
-	background: #fff;
+	background: #000;
+	color: #fff;
 }
 p.mainlinks {
 	border-top: thin solid #333;
