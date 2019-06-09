@@ -1,0 +1,6 @@
+
+User-agent: *
+Disallow: /CSS/
+
+User-agent: *
+Disallow: /
