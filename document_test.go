@@ -107,8 +107,7 @@ func TestTDocument_Filename(t *testing.T) {
 	}
 	w1 := filepath.Join(d1.path, "Zoe's Tale - John Scalzi.azw3")
 	type args struct {
-		aFormat   string
-		aRelative bool
+		aFormat string
 	}
 	tests := []struct {
 		name   string
@@ -117,12 +116,12 @@ func TestTDocument_Filename(t *testing.T) {
 		want   string
 	}{
 		// TODO: Add test cases.
-		{" 1", d1, args{"azw3", true}, w1},
+		{" 1", d1, args{"azw3"}, w1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			doc := &tt.fields
-			if got := doc.Filename(tt.args.aFormat, tt.args.aRelative); got != tt.want {
+			if got := doc.Filename(tt.args.aFormat); got != tt.want {
 				t.Errorf("TDocument.Filename() = '%s',\nwant '%s'", got, tt.want)
 			}
 		})
@@ -196,7 +195,7 @@ func TestTDocument_Files(t *testing.T) {
 		TEntity{
 			ID:   2,
 			Name: "PDF",
-			URL:  "/file/1/PDF",
+			URL:  "/file/1/PDF/.pdf",
 		},
 	}
 	tests := []struct {

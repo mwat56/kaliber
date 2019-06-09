@@ -154,19 +154,13 @@ func (doc *TDocument) DocLink() string {
 	return fmt.Sprintf("/doc/%d/doc.html", doc.ID)
 } // DocLink()
 
-// Filename returns the path-/filename od `aFormat`.
-func (doc *TDocument) Filename(aFormat string, aRelative bool) string {
-	format := strings.ToUpper(aFormat)
-	list := doc.Filenames()
-	result, ok := (*list)[format]
-	if !ok {
-		return ""
-	}
-	if !aRelative {
-		return result
-	}
-	if dir, err := filepath.Rel(calibreLibraryPath, result); nil == err {
-		return dir
+// Filename returns the path-/filename of `aFormat`.
+func (doc *TDocument) Filename(aFormat string) string {
+	list := *doc.Filenames()
+	if pName, ok := list[strings.ToUpper(aFormat)]; ok {
+		if fName, err := filepath.Rel(calibreLibraryPath, pName); nil == err {
+			return fName
+		}
 	}
 
 	return ""
@@ -199,10 +193,11 @@ func (doc *TDocument) Files() *TEntityList {
 		if "ORIGINAL_EPUB" == file.Name {
 			continue
 		}
+		fName := url.PathEscape(strings.ReplaceAll(doc.Title, ` `, `_`)) + `.` + strings.ToLower(file.Name)
 		ent := TEntity{
 			ID:   file.ID,
 			Name: file.Name,
-			URL:  fmt.Sprintf("/file/%d/%s", doc.ID, file.Name),
+			URL:  fmt.Sprintf("/file/%d/%s/%s", doc.ID, file.Name, fName),
 		}
 		result = append(result, ent)
 	}
