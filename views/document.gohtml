@@ -15,7 +15,7 @@
 		{{- range $i, $author := $doc.Authors -}}
 			{{- $name := $author.Name -}}
 			{{- $url := $author.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &nbsp;
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		{{- end -}}
 		</td>
 	</tr>
@@ -27,7 +27,7 @@
 		{{- range $i, $file := $doc.Files -}}
 			{{- $name := $file.Name -}}
 			{{- $url := $file.URL -}}
-		<a class="button" title="download {{$name}}" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
+		<a class="button" title="download {{$name}}" href="{{$url}}{{$qoc}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		{{- end -}}
 		</td>
 	</tr>
@@ -39,8 +39,8 @@
 		{{- $series := $doc.Series -}}
 		{{- $name := $series.Name -}}
 		{{- $url := $series.URL -}}
-		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &nbsp;
-		{{- $doc.SeriesIndex -}} &nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+		{{- $doc.SeriesIndex -}}
 		</td>
 	</tr>
 	{{- end -}}
@@ -51,7 +51,7 @@
 		{{- $pub := $doc.Publisher -}}
 		{{- $name := $pub.Name -}}
 		{{- $url := $pub.URL -}}
-		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
 		</td>
 	</tr>
 	{{- end -}}
@@ -102,7 +102,7 @@
 		{{- $lang := $doc.Language -}}
 		{{- $name := $lang.Name -}}
 		{{- $url := $lang.URL -}}
-		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>&nbsp;
+		<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		</td>
 	</tr>
 	{{- end -}}
@@ -113,7 +113,7 @@
 		{{- range $i, $format := $doc.Formats -}}
 			{{- $name := $format.Name -}}
 			{{- $url := $format.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
+			<a class="button" href="{{$url}}{{$qoc}}" title="show all {{$name}}s">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		{{- end -}}
 		</td>
 	</tr>

@@ -22,11 +22,11 @@
 		<p><strong>{{$doc.Title}}</strong>
 
 		{{- if $doc.Authors -}}
-			<br>by &nbsp;
+			<br>by &shy;
 			{{- range $i, $author := $doc.Authors -}}
 				{{- $name := $author.Name -}}
 				{{- $url := $author.URL -}}
-				<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &nbsp;
+				<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;
 			{{- end -}}
 		{{- end -}}
 		</p>
@@ -43,7 +43,7 @@
 		<p>{{range $i, $tag := $doc.Tags -}}
 			{{- $name := $tag.Name -}}
 			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
+			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;
 			{{- end -}}
 		</p>
 		{{- end -}}
@@ -52,16 +52,16 @@
 			{{- range $i, $file := $doc.Files -}}
 				{{- $name := $file.Name -}}
 				{{- $url := $file.URL -}}
-				<a class="button" href="{{$url}}" target="_extern" title="download {{$name}} file">{{$name}}</a>&nbsp;
+				<a class="button" href="{{$url}}{{$qoc}}" target="_extern" title="download {{$name}} file">{{$name}}</a> &shy;
 			{{- end -}}
 		{{- end -}}
 
 		{{- if $doc.Publisher -}}
-			<p>Published &nbsp; {{$doc.PubDate}} &nbsp;
+			<p>Published &shy; {{$doc.PubDate}} &shy;
 			{{- $pub := $doc.Publisher -}}
 			{{- $name := $pub.Name -}}
 			{{- $url := $pub.URL -}}
-			<em>by</em> &nbsp;
+			<em>by</em> &shy;
 			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
 			</p>
 		{{- end -}}
