@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/mwat56/passlist"
@@ -24,11 +25,11 @@ type (
 	TPageHandler struct {
 		addr     string              // listen address ("1.2.3.4:5678")
 		dd       string              // datadir: base dir for data
-		dfs      http.Handler        // document file server
+		docFS    http.Handler        // document file server
 		lang     string              // default language
 		ln       string              // the library's name
 		realm    string              // host/domain to secure by BasicAuth
-		sfs      http.Handler        // static file server
+		staticFS http.Handler        // static file server
 		theme    string              // `dark` or `light` display theme
 		ul       *passlist.TPassList // user/password list
 		viewList *TViewList          // list of template/views
@@ -48,7 +49,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.dd = s
 
-	result.dfs = http.FileServer(http.Dir(calibreLibraryPath))
+	result.docFS = http.FileServer(http.Dir(calibreLibraryPath))
 
 	if s, err = AppArguments.Get("lang"); nil == err {
 		result.lang = s
@@ -68,7 +69,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.addr += ":" + s
 
-	result.sfs = http.FileServer(http.Dir(result.dd))
+	result.staticFS = http.FileServer(http.Dir(result.dd))
 
 	if s, err = AppArguments.Get("uf"); nil != err {
 		log.Printf("NewPageHandler(): %v\nAUTHENTICATION DISABLED!", err)
@@ -165,27 +166,29 @@ func (ph *TPageHandler) basicTemplateData() *TemplateData {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+var (
+	// extract ID and file format from URL
+	fileParseRE = regexp.MustCompile(`^(\d+)/([^/]+?)/(.*)`)
+)
+
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
 	qo := NewQueryOptions() // in `queryoptions.go`
 	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
 		qo.UnCGI(qoc) // page GET
 	}
-
 	pageData := ph.basicTemplateData().
 		Set("SLL", qo.SelectLimitOptions()).
 		Set("SSB", qo.SelectSortByOptions()).
 		Set("SOO", qo.SelectOrderOptions())
 	path, tail := URLparts(aRequest.URL.Path)
-	// log.Printf("head: `%s`: tail: `%s`", path, tail) //FIXME REMOVE
 	switch path {
-
 	case "all", "author", "format", "lang", "publisher", "series", "tag":
 		var (
-			id    TID
-			dummy string
+			id   TID
+			term string
 		)
-		if _, err := fmt.Sscanf(tail, "%d/%s", &id, &dummy); nil == err {
+		if _, err := fmt.Sscanf(tail, "%d/%s", &id, &term); nil == err {
 			qo.ID = id
 		}
 		qo.Entity = path
@@ -215,10 +218,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			return
 		}
 		aRequest.URL.Path = file
-		ph.dfs.ServeHTTP(aWriter, aRequest)
+		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "css":
-		ph.sfs.ServeHTTP(aWriter, aRequest)
+		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
 		var (
@@ -241,34 +244,30 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
 	case "file":
-		var (
-			id     TID
-			format string
-		)
-		fmt.Sscanf(tail, "%d/%s", &id, &format)
-		qo.ID = id
-		doc := QueryDocMini(id)
+		matches := fileParseRE.FindStringSubmatch(tail)
+		if (nil == matches) || (3 > len(matches)) {
+			http.NotFound(aWriter, aRequest)
+			return
+		}
+		qo.ID, _ = strconv.Atoi(matches[1])
+		doc := QueryDocMini(qo.ID)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		file := doc.Filename(format, true)
-		if 0 >= len(file) {
-			http.NotFound(aWriter, aRequest)
-			return
-		}
-		if 0 >= len(file) {
+		file := doc.Filename(matches[2])
+		if 0 == len(file) {
 			http.NotFound(aWriter, aRequest)
 			return
 		}
 		aRequest.URL.Path = file
-		ph.dfs.ServeHTTP(aWriter, aRequest)
+		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "fonts":
-		ph.sfs.ServeHTTP(aWriter, aRequest)
+		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "img":
-		ph.sfs.ServeHTTP(aWriter, aRequest)
+		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
 		ph.viewList.Render("imprint", aWriter, pageData)
@@ -281,6 +280,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "privacy", "datenschutz":
 		ph.viewList.Render("privacy", aWriter, pageData)
+
+	case "robots.txt":
+		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "views": // this files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
@@ -299,7 +301,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.Request) {
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
-	case "": // theonly POST destination
+	case "": // the only POST destination
 		qo := NewQueryOptions()
 		if qos := aRequest.FormValue("qos"); 0 < len(qos) {
 			qo.Scan(qos).Update(aRequest)
