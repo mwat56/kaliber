@@ -54,47 +54,6 @@ func (al *tAguments) Get(aKey string) (string, error) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-const (
-	// Name of the `Calibre` database
-	calibreDatabaseName = "metadata.db"
-)
-
-var (
-	// Pathname to the `Calibre` database
-	calibreLibraryPath = ""
-)
-
-// CalibreDatabaseName returns the name of the `Calibre` database.
-func CalibreDatabaseName() string {
-	return calibreDatabaseName
-} // CalibreDatabaseName()
-
-// CalibreLibraryPath returns the base directory of the `Calibre` library.
-func CalibreLibraryPath() string {
-	return calibreLibraryPath
-} // CalibreLibraryPath()
-
-// SetCalibreLibraryPath sets the base directory of the `Calibre` library.
-func SetCalibreLibraryPath(aPath string) string {
-	if path, err := filepath.Abs(aPath); nil == err {
-		aPath = path
-	}
-	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
-		calibreLibraryPath = aPath
-	} else {
-		calibreLibraryPath = ""
-	}
-
-	return calibreLibraryPath
-} // CalibreLibraryPath()
-
-// CalibreDatabasePath returns rhe complete path-/filename of the `Calibre` library.
-func CalibreDatabasePath() string {
-	return filepath.Join(calibreLibraryPath, calibreDatabaseName)
-} // CalibreDatabasePath()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 // `absolute()` return `aDir` as an absolute path
 func absolute(aBaseDir, aDir string) string {
 	if 0 == len(aDir) {
@@ -178,12 +137,12 @@ func initArguments() {
 
 	bppInt, _ := AppArguments.AsInt("booksperpage")
 	flag.IntVar(&bppInt, "booksperpage", bppInt,
-		"<portNumber> the IP port to listen to ")
+		"<number> the default number of books shown per page ")
 
 	s, _ := AppArguments.Get("datadir")
 	dataStr, _ := filepath.Abs(s)
 	flag.StringVar(&dataStr, "datadir", dataStr,
-		"<dirName> the directory with CSS, IMG, and VIEWS sub-directories\n")
+		"<dirName> the directory with CACHE, CSS, IMG, and VIEWS sub-directories\n")
 
 	s, _ = AppArguments.Get("certKey")
 	ckStr := absolute(dataStr, s)
@@ -318,7 +277,8 @@ func initArguments() {
 	}
 	AppArguments.set("libraryname", lnStr)
 
-	AppArguments.set("librarypath", SetCalibreLibraryPath(lpStr))
+	SetCalibreCachePath(filepath.Join(dataStr, "cache"))
+	SetCalibreLibraryPath(lpStr)
 
 	if "0" == listenStr {
 		listenStr = ""
