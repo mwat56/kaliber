@@ -310,14 +310,14 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			qo.DecLimit()
 		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
 			qo.DecLimit().DecLimit()
-		} else if next := aRequest.FormValue("next"); 0 < len(next) {
-			next = "" // nothing to do here
 		} else if last := aRequest.FormValue("last"); 0 < len(last) {
-			if ls := int(qo.QueryCount) - int(qo.LimitLength); 0 < ls {
-				qo.LimitStart = uint(ls)
-			} else {
+			if qo.QueryCount <= qo.LimitLength {
 				qo.LimitStart = 0
+			} else {
+				qo.LimitStart = qo.QueryCount - qo.LimitLength
 			}
+			// } else if next := aRequest.FormValue("next"); 0 < len(next) {
+			// 	next = "" // nothing to do here
 		}
 		ph.handleQuery(qo, aWriter)
 
@@ -350,10 +350,14 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		aOption.QueryCount = 0
 	}
 	BFirst := aOption.LimitStart + 1 // zero-based to one-based
-	BLast := BFirst + uint(len(*doclist)) - 1
 	BCount := aOption.QueryCount
+	BLast := aOption.LimitStart + aOption.LimitLength
+	if BLast > aOption.QueryCount {
+		BLast = aOption.QueryCount
+	}
 	hasLast := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength + 1)
 	hasNext := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength)
+	hasPrev := aOption.LimitStart > aOption.LimitLength
 	aOption.IncLimit()
 	pageData := ph.basicTemplateData().
 		Set("BFirst", BFirst).
@@ -362,7 +366,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("Documents", doclist).
 		Set("HasLast", hasLast).
 		Set("HasNext", hasNext).
-		Set("HasPrev", aOption.LimitStart > aOption.LimitLength).
+		Set("HasPrev", hasPrev).
 		Set("Matching", aOption.Matching).
 		Set("QOC", aOption.CGI()).
 		Set("QOS", aOption.String()).
