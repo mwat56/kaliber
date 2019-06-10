@@ -1,13 +1,14 @@
 *~
+cache/
 certs/*
 *.db
 _demo/
 .git/
 img/*
 *.ini
-*.log
-*.sql
 kaliber
+*.log
 metadata*
+*.sql
 TODO*
 .vscode/
