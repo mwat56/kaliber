@@ -59,9 +59,8 @@ func NewPageHandler() (*TPageHandler, error) {
 		result.ln = s
 	}
 
-	if s, err = AppArguments.Get("listen"); nil != err {
-		return nil, err
-	}
+	s, err = AppArguments.Get("listen")
+	// an empty value means: listen on all interfaces
 	result.addr = s
 
 	if s, err = AppArguments.Get("port"); nil != err {
