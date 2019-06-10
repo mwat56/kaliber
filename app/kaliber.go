@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/mwat56/apachelogger"
@@ -38,6 +39,8 @@ func setupSinals(aServer *http.Server) {
 
 // Actually run the program …
 func main() {
+	// use all CPU cores for maximum performance
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	var (
 		err           error
 		handler       http.Handler
