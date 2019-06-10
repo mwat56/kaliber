@@ -88,6 +88,8 @@ b.has_cover
 FROM books b `
 
 	countQuery = `SELECT COUNT(b.id) FROM books b `
+
+	idQuery = `SELECT id, path FROM books `
 )
 
 var (
@@ -133,7 +135,7 @@ var (
 
 // CalibreCachePath returns the directory of the copied `Calibre` databse.
 func CalibreCachePath() string {
-	return calibreLibraryPath
+	return calibreCachePath
 } // CalibreCachePath()
 
 // CalibreDatabaseName returns the name of the `Calibre` database.
@@ -308,8 +310,7 @@ func docListQuery(aQuery string) (*TDocList, error) {
 		doc.publisher = prepPublisher(publisher)
 		doc.series = prepSeries(series)
 		doc.tags = prepTags(tags)
-
-		*result = append(*result, *doc)
+		result.Add(doc)
 	}
 
 	return result, nil
@@ -631,6 +632,24 @@ func QueryDocument(aID TID) *TDocument {
 
 	return nil
 } // QueryDocument()
+
+// QueryIDs returns a list of documents with only the `ID` and
+// `path` fields set.
+func QueryIDs() (*TDocList, error) {
+	rows, err := sqliteDatabase.Query(idQuery)
+	if nil != err {
+		return nil, err
+	}
+
+	result := newDocList()
+	for rows.Next() {
+		doc := newDocument()
+		rows.Scan(&doc.ID, &doc.path)
+		result.Add(doc)
+	}
+
+	return result, nil
+} // QueryIDs()
 
 // QueryLimit returns a list of `TDocument` objects.
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
