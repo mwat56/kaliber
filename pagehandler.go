@@ -92,8 +92,56 @@ func NewPageHandler() (*TPageHandler, error) {
 		return nil, err
 	}
 
+	// update the thumbnails cache:
+	go ThumbnailUpdate()
+
 	return result, nil
 } // NewPageHandler()
+
+// `newViewList()` returns a list of views found in `aDirectory`
+// and a possible I/O error.
+func newViewList(aDirectory string) (*TViewList, error) {
+	var v *TView
+	result := NewViewList()
+
+	files, err := filepath.Glob(aDirectory + "/*.gohtml")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fName := range files {
+		fName := filepath.Base(fName[:len(fName)-7]) // remove extension
+		if v, err = NewView(aDirectory, fName); nil != err {
+			return nil, err
+		}
+		result = result.Add(v)
+	}
+
+	return result, nil
+} // newViewList()
+
+var (
+	// RegEx to find path and possible added path components
+	// urlPartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?([§ÄÖÜß\w.?=:;/,_@-]*)?`)
+	urlPartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
+)
+
+// URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
+// `rPath` holds the remaining part of `aURL`.
+//
+// Depending on the actual value of `aURL` both return values may be
+// empty or both may be filled; none of both will hold a leading slash.
+func URLparts(aURL string) (rDir, rPath string) {
+	if result, err := url.QueryUnescape(aURL); nil == err {
+		aURL = result
+	}
+	matches := urlPartsRE.FindStringSubmatch(aURL)
+	if 2 < len(matches) {
+		return matches[1], matches[2]
+	}
+
+	return aURL, ""
+} // URLparts()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -119,28 +167,6 @@ func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 
 	return empty
 } // GetErrorPage()
-
-// `newViewList()` returns a list of views found in `aDirectory`
-// and a possible I/O error.
-func newViewList(aDirectory string) (*TViewList, error) {
-	var v *TView
-	result := NewViewList()
-
-	files, err := filepath.Glob(aDirectory + "/*.gohtml")
-	if err != nil {
-		return nil, err
-	}
-
-	for _, fName := range files {
-		fName := filepath.Base(fName[:len(fName)-7]) // remove extension
-		if v, err = NewView(aDirectory, fName); nil != err {
-			return nil, err
-		}
-		result = result.Add(v)
-	}
-
-	return result, nil
-} // newViewList()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -284,6 +310,31 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "robots.txt":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
+	case "thumb":
+		var (
+			id    TID
+			dummy string
+		)
+		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
+		doc := QueryDocMini(id)
+		if nil == doc {
+			http.NotFound(aWriter, aRequest)
+			return
+		}
+		tName, err := Thumbnail(doc)
+		if nil != err {
+			http.NotFound(aWriter, aRequest)
+			return
+		}
+		file, err := filepath.Rel(ph.dd, tName)
+		if nil != err {
+			http.NotFound(aWriter, aRequest)
+			return
+		}
+		// log.Printf("cache: %s", file) //FIXME REMOVE
+		aRequest.URL.Path = file
+		ph.staticFS.ServeHTTP(aWriter, aRequest)
+
 	case "views": // this files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
@@ -411,27 +462,5 @@ func (ph TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Req
 		http.Error(aWriter, "HTTP Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 } // ServeHTTP()
-
-var (
-	// RegEx to find path and possible added path components
-	routeRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?([§ÄÖÜß\w.?=:;/,_@-]*)?`)
-)
-
-// URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
-// `rPath` holds the remaining part of `aURL`.
-//
-// Depending on the actual value of `aURL` both return values may be
-// empty or both may be filled; none of both will hold a leading slash.
-func URLparts(aURL string) (rDir, rPath string) {
-	if result, err := url.QueryUnescape(aURL); nil == err {
-		aURL = result
-	}
-	matches := routeRE.FindStringSubmatch(aURL)
-	if 2 < len(matches) {
-		return matches[1], matches[2]
-	}
-
-	return aURL, ""
-} // URLparts()
 
 /* _EoF_ */
