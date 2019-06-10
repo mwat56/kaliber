@@ -16,12 +16,12 @@ func TestTDocument_Cover(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
 	d1 := TDocument{
 		ID:   7628,
-		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+		path: "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
 	w1 := "/cover/7628/cover.gif"
 	d2 := TDocument{
 		ID:   6730,
-		path: calibreLibraryPath + "/John Scalzi/Zoe's Tale (6730)",
+		path: "/John Scalzi/Zoe's Tale (6730)",
 	}
 	w2 := "/cover/6730/cover.gif"
 	tests := []struct {
