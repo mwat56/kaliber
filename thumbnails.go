@@ -23,7 +23,7 @@ import (
 
 var (
 	// The image's width of the generated thumbnail.
-	thumbwidth uint = 384
+	thumbwidth uint = 320
 )
 
 // `makeThumbDir()` creates the directory for the document's thumbnail.
