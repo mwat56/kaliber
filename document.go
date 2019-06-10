@@ -356,10 +356,24 @@ func (doc *TDocument) Tags() *TEntityList {
 	return nil
 } // Tags()
 
+// Thumb returns the relative path-filename of the document's cover image.
+func (doc *TDocument) Thumb() string {
+	return fmt.Sprintf("/thumb/%d/cover.jpg", doc.ID)
+} // Thumb()
+
 // Timestamp returns the formatted `timestamp` property.
 func (doc *TDocument) Timestamp() string {
 	return doc.timestamp.Format("2006-01-02 15:04:05")
 } // Timestamp()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+// Add appends `aDoc` to the list.
+func (dl *TDocList) Add(aDoc *TDocument) *TDocList {
+	*dl = append(*dl, *aDoc)
+
+	return dl
+} // Add()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
