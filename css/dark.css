@@ -26,6 +26,9 @@ article.overview div.cover:hover img.cover {
 article.overview div.cover img.cover:hover {
 	border: thick inset #999;
 }
+article.overview div.meta p {
+	border-bottom: thin dashed #333;
+}
 a.button {
 	background-color: #090010;
 	color: #eeeeee;
@@ -41,6 +44,9 @@ code, .code, kbd, pre, textarea {
 }
 del {
 	color: #999;
+}
+div.meta table.meta tr {
+	border-bottom: thin dashed #333;
 }
 div#search_box {
 	border-bottom: thin solid #ffc;

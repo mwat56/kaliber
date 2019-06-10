@@ -28,9 +28,6 @@ a:link, a[href] {
 a:hover {
 	text-decoration: underline;
 }
-a.idlink {
-	color: inherit;
-}
 blockquote {
 	display: block;
 	font-size: 98%;
@@ -124,14 +121,7 @@ h1 {
 	letter-spacing: 0.3ex;
 	page-break-before: always;
 }
-/*
-h1, h2, h3, h4, h5, h6 {
-	margin: 1em auto;
-}
-h1+h2, h2+h3, h3+h4, h4+h5, h5+h6 {
-	margin-top: -1ex;
-}
-*/
+
 header {
 	margin: 0 0 1em 0;
 }
@@ -175,7 +165,7 @@ select:hover {
 }
 ol, ul {
 	list-style-type: decimal;
-	list-style-position: inside;
+	list-style-position: outside;
 }
 dl dt, dl dd, ol li, ul li {
 	text-indent: 0.3ex;
@@ -245,7 +235,11 @@ ul li ul li ul {
 }
 ul li {
 	display: list-item;
-	margin-left: 2.6ex;
+	margin-left: 1ex;	/* */
+	/* list-style-position: outside;	/* */
+}
+li p {
+	margin-top: 0;
 }
 
 #body {
@@ -301,13 +295,13 @@ article.document h2 {
 }
 blockquote.comment {
 	margin: 1ex 0;
-	max-height: 11em;
+	max-height: 10em;
 	overflow: auto;
 }
-div.comment {
+.document .meta div.comment {
 	margin: 1em 1ex 0 0;
-	max-height: 60em;
-	overflow: auto;
+	/* max-height: 60em; /* */
+	/* overflow: auto; /* */
 }
 div.cover {
 	display: inline-block;
@@ -315,38 +309,41 @@ div.cover {
 }
 div.cover p {
 	margin: 0;
-	padding: 1ex 0 0 0;
+	padding: 0;
 	text-indent: 0;
 }
 div.cover img.cover {
+	border-radius: 0.6ex;
 	max-height: 99%;
 	max-width: 99%;
 }
-article.document div.cover {
+.document div.cover {
 	max-width: 40%;
 }
-article.document div.cover p.cover {
+.document div.cover p.cover {
 	text-align: right;
 }
-article.overview {
-	max-height: 21em;
-	overflow: hidden;
-	width: 100ex;
+
+.overview {
+	max-height: 22em;
+	overflow: auto;
+	max-width: 100ex;
 }
-article.overview {
+.overview {
 	border-radius: 1ex;
 	border: thin solid transparent;
 	margin: 0 0 1ex 0;
 	padding: 0 0 1ex 0;
 }
-article.overview div.cover {
+.overview div.cover {
 	width: 20%;
 }
-article.overview:hover div.cover img.cover,
-article.overview div.cover:hover img.cover,
-article.overview div.cover img.cover:hover {
+.overview:hover .cover .cover,
+.overview .cover:hover .cover,
+.overview .cover .cover:hover {
 	max-width: 94%;
 }
+
 .error {
 	padding: 1em 0 1em 0;
 }
@@ -367,19 +364,24 @@ div.meta {
 	padding: 0 0.5ex;
 	vertical-align: top;
 }
-article.document div.meta {
+.document div.meta {
 	max-width: 58%;
 }
-article.overview div.meta {
-	max-height: 38ex;
-	width: 78%;
+.overview div.meta {
+	max-height: 22em;
+	width: 77%;
 }
-article.overview div.meta p,
-table.meta tr td {
-	line-height: 1.6; /* to make room for the buttons */
+.overview .meta p,
+.meta tr td {
+	line-height: 1.6; /* make room for the button links */
+	padding: 0 0 0.3ex 0;
 }
-article.overview blockquote.comment,
-article.overview blockquote.comment p {
+.overview .meta .comment {
+	border: 0;
+	margin: 0;
+}
+.overview .meta .comment,
+.overview .meta .comment p {
 	line-height: 1.3;
 }
 div.naviline {
