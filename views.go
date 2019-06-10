@@ -22,17 +22,17 @@ import (
 
 var (
 	// RegEx to HREF= tag attributes
-	hrefRE = regexp.MustCompile(` (href="http)`)
+	externalURLHrefRE = regexp.MustCompile(` (href="http)`)
 )
 
 const (
 	// replacement text for `hrefRE`
-	hrefReplace = ` target="_extern" $1`
+	externalURLHrefReplace = ` target="_extern" $1`
 )
 
 // `addExternURLtagets()` adds a TARGET attribute to HREFs.
 func addExternURLtagets(aPage []byte) []byte {
-	return hrefRE.ReplaceAll(aPage, []byte(hrefReplace))
+	return externalURLHrefRE.ReplaceAll(aPage, []byte(externalURLHrefReplace))
 } // addExternURLtagets()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
