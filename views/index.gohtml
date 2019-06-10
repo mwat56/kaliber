@@ -17,7 +17,7 @@
 <article class="overview {{$class}}">
 	<div class="cover">
 		<p class="cover"><a href="{{.DocLink}}{{$qoc}}">
-		<img alt="Cover" class="cover" src="{{$doc.Cover}}"></a></p>
+		<img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a></p>
 	</div><div class="meta">
 		<p><strong>{{$doc.Title}}</strong>
 
@@ -49,11 +49,13 @@
 		{{- end -}}
 
 		{{- if $doc.Files -}}
+			<p>
 			{{- range $i, $file := $doc.Files -}}
 				{{- $name := $file.Name -}}
 				{{- $url := $file.URL -}}
 				<a class="button" href="{{$url}}{{$qoc}}" target="_extern" title="download {{$name}} file">{{$name}}</a> &shy;
 			{{- end -}}
+			</p>
 		{{- end -}}
 
 		{{- if $doc.Publisher -}}
