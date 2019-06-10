@@ -327,7 +327,13 @@ func (doc *TDocument) Series() *TEntity {
 
 // SeriesIndex returns the document's series index as formatted string.
 func (doc *TDocument) SeriesIndex() string {
-	return fmt.Sprintf("%.2f", doc.seriesindex)
+	result := fmt.Sprintf("%.2f", doc.seriesindex)
+	parts := strings.Split(result, `.`)
+	if "00" == parts[1] {
+		return parts[0]
+	}
+
+	return result
 } // SeriesIndex()
 
 var (
