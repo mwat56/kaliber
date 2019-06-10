@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	// `baseQueryString` is the default query to get document data.
-	baseQueryString = `SELECT b.id,
+	// `calibreBaseQuery` is the default query to get document data.
+	calibreBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
 	FROM authors a
@@ -87,9 +87,9 @@ b.uuid,
 b.has_cover
 FROM books b `
 
-	countQuery = `SELECT COUNT(b.id) FROM books b `
+	calibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
-	idQuery = `SELECT id, path FROM books `
+	calibreIDQuery = `SELECT id, path FROM books `
 )
 
 var (
@@ -386,8 +386,8 @@ func orderBy(aOrder uint8, aDescending bool) string {
 		result += "size" + desc + ", b.author_sort" + desc + " "
 	case SortByTags:
 		result += "tags" + desc + ", b.author_sort" + desc + " "
-	case SortByTime:
-		result += "b.pubdate" + desc + ", b.author_sort" + desc + " "
+	case SortByTime: //b.pubdate
+		result += "b.timestamp" + desc + ", b.author_sort" + desc + " "
 	case SortByTitle:
 		result += "b.sort" + desc + ", b.author_sort" + desc + " "
 	default:
@@ -571,14 +571,14 @@ func prepTags(aTag tCSVstring) *tTagList {
 
 // QueryBy returns all documents according to `aOption`.
 func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := sqliteDatabase.Query(countQuery +
+	if rows, err := sqliteDatabase.Query(calibreCountQuery +
 		havIng(aOption.Entity, aOption.ID)); nil == err {
 		if rows.Next() {
 			rows.Scan(&rCount)
 		}
 	}
 	if 0 < rCount {
-		rList, rErr = docListQuery(baseQueryString +
+		rList, rErr = docListQuery(calibreBaseQuery +
 			havIng(aOption.Entity, aOption.ID) +
 			orderBy(aOption.SortBy, aOption.Descending) +
 			limit(aOption.LimitStart, aOption.LimitLength))
@@ -623,7 +623,7 @@ func QueryDocMini(aID TID) *TDocument {
 
 // QueryDocument returns the `TDocument` identified by `aID`.
 func QueryDocument(aID TID) *TDocument {
-	list, _ := docListQuery(baseQueryString + fmt.Sprintf("WHERE b.id=%d ", aID))
+	list, _ := docListQuery(calibreBaseQuery + fmt.Sprintf("WHERE b.id=%d ", aID))
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
@@ -636,7 +636,7 @@ func QueryDocument(aID TID) *TDocument {
 // QueryIDs returns a list of documents with only the `ID` and
 // `path` fields set.
 func QueryIDs() (*TDocList, error) {
-	rows, err := sqliteDatabase.Query(idQuery)
+	rows, err := sqliteDatabase.Query(calibreIDQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -653,19 +653,19 @@ func QueryIDs() (*TDocList, error) {
 
 // QueryLimit returns a list of `TDocument` objects.
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
-	return docListQuery(baseQueryString + limit(aStart, aLength))
+	return docListQuery(calibreBaseQuery + limit(aStart, aLength))
 } // QueryLimit()
 
 // QuerySearch returns a list of documents
 func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	where := NewSearch(aOption.Matching)
-	if rows, err := sqliteDatabase.Query(countQuery + where.Clause()); nil == err {
+	if rows, err := sqliteDatabase.Query(calibreCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			rows.Scan(&rCount)
 		}
 	}
 	if 0 < rCount {
-		rList, rErr = docListQuery(baseQueryString +
+		rList, rErr = docListQuery(calibreBaseQuery +
 			where.Clause() +
 			orderBy(aOption.SortBy, aOption.Descending) +
 			limit(aOption.LimitStart, aOption.LimitLength))

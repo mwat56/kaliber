@@ -7,19 +7,19 @@
 package kaliber
 
 import (
-	"path/filepath"
+	"log"
 	"reflect"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func openDB() {
-	dir, _ := filepath.Abs("./")
-	SetCalibreLibraryPath(dir)
-	DBopen(CalibreDatabasePath())
+func openDBforTesting() {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
-} // openDB()
+	if err := DBopen(CalibreDatabasePath()); nil != err {
+		log.Fatalf("DBopen: %v", err)
+	}
+} // openDBforTesting()
 
 func Test_prepAuthors(t *testing.T) {
 	w0 := &tAuthorList{}
@@ -297,8 +297,7 @@ func Test_prepTags(t *testing.T) {
 } // Test_prepTags()
 
 func TestDBopen(t *testing.T) {
-	dir, _ := filepath.Abs("./")
-	SetCalibreLibraryPath(dir)
+	SetCalibreLibraryPath(`/var/opt/Calibre`)
 	dbfn := CalibreDatabasePath()
 	type args struct {
 		aFilename string
@@ -321,7 +320,7 @@ func TestDBopen(t *testing.T) {
 } // TestDBopen()
 
 func Test_queryDocument(t *testing.T) {
-	openDB()
+	openDBforTesting()
 
 	type args struct {
 		aID int
@@ -345,7 +344,7 @@ func Test_queryDocument(t *testing.T) {
 } // Test_queryDocument()
 
 func TestQueryBy(t *testing.T) {
-	openDB()
+	openDBforTesting()
 	o0 := &TQueryOptions{
 		ID:          0,
 		Descending:  false,
@@ -436,7 +435,7 @@ func TestQueryBy(t *testing.T) {
 } // TestQueryBy()
 
 func TestQueryLimit(t *testing.T) {
-	openDB()
+	openDBforTesting()
 	type args struct {
 		aStart  uint
 		aLength uint
@@ -476,7 +475,7 @@ func TestQueryLimit(t *testing.T) {
 } // TestQueryLimit()
 
 func TestQuerySearch(t *testing.T) {
-	openDB()
+	openDBforTesting()
 	qo1 := NewQueryOptions()
 	qo1.Matching = `"Golang"`
 	type args struct {
