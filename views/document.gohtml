@@ -3,6 +3,8 @@
 {{- end -}}
 
 {{- define "bodypage" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
 {{- $doc := $.Document -}}
 {{- $qoc := $.QOC -}}
 <article class="document">
@@ -11,7 +13,7 @@
 	<table class="meta">
 	{{- if $doc.Authors -}}
 	<tr>
-		<td class="label">Author:</td><td>
+		<td class="label">{{if eq $lang "de"}}Authoren{{else}}Authors{{end}}:</td><td>
 		{{- range $i, $author := $doc.Authors -}}
 			{{- $name := $author.Name -}}
 			{{- $url := $author.URL -}}
@@ -35,7 +37,7 @@
 
 	{{- if $doc.Series -}}
 	<tr>
-		<td class="label">Series:</td><td>
+		<td class="label">{{if eq $lang "de"}}Serie{{else}}Series{{end}}:</td><td>
 		{{- $series := $doc.Series -}}
 		{{- $name := $series.Name -}}
 		{{- $url := $series.URL -}}
@@ -47,7 +49,7 @@
 
 	{{- if $doc.Publisher -}}
 	<tr>
-		<td class="label">Publisher:</td><td>
+		<td class="label">{{if eq $lang "de"}}Verlag{{else}}Publisher{{end}}:</td><td>
 		{{- $pub := $doc.Publisher -}}
 		{{- $name := $pub.Name -}}
 		{{- $url := $pub.URL -}}
@@ -58,7 +60,7 @@
 
 	{{- if $doc.PubDate -}}
 	<tr>
-		<td class="label">Published:</td><td>
+		<td class="label">{{if eq $lang "de"}}Publiziert{{else}}Published{{end}}:</td><td>
 			{{- $doc.PubDate -}}
 		</td>
 	</tr>
@@ -66,7 +68,7 @@
 
 	{{- if $doc.Pages -}}
 	<tr>
-		<td class="label">Pages:</td><td>
+		<td class="label">{{if eq $lang "de"}}Seiten{{else}}Pages{{end}}:</td><td>
 		{{- if lt 0 $doc.Pages}}{{$doc.Pages}}{{end -}}
 		</td>
 	</tr>
@@ -74,7 +76,7 @@
 
 	{{- if $doc.Identifiers -}}
 	<tr>
-		<td class="label">Identifiers:</td><td>
+		<td class="label">{{if eq $lang "de"}}Kennzeichen{{else}}Identifiers{{end}}:</td><td>
 		{{- range $i, $ident := $doc.Identifiers -}}
 			{{- $name := $ident.Name -}}
 			{{- $url := $ident.URL -}}
@@ -98,7 +100,7 @@
 
 	{{- if $doc.Language -}}
 	<tr>
-		<td class="label">Language:</td><td>
+		<td class="label">{{if eq $lang "de"}}Sprache{{else}}Language{{end}}:</td><td>
 		{{- $lang := $doc.Language -}}
 		{{- $name := $lang.Name -}}
 		{{- $url := $lang.URL -}}
@@ -109,7 +111,7 @@
 
 	{{- if $doc.Formats -}}
 	<tr>
-		<td class="label">Formats:</td><td>
+		<td class="label">{{if eq $lang "de"}}Formate{{else}}Formats{{end}}:</td><td>
 		{{- range $i, $format := $doc.Formats -}}
 			{{- $name := $format.Name -}}
 			{{- $url := $format.URL -}}

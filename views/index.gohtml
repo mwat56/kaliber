@@ -3,9 +3,12 @@
 {{- end -}}
 
 {{- define "bodypage" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
 {{- $class := " even" -}}<!-- CSS class for even rows -->
 {{- $qoc := $.QOC -}}<!-- query options container -->
 {{- $row := 1 -}}<!-- record row indicator -->
+{{- if $.Documents -}}
 {{- range $i, $doc := $.Documents -}}
 {{- if eq 1 $row -}}
 	{{- $class = "odd" -}}
@@ -16,13 +19,12 @@
 {{- end -}}
 <article class="overview {{$class}}">
 	<div class="cover">
-		<p class="cover"><a href="{{.DocLink}}{{$qoc}}">
-		<img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a></p>
+		<a href="{{.DocLink}}{{$qoc}}"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a>
 	</div><div class="meta">
 		<p><strong>{{$doc.Title}}</strong>
 
 		{{- if $doc.Authors -}}
-			<br>by &shy;
+			<br>{{if eq $lang "de"}}von{{else}}by{{end}} &shy;
 			{{- range $i, $author := $doc.Authors -}}
 				{{- $name := $author.Name -}}
 				{{- $url := $author.URL -}}
@@ -35,7 +37,7 @@
 			{{- $series := $doc.Series -}}
 			{{- $name := $series.Name -}}
 			{{- $url := $series.URL -}}
-			<p><em>{{$doc.SeriesIndex}}</em> of <em><a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a></em>
+			<p><em>{{$doc.SeriesIndex}}</em> {{if eq $lang "de"}}von{{else}}of{{end}} <em><a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a></em>
 			</p>
 		{{- end -}}
 
@@ -59,11 +61,11 @@
 		{{- end -}}
 
 		{{- if $doc.Publisher -}}
-			<p>Published &shy; {{$doc.PubDate}} &shy;
+			<p>{{if eq $lang "de"}}Publiziert{{else}}Published{{end}} &shy; {{$doc.PubDate}} &shy;
 			{{- $pub := $doc.Publisher -}}
 			{{- $name := $pub.Name -}}
 			{{- $url := $pub.URL -}}
-			<em>by</em> &shy;
+			<em>{{if eq $lang "de"}}von{{else}}by{{end}}</em> &shy;
 			<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
 			</p>
 		{{- end -}}
@@ -73,5 +75,6 @@
 		{{- end -}}
 	</div>
 </article>
+{{- end -}}
 {{- end -}}
 {{- end -}}
