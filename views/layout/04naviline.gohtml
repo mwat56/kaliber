@@ -6,7 +6,7 @@
 {{- if eq $lang "de" -}}
 <p class="naviline">Bücher &nbsp; {{if .BFirst}}<strong>{{.BFirst}}</strong>{{end}} &nbsp; bis &nbsp; {{if .BLast}}<strong>{{.BLast}}</strong>{{end}} &nbsp; von &nbsp; {{if .BCount}}<strong>{{.BCount}}</strong>{{end}}</p>
 {{- else -}}
-<p class="naviline">Books {{if .BFirst}}{{.BFirst}}{{end}} to {{if .BLsst}}{{.BLast}}{{end}} of {{if .BCount}}{{.BCount}}{{end}}</p>
+<p class="naviline">Books {{if .BFirst}}{{.BFirst}}{{end}} to {{if .BLast}}{{.BLast}}{{end}} of {{if .BCount}}{{.BCount}}{{end}}</p>
 {{- end -}}
 
 <table class="prevnext"><tr><td>
@@ -38,7 +38,7 @@
 	{{- if eq $lang "de" -}}
 	<input class="button" form="pageform" name="last" type="submit" value="Letzte" title="Letzte Seite mit Büchern">
 	{{- else -}}
-	<input class="button" form="pageform" name="last" type="submit" value="last" title="last page of books">
+	<input class="button" form="pageform" name="last" type="submit" value="Last" title="last page of books">
 	{{- end -}}
 {{- end -}}
 </td></tr></table>
