@@ -4,9 +4,10 @@ certs/*
 *.db
 _demo/
 .git/
+go-build-executable.sh
 img/*
 *.ini
-kaliber
+kaliber*
 *.log
 metadata*
 *.sql
