@@ -37,28 +37,6 @@ func makeThumbDir(aDoc *TDocument) error {
 	return os.MkdirAll(filepath.FromSlash(dName), fmode)
 } // makeThumbDir()
 
-// Thumbnail will downscale provided image to max width and height preserving
-// original aspect ratio and using the interpolation function interp.
-// It will return original image, without processing it, if original sizes
-// are already smaller than provided constraints.
-func makeThumbPrim(img image.Image) image.Image {
-	origBounds := img.Bounds()
-	origWidth := uint(origBounds.Dx())
-	origHeight := uint(origBounds.Dy())
-	newWidth, newHeight := origWidth, origHeight
-
-	// Preserve aspect ratio
-	if origWidth > thumbwidth {
-		newHeight = uint(origHeight * thumbwidth / origWidth)
-		if newHeight < 1 {
-			newHeight = 1
-		}
-		newWidth = thumbwidth
-	}
-
-	return resize.Resize(newWidth, newHeight, img, resize.Bilinear)
-} // makeThumbPrim()
-
 // `makeThumbnail()` generates a thumbnail for `aSrcName` and stores it
 // in `aDstName`.
 func makeThumbnail(aSrcName, aDstName string) error {
@@ -83,15 +61,38 @@ func makeThumbnail(aSrcName, aDstName string) error {
 	if dFile, err = os.OpenFile(aDstName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644); nil != err {
 		return err
 	}
-	defer dFile.Close()
+	defer func() {
+		dFile.Close()
+		if nil != err {
+			os.Remove(aDstName)
+		}
+	}()
+	err = jpeg.Encode(dFile, dImg, &jpeg.Options{Quality: 100})
 
-	return jpeg.Encode(dFile, dImg, &jpeg.Options{Quality: 100})
+	return err
 } // makeThumbnail()
 
-// ThumbWidth returns the configured width of generated thumbnails.
-func ThumbWidth() uint {
-	return thumbwidth
-} // ThumbWidth()
+// Thumbnail will downscale provided image to max width and height preserving
+// original aspect ratio and using the interpolation function interp.
+// It will return original image, without processing it, if original sizes
+// are already smaller than provided constraints.
+func makeThumbPrim(img image.Image) image.Image {
+	origBounds := img.Bounds()
+	origWidth := uint(origBounds.Dx())
+	origHeight := uint(origBounds.Dy())
+	newWidth, newHeight := origWidth, origHeight
+
+	// Preserve aspect ratio
+	if origWidth > thumbwidth {
+		newHeight = uint(origHeight * thumbwidth / origWidth)
+		if newHeight < 1 {
+			newHeight = 1
+		}
+		newWidth = thumbwidth
+	}
+
+	return resize.Resize(newWidth, newHeight, img, resize.Bilinear)
+} // makeThumbPrim()
 
 // SetThumbWidth set the new width for generated thumbnails.
 //
@@ -104,8 +105,6 @@ func SetThumbWidth(aWidth uint) uint {
 
 	return thumbwidth
 } // SetThumbWidth()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // Thumbnail generates a thumbnail of the document's cover.
 func Thumbnail(aDoc *TDocument) (string, error) {
@@ -171,14 +170,21 @@ func ThumbnailUpdate() {
 		return
 	}
 	for _, doc := range *docList {
-		// here we ignore all errors but hope for the best
-		Thumbnail(&doc)
+		go func(aDoc *TDocument) {
+			// here we ignore all errors but hope for the best
+			Thumbnail(aDoc)
+		}(&doc)
 	}
 
 	//TODO implement reverse: delete all thumbnails no longer matching
 	// an existing document
 
 } // ThumbnailUpdate()
+
+// ThumbWidth returns the configured width of generated thumbnails.
+func ThumbWidth() uint {
+	return thumbwidth
+} // ThumbWidth()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
