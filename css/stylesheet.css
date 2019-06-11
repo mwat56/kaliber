@@ -297,31 +297,24 @@ blockquote.comment {
 	margin: 1ex 0;
 	max-height: 10em;
 	overflow: auto;
+	text-align: justify;
 }
 .document .meta div.comment {
 	margin: 1em 1ex 0 0;
-	/* max-height: 60em; /* */
-	/* overflow: auto; /* */
 }
 div.cover {
 	display: inline-block;
 	vertical-align: top;
 }
-div.cover p {
-	margin: 0;
-	padding: 0;
-	text-indent: 0;
+.document div.cover {
+	max-width: 40%;
+	text-align: right;
 }
+
 div.cover img.cover {
 	border-radius: 0.6ex;
 	max-height: 99%;
 	max-width: 99%;
-}
-.document div.cover {
-	max-width: 40%;
-}
-.document div.cover p.cover {
-	text-align: right;
 }
 
 .overview {
@@ -338,9 +331,9 @@ div.cover img.cover {
 .overview div.cover {
 	width: 20%;
 }
-.overview:hover .cover .cover,
-.overview .cover:hover .cover,
-.overview .cover .cover:hover {
+.overview:hover div.cover img.cover,
+.overview div.cover:hover img.cover,
+.overview div.cover img.cover:hover {
 	max-width: 94%;
 }
 
@@ -369,7 +362,7 @@ div.meta {
 }
 .overview div.meta {
 	max-height: 22em;
-	width: 77%;
+	max-width: 77%;
 }
 .overview .meta p,
 .meta tr td {
@@ -396,16 +389,8 @@ table.prevnext {
 	width: 99%;
 }
 table.prevnext tr td {
-	width: 33%;
-}
-p.last, input.last {
-	text-align: right;
-}
-p.next, input.next {
 	text-align: center;
-}
-p.prev, input.prev {
-	text-align: left;
+	width: 24%;
 }
 .right {
 	text-align: right;

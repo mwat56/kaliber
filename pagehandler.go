@@ -360,6 +360,8 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		// check which of the four possible SUBMIT buttons was activated
 		if search := aRequest.FormValue("search"); 0 < len(search) {
 			qo.DecLimit()
+		} else if first := aRequest.FormValue("first"); 0 < len(first) {
+			qo.LimitStart = 0
 		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
 			qo.DecLimit().DecLimit()
 		} else if last := aRequest.FormValue("last"); 0 < len(last) {
@@ -407,6 +409,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	if BLast > aOption.QueryCount {
 		BLast = aOption.QueryCount
 	}
+	hasFirst := 0 < aOption.LimitStart
 	hasLast := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength + 1)
 	hasNext := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength)
 	hasPrev := aOption.LimitStart > aOption.LimitLength
@@ -416,6 +419,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("BLast", BLast).
 		Set("BCount", BCount).
 		Set("Documents", doclist).
+		Set("HasFirst", hasFirst).
 		Set("HasLast", hasLast).
 		Set("HasNext", hasNext).
 		Set("HasPrev", hasPrev).

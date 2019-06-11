@@ -10,35 +10,37 @@
 {{- end -}}
 
 <table class="prevnext"><tr><td>
-{{- if $.HasPrev -}}
-	<p class="prev">
+{{- if $.HasFirst -}}
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="prev" type="submit" value="Vorige">
+	<input class="button" form="pageform" name="first" type="submit" value="Erste" title="Erste Seite mit Büchern">
 	{{- else -}}
-	<input class="button" form="pageform" name="prev" type="submit" value="Prev">
+	<input class="button" form="pageform" name="first" type="submit" value="First" title="First page of books">
 	{{- end -}}
-	</p>
+{{- end -}}
+</td><td>
+{{- if $.HasPrev -}}
+	{{- if eq $lang "de" -}}
+	<input class="button" form="pageform" name="prev" type="submit" value="Vorige" title="Vorherige Seite mit Büchern">
+	{{- else -}}
+	<input class="button" form="pageform" name="prev" type="submit" value="Prev" title="Previous page of books">
+	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasNext -}}
-	<p class="next">
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="next" type="submit" value="Nächste">
+	<input class="button" form="pageform" name="next" type="submit" value="Nächste" title="Nächste Seite mit Büchern">
 	{{- else -}}
-	<input class="button" form="pageform" name="next" type="submit" value="Next">
+	<input class="button" form="pageform" name="next" type="submit" value="Next" title="Next page of books">
 	{{- end -}}
-	</p>
 {{- end -}}
 </td><td>
 {{- if $.HasLast -}}
-	<p class="last">
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="last" type="submit" value="Letzte">
+	<input class="button" form="pageform" name="last" type="submit" value="Letzte" title="Letzte Seite mit Büchern">
 	{{- else -}}
-	<input class="button" form="pageform" name="last" type="submit" value="last">
+	<input class="button" form="pageform" name="last" type="submit" value="last" title="last page of books">
 	{{- end -}}
-	</p>
 {{- end -}}
 </td></tr></table>
-</div>
+</div><!-- "naviline" -->
 {{- end -}}
