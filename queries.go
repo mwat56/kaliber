@@ -183,36 +183,37 @@ func CalibreDatabasePath() string {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// `fileTime()` checks whether the SQLite database file has changed
+// `dbReopen()` checks whether the SQLite database file has changed
 // since the last access. If so, the current database connection is
 // closed and a new one is established.
 //
-func (db *tDataBase) fileTime() error {
+func (db *tDataBase) dbReopen() error {
 	// check whether the DB file changed:
 	select {
 	case <-db.isDone:
 		if nil != db.DB {
 			db.DB.Close()
 		}
-		dsn := `file:` + db.fileName + `?mode=ro`
 		var err error
+		// "cache=shared" is essential to avoid running out of
+		// file handles since each query holds its own file handle.
+		// "mode=ro" is self-explanatory since we don't change the
+		// DB in any way.
+		dsn := `file:` + db.fileName + `?cache=shared&mode=ro`
 		if db.DB, err = sql.Open("sqlite3", dsn); nil != err {
 			return err
 		}
-		if err = db.DB.Ping(); nil != err {
-			return err
-		}
+		return db.DB.Ping()
+
 	default:
 		return nil
 	}
-
-	return nil
-} // fileTime()
+} // dbReopen()
 
 // Query executes a query that returns rows, typically a SELECT.
 // The `args` are for any placeholder parameters in the query.
 func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error) {
-	if err := db.fileTime(); nil != err {
+	if err := db.dbReopen(); nil != err {
 		return nil, err
 	}
 
@@ -261,6 +262,8 @@ func copyDatabaseFile(aSrc, aDst string) error {
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return err
 	}
+	sFile.Close()
+	tFile.Close()
 
 	return os.Rename(tName, aDst)
 } // copyDatabaseFile()
@@ -285,7 +288,7 @@ func DBopen(aFilename string) error {
 	// start monitoring the original database file:
 	go goCheckFile(sqliteDatabase.doCheck, sqliteDatabase.isDone)
 
-	return sqliteDatabase.fileTime()
+	return sqliteDatabase.dbReopen()
 } // DBopen()
 
 // `docListQuery()` returns a list of documents.
@@ -319,13 +322,13 @@ func docListQuery(aQuery string) (*TDocList, error) {
 // `goCheckFile()` checks in the background whether the original database
 // file has changed. If so, that file is copied into the cache directory
 // from where it is read and used by the `sqliteDatabase` instance.
-func goCheckFile(aWork <-chan bool, aDone chan<- bool) {
+func goCheckFile(aCheck <-chan bool, aDone chan<- bool) {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
 
 	for { // wait for a signal to arrive
 		select {
-		case <-aWork:
+		case <-aCheck:
 			if err := copyDatabaseFile(sName, dName); nil == err {
 				aDone <- true
 			}
