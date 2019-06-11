@@ -17,7 +17,7 @@ article.document div.cover img.cover {
 	border: thick inset #330;
 }
 article.even, footer, header {
-	background: #201010;
+	background: #201919;
 }
 article.overview:hover div.cover img.cover,
 article.overview div.cover:hover img.cover {

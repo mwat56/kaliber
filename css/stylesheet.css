@@ -362,7 +362,7 @@ div.meta {
 }
 .overview div.meta {
 	max-height: 22em;
-	max-width: 77%;
+	width: 77%;
 }
 .overview .meta p,
 .meta tr td {
@@ -375,20 +375,23 @@ div.meta {
 }
 .overview .meta .comment,
 .overview .meta .comment p {
-	line-height: 1.3;
+	line-height: 1.4;
 }
 div.naviline {
 	min-height: 1em;
 }
 p.naviline {
 	letter-spacing: 0.3ex;
+	padding: 0 0 0.6ex 0;
 	text-align: center;
 }
 table.prevnext {
 	margin: 0 auto;
+	padding: 0 0 0.6ex 0;
 	width: 99%;
 }
 table.prevnext tr td {
+	padding: 0 0 1ex 0;
 	text-align: center;
 	width: 24%;
 }
