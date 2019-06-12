@@ -352,7 +352,7 @@ func TestQueryBy(t *testing.T) {
 		LimitLength: 1000,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      SortByAuthor,
+		SortBy:      qoSortByAuthor,
 	}
 	o1 := &TQueryOptions{
 		ID:          3524,
@@ -361,7 +361,7 @@ func TestQueryBy(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      SortByAuthor,
+		SortBy:      qoSortByAuthor,
 	}
 	o2 := &TQueryOptions{
 		ID:          1,
@@ -370,7 +370,7 @@ func TestQueryBy(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      SortByLanguage,
+		SortBy:      qoSortByLanguage,
 	}
 	o3 := &TQueryOptions{
 		ID:          574,
@@ -379,7 +379,7 @@ func TestQueryBy(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      SortByPublisher,
+		SortBy:      qoSortByPublisher,
 	}
 	o4 := &TQueryOptions{
 		ID:          519,
@@ -388,7 +388,7 @@ func TestQueryBy(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      SortByTime,
+		SortBy:      qoSortByTime,
 	}
 	o5 := &TQueryOptions{
 		ID:          60,
@@ -397,7 +397,7 @@ func TestQueryBy(t *testing.T) {
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      SortByTags,
+		SortBy:      qoSortByTags,
 	}
 	type args struct {
 		aOption *TQueryOptions

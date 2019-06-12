@@ -375,23 +375,23 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	}
 	result := "ORDER BY "
 	switch aOrder { // constants defined in `queryoptions.go`
-	case SortByAuthor:
+	case qoSortByAuthor:
 		result += "b.author_sort" + desc + ", b.pubdate" + desc + " "
-	case SortByLanguage:
+	case qoSortByLanguage:
 		result += "language" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
-	case SortByPublisher:
+	case qoSortByPublisher:
 		result += "publisher" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
-	case SortByRating:
+	case qoSortByRating:
 		result += "rating" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
-	case SortBySeries:
+	case qoSortBySeries:
 		result += "series" + desc + ", b.series_index" + desc + ", b.sort" + desc + " "
-	case SortBySize:
+	case qoSortBySize:
 		result += "size" + desc + ", b.author_sort" + desc + " "
-	case SortByTags:
+	case qoSortByTags:
 		result += "tags" + desc + ", b.author_sort" + desc + " "
-	case SortByTime: //b.pubdate
+	case qoSortByTime: //b.pubdate
 		result += "b.timestamp" + desc + ", b.author_sort" + desc + " "
-	case SortByTitle:
+	case qoSortByTitle:
 		result += "b.sort" + desc + ", b.author_sort" + desc + " "
 	default:
 		return ""
