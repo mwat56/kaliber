@@ -170,10 +170,8 @@ func ThumbnailUpdate() {
 		return
 	}
 	for _, doc := range *docList {
-		go func(aDoc *TDocument) {
-			// here we ignore all errors but hope for the best
-			Thumbnail(aDoc)
-		}(&doc)
+		// here we ignore all errors but hope for the best
+		Thumbnail(&doc)
 	}
 
 	//TODO implement reverse: delete all thumbnails no longer matching
