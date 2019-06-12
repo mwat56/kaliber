@@ -12,33 +12,41 @@
 <table class="prevnext"><tr><td>
 {{- if $.HasFirst -}}
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="first" type="submit" value="Erste" title="Erste Seite mit Büchern">
+	<a class="button" href="/first{{$.QOC}}" title=" Erste Seite mit Büchern"><img alt="Erste" src="/img/first.gif"></a>
+	<!-- input class="button" form="pageform" name="first" type="submit" value="Erste" title=" Erste Seite mit Büchern" -->
 	{{- else -}}
-	<input class="button" form="pageform" name="first" type="submit" value="First" title="First page of books">
+	<a class="button" href="/first{{$.QOC}}" title=" First page of books"><img alt="First" src="/img/first.gif"></a>
+	<!-- input class="button" form="pageform" name="first" type="submit" value="First" title=" First page of books" -->
 	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasPrev -}}
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="prev" type="submit" value="Vorige" title="Vorherige Seite mit Büchern">
+	<a class="button" href="/prev{{$.QOC}}" title=" Vorherige Seite mit Büchern"><img alt="Vorige" src="/img/prev.gif"></a>
+	<!-- input class="button" form="pageform" name="prev" type="submit" value="Vorige" title=" Vorherige Seite mit Büchern" -->
 	{{- else -}}
-	<input class="button" form="pageform" name="prev" type="submit" value="Prev" title="Previous page of books">
+	<a class="button" href="/prev{{$.QOC}}" title=" Previous page of books"><img alt="Prev" src="/img/prev.gif"></a>
+	<!-- input class="button" form="pageform" name="prev" type="submit" value="Prev" title=" Previous page of books" -->
 	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasNext -}}
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="next" type="submit" value="Nächste" title="Nächste Seite mit Büchern">
+	<!-- input class="button" form="pageform" name="next" type="submit" value="Nächste" title=" Nächste Seite mit Büchern" -->
+	<a class="button" href="/next{{$.QOC}}" title=" Nächste Seite mit Büchern"><img alt="Nächste" src="/img/next.gif"></a>
 	{{- else -}}
-	<input class="button" form="pageform" name="next" type="submit" value="Next" title="Next page of books">
+	<!-- input class="button" form="pageform" name="next" type="submit" value="Next" title=" Next page of books" -->
+	<a class="button" href="/next{{$.QOC}}" title=" Next page of books"><img alt="Next" src="/img/next.gif"></a>
 	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasLast -}}
 	{{- if eq $lang "de" -}}
-	<input class="button" form="pageform" name="last" type="submit" value="Letzte" title="Letzte Seite mit Büchern">
+	<!-- input class="button" form="pageform" name="last" type="submit" value="Letzte" title=" Letzte Seite mit Büchern" -->
+	<a class="button" href="/last{{$.QOC}}" title=" Letzte Seite mit Büchern"><img alt="Letzte" src="/img/last.gif"></a>
 	{{- else -}}
-	<input class="button" form="pageform" name="last" type="submit" value="Last" title="last page of books">
+	<!-- input class="button" form="pageform" name="last" type="submit" value="Last" title=" Last page of books" -->
+	<a class="button" href="/last{{$.QOC}}" title=" Last page of books"><img alt="Last" src="/img/last.gif"></a>
 	{{- end -}}
 {{- end -}}
 </td></tr></table>

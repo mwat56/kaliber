@@ -262,7 +262,9 @@ img#logo {
 }
 div#search_box {
 	font-size: 89%;
-	padding: 0.1ex 0 1ex 0;
+	/* we need this to allow for wrapping on smaller screens: */
+	line-height: 2.5;
+	padding: 0 0 1ex 0;
 	text-align: right;
 }
 
@@ -275,7 +277,7 @@ a.button {
 	padding: 0 0.3ex 0.2ex 0.3ex;
 	text-align: center;
 	text-decoration: none;
-	vertical-align: middle;
+	vertical-align: baseline;
 	white-space: nowrap;
 }
 a.button:hover {
@@ -329,6 +331,7 @@ div.cover img.cover {
 	padding: 0 0 1ex 0;
 }
 .overview div.cover {
+	padding: 1ex 0 0 0;
 	width: 20%;
 }
 .overview:hover div.cover img.cover,
@@ -350,7 +353,7 @@ td.label {
 	text-align: left;
 }
 p.mainlinks {
-	margin: 0.6ex 0 0 0;
+	margin: 0.5ex 0 0 0;
 }
 div.meta {
 	display: inline-block;
@@ -382,18 +385,26 @@ div.naviline {
 }
 p.naviline {
 	letter-spacing: 0.3ex;
-	padding: 0 0 0.6ex 0;
+	padding: 0 0 0.5ex 0;
 	text-align: center;
 }
 table.prevnext {
 	margin: 0 auto;
-	padding: 0 0 0.6ex 0;
+	padding: 0 0 0.5ex 0;
 	width: 99%;
 }
 table.prevnext tr td {
-	padding: 0 0 1ex 0;
+	padding: 0 0 0.5ex 0;
 	text-align: center;
 	width: 24%;
+}
+table.prevnext tr td a {
+	background: transparent;
+	border: thin outset transparent;
+	padding: 0;
+}
+table.prevnext tr td a:hover {
+	border-style: inset;
 }
 .right {
 	text-align: right;

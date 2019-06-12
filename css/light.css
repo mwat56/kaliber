@@ -89,5 +89,9 @@ p.mainlinks {
 pre {
 	border-left: thick solid #999;
 }
+table.prevnext tr td a {
+	background: #c0c0c0; /* matching the IMG's background */
+	border-color: #c0c0c0;
+}
 
 /* _EoF_ */

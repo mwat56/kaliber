@@ -284,6 +284,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		aRequest.URL.Path = file
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
+	case "first":
+		qo.Navigation = qoFirst
+		ph.handleQuery(qo, aWriter)
+
 	case "fonts":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
@@ -293,10 +297,22 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "imprint", "impressum":
 		ph.viewList.Render("imprint", aWriter, pageData)
 
+	case "last":
+		qo.Navigation = qoLast
+		ph.handleQuery(qo, aWriter)
+
 	case "licence", "license", "lizenz":
 		ph.viewList.Render("licence", aWriter, pageData)
 
+	case "next":
+		qo.Navigation = qoNext
+		ph.handleQuery(qo, aWriter)
+
 	case "post":
+		ph.handleQuery(qo, aWriter)
+
+	case "prev":
+		qo.Navigation = qoPrev
 		ph.handleQuery(qo, aWriter)
 
 	case "privacy", "datenschutz":
@@ -326,7 +342,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		// log.Printf("cache: %s", file) //FIXME REMOVE
 		aRequest.URL.Path = file
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
@@ -357,17 +372,13 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		if search := aRequest.FormValue("search"); 0 < len(search) {
 			qo.DecLimit()
 		} else if first := aRequest.FormValue("first"); 0 < len(first) {
-			qo.LimitStart = 0
-		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
-			qo.DecLimit().DecLimit()
+			qo.Navigation = qoFirst
 		} else if last := aRequest.FormValue("last"); 0 < len(last) {
-			if qo.QueryCount <= qo.LimitLength {
-				qo.LimitStart = 0
-			} else {
-				qo.LimitStart = qo.QueryCount - qo.LimitLength
-			}
-			// } else if next := aRequest.FormValue("next"); 0 < len(next) {
-			// 	next = "" // nothing to do here
+			qo.Navigation = qoLast
+		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
+			qo.Navigation = qoPrev
+		} else if next := aRequest.FormValue("next"); 0 < len(next) {
+			qo.Navigation = qoNext
 		}
 		ph.handleQuery(qo, aWriter)
 
@@ -399,6 +410,22 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	} else {
 		aOption.QueryCount = 0
 	}
+
+	switch aOption.Navigation {
+	case qoFirst:
+		aOption.LimitStart = 0
+	case qoPrev:
+		aOption.DecLimit().DecLimit()
+	case qoLast:
+		if aOption.QueryCount <= aOption.LimitLength {
+			aOption.LimitStart = 0
+		} else {
+			aOption.LimitStart = aOption.QueryCount - aOption.LimitLength
+		}
+	default:
+		// qoNext: nothing to do here
+	}
+
 	BFirst := aOption.LimitStart + 1 // zero-based to one-based
 	BCount := aOption.QueryCount
 	BLast := aOption.LimitStart + aOption.LimitLength
@@ -426,7 +453,6 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("SOO", aOption.SelectOrderOptions()).
 		Set("SSB", aOption.SelectSortByOptions()).
 		Set("ShowForm", true)
-	// log.Printf("handleQuery: `%v`", pageData) //FIXME REMOVE
 	if err = ph.viewList.Render("index", aWriter, pageData); nil != err {
 		//TODO better error handling
 		log.Printf("handleQuery() Render: %v\n", err)
