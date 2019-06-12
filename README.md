@@ -28,7 +28,7 @@ Relunctantly I started to investigate and then use eBooks, first on my main desk
 
 Soon – and again – there were so many that I started looking for some convenient way to handle, store, and retrieve them.
 That's when I became aquainted with [Calibre](https://calibre-ebook.com/), a great software for working with eBooks.
-Of course, there were some problems but since the software is actively maintained and extended those problems either went away on their own with the next update or I found some way around them.
+Of course, there were some problems but since the software is actively maintained and extended all the time those problems either went away on their own with the next update or I found some way around them.
 And sure, it took some work to get all the eBooks into that library system, and since there are always coming new titles the work kind of never ends.
 
 Another question soom became urgent: How to access my books when I'm not at home?
@@ -38,7 +38,7 @@ Quite another question, however, is _how_ it does its job.
 And there the problem lies.
 The web-server coming with `Calibre` serves pages that are heavily dependent on JavaScript; so much so that the pages simply don't appear or work at all if you have JavaScript disabled in your browser e.g. for privacy or security reasons.
 For a while I grudgingly activated JavaScript whenever I wanted to access my books remotely.
-I asked the author of `Calibre` whether he'd be willing to provide a barrier-free alternative (i.e. w/o JavaScript) but unfortunately he declined: "Not going to happen."
+I asked the author of `Calibre` whether he'd be willing to provide a barrier-free alternative (i.e. without JavaScript) but unfortunately he declined: "Not going to happen."
 
 Well, due to other projects I didn't find the time then to do something about it, and it took some more years before I started seriously to look for alternatives.
 Therefore now there's `Kaliber`, a barrier-free web-server for your `Calibre` book collection.
@@ -56,6 +56,7 @@ You'd probably were seriously annoyed if the waiter/server just brought you the 
 
 Since I couldn't find a documentation of the database structure used by `Calibre` I had to reverse engineer the ways to access the stored book data.
 The same is true – to a certain lesser degree – for the web-pages served by `Kaliber`: it's kind of a mix of `Calibre`'s normal (i.e. JavaScript based) and `mobile` pages.
+The overall layout of the web-pages served by `Kaliber` is intentionally kept simple ([KISS](https://en.wikipedia.org/wiki/KISS_principle)).
 
 ## Installation
 
@@ -288,10 +289,10 @@ There's an INI file which can take all the options (apart from the user handling
 
 Under the directory given with the `datadir =` entry in the INI file or the `-datadir` commandline option there are several sub-directories expected:
 
-* `css`: the CSS files used,
-* `fonts`: the fonts used,
-* `img`: the images used,
-* `views` and `views/layout`: the Go templates used.
+* `css`: containing the CSS files used,
+* `fonts`: containing the fonts used,
+* `img`: containing the images used,
+* `views`: the Go templates used to generate the pages.
 
 All of this directories and files are part of the `Kaliber` package.
 You can use them as is or customise them as you see fit to suit your needs.
@@ -301,9 +302,10 @@ However, please note: _I will not support any customisations_, you're on your ow
 
 There are some `Calibre` features which are not available (yet) with `Kaliber` and not currently supported:
 
-* _custom columns_ defined by the respective `Calibre` user,
-* _virtual libraries_ created by the `Calibre` user,
-* _different libraries_ of the user to switch between.
+* _custom columns_ defined by the respective `Calibre` user;
+* _different libraries_ of the user to switch between;
+* _virtual libraries_ created by the `Calibre` user;
+* _book uploads_ are not planned to be included.
 
 Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided there's actually time to do it).
 
