@@ -9,22 +9,45 @@ package kaliber
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 )
 
+// Constants defining the navigation direction
+const (
+	qoFirst = uint8(1 << iota)
+	qoPrev
+	qoNext
+	qoLast
+)
+
 // Constants defining the ORDER_BY clause
 const (
-	SortUnsorted = uint8(iota)
-	SortByAuthor
-	SortByLanguage
-	SortByPublisher
-	SortByRating
-	SortBySeries
-	SortBySize
-	SortByTags
-	SortByTime
-	SortByTitle
+	qoSortUnsorted = uint8(iota)
+	qoSortByAuthor
+	qoSortByLanguage
+	qoSortByPublisher
+	qoSortByRating
+	qoSortBySeries
+	qoSortBySize
+	qoSortByTags
+	qoSortByTime
+	qoSortByTitle
+)
+
+// Pattern used by `String()` and `Scan()`:
+const (
+	qoStringPattern = `|%d|%t|%q|%d|%d|%q|%d|%d|%d|`
+	//                   |  |  |  |  |  |  |  |  + SortBy
+	//                   |  |  |  |  |  |  |  + QueryCount
+	//                   |  |  |  |  |  |  + Navigation
+	//                   |  |  |  |  |  + Matching
+	//                   |  |  |  |  + LimitStart
+	//                   |  |  |  + LimitLength
+	//                   |  |  + Entity
+	//                   |  + Descending
+	//                   + ID
 )
 
 type (
@@ -39,6 +62,7 @@ type (
 		LimitLength uint   // number of documents per page
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
+		Navigation  uint8  // page navigation direction
 		SortBy      uint8  // display order of documents
 		QueryCount  uint   // number of DB records matching the query option
 	}
@@ -47,7 +71,7 @@ type (
 // CGI returns the object's query escaped string representation
 // fit for use as the `qos` CGI argument.
 func (qo *TQueryOptions) CGI() string {
-	return `?qo="` + base64.StdEncoding.EncodeToString([]byte(qo.String())) + `"`
+	return `?qoc="` + base64.StdEncoding.EncodeToString([]byte(qo.String())) + `"`
 } // CGI()
 
 // DecLimit decrements the LIMIT values.
@@ -69,6 +93,16 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 
 	return qo
 } // decLimit()
+
+// Scan returns the options read from `aString`.
+func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
+	fmt.Sscanf(aString, qoStringPattern,
+		&qo.ID, &qo.Descending, &qo.Entity,
+		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
+		&qo.Navigation, &qo.QueryCount, &qo.SortBy)
+
+	return qo
+} // Scan()
 
 // SelectLimitOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectLimitOptions() *TStringMap {
@@ -106,15 +140,15 @@ func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 // SelectSortByOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectSortByOptions() *TStringMap {
 	result := make(TStringMap, 9)
-	qo.selectSortByPrim(&result, SortByAuthor, "author")
-	qo.selectSortByPrim(&result, SortByLanguage, "language")
-	qo.selectSortByPrim(&result, SortByPublisher, "publisher")
-	qo.selectSortByPrim(&result, SortByRating, "rating")
-	qo.selectSortByPrim(&result, SortBySeries, "series")
-	qo.selectSortByPrim(&result, SortBySize, "size")
-	qo.selectSortByPrim(&result, SortByTags, "tags")
-	qo.selectSortByPrim(&result, SortByTime, "time")
-	qo.selectSortByPrim(&result, SortByTitle, "title")
+	qo.selectSortByPrim(&result, qoSortByAuthor, "author")
+	qo.selectSortByPrim(&result, qoSortByLanguage, "language")
+	qo.selectSortByPrim(&result, qoSortByPublisher, "publisher")
+	qo.selectSortByPrim(&result, qoSortByRating, "rating")
+	qo.selectSortByPrim(&result, qoSortBySeries, "series")
+	qo.selectSortByPrim(&result, qoSortBySize, "size")
+	qo.selectSortByPrim(&result, qoSortByTags, "tags")
+	qo.selectSortByPrim(&result, qoSortByTime, "time")
+	qo.selectSortByPrim(&result, qoSortByTitle, "title")
 
 	return &result
 } // SelectSortByOptions()
@@ -129,28 +163,33 @@ func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort uint8, aIndex 
 
 // String returns the options as a `|` delimited string.
 func (qo *TQueryOptions) String() string {
-	return fmt.Sprintf(`|%d|%t|%q|%d|%d|%q|%d|%d|`,
+	return fmt.Sprintf(qoStringPattern,
 		qo.ID, qo.Descending, qo.Entity,
-		qo.LimitLength, qo.LimitStart,
-		qo.Matching, qo.QueryCount, qo.SortBy)
+		qo.LimitLength, qo.LimitStart, qo.Matching,
+		qo.Navigation, qo.QueryCount, qo.SortBy)
 } // String()
-
-// Scan returns the options read from `aString`.
-func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
-	fmt.Sscanf(aString, `|%d|%t|%q|%d|%d|%q|%d|%d|`, &qo.ID, &qo.Descending, &qo.Entity, &qo.LimitLength, &qo.LimitStart, &qo.Matching, &qo.QueryCount, &qo.SortBy)
-
-	return qo
-} // Scan()
 
 // UnCGI unescapes the given `aCGI`.
 //
 // If there are errors during unescaping the current values remain unchanged.
 func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
-	if qosu, err := base64.StdEncoding.DecodeString(aCGI); nil == err {
-		return qo.Scan(string(qosu))
+	sLen := len(aCGI) - 1
+	if 1 < sLen {
+		if '"' == aCGI[sLen] {
+			aCGI = aCGI[:sLen]
+		}
+		if '"' == aCGI[0] {
+			aCGI = aCGI[1:]
+		}
+	}
+	qoc, err := base64.StdEncoding.DecodeString(aCGI)
+	if nil != err {
+		//TODO better error handling
+		log.Printf("TQueryOptions.UnCGI('%s'): %v", aCGI, err) //FIXME REMOVE
+		return qo
 	}
 
-	return qo
+	return qo.Scan(string(qoc))
 } // UnCGI()
 
 // Update returns a `TQueryOptions` instance with values
@@ -181,23 +220,23 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		var sb uint8
 		switch fsb {
 		case "author":
-			sb = SortByAuthor
+			sb = qoSortByAuthor
 		case "language":
-			sb = SortByLanguage
+			sb = qoSortByLanguage
 		case "publisher":
-			sb = SortByPublisher
+			sb = qoSortByPublisher
 		case "rating":
-			sb = SortByRating
+			sb = qoSortByRating
 		case "series":
-			sb = SortBySeries
+			sb = qoSortBySeries
 		case "size":
-			sb = SortBySize
+			sb = qoSortBySize
 		case "tags":
-			sb = SortByTags
+			sb = qoSortByTags
 		case "time":
-			sb = SortByTime
+			sb = qoSortByTime
 		case "title":
-			sb = SortByTitle
+			sb = qoSortByTitle
 		}
 		if sb != qo.SortBy {
 			qo.SortBy = sb
@@ -216,7 +255,7 @@ func NewQueryOptions() *TQueryOptions {
 		Descending:  true,
 		Entity:      "all",
 		LimitLength: 25,
-		SortBy:      SortByTime,
+		SortBy:      qoSortByTime,
 	}
 	if s, _ := AppArguments.Get("booksperpage"); 0 < len(s) {
 		if _, err := fmt.Sscanf(s, "%d", &result.LimitLength); nil != err {
