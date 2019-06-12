@@ -234,11 +234,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			return
 		}
 		file, err := doc.coverAbs(true)
-		if nil != err {
-			http.NotFound(aWriter, aRequest)
-			return
-		}
-		if 0 >= len(file) {
+		if (nil != err) || (0 >= len(file)) {
 			http.NotFound(aWriter, aRequest)
 			return
 		}

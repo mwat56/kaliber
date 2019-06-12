@@ -277,7 +277,7 @@ func initArguments() {
 	}
 	AppArguments.set("libraryname", lnStr)
 
-	SetCalibreCachePath(filepath.Join(dataStr, "cache"))
+	SetCalibreCachePath(filepath.Join(dataStr, "img"))
 	SetCalibreLibraryPath(lpStr)
 
 	if "0" == listenStr {

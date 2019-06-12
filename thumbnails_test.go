@@ -37,13 +37,13 @@ func Test_makeThumbDir(t *testing.T) {
 } // Test_makeThumbDir()
 
 func TestThumbnail(t *testing.T) {
-	SetCalibreCachePath("./cache")
+	SetCalibreCachePath("./img")
 	SetCalibreLibraryPath("/var/opt/Calibre/")
 	d1 := &TDocument{
 		ID:   7628,
 		path: "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
-	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/cache/0076/007628.jpg"
+	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/img/0076/007628.jpg"
 	ThumbnailRemove(d1)
 	type args struct {
 		aDoc *TDocument
@@ -72,13 +72,13 @@ func TestThumbnail(t *testing.T) {
 } // TestThumbnail()
 
 func TestThumbnailName(t *testing.T) {
-	SetCalibreCachePath("./cache")
+	SetCalibreCachePath("./img")
 	SetCalibreLibraryPath("/var/opt/Calibre/")
 	d1 := &TDocument{
 		ID:   7628,
 		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
-	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/cache/0076/007628.jpg"
+	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/img/0076/007628.jpg"
 	ThumbnailRemove(d1)
 	type args struct {
 		aDoc *TDocument
@@ -101,7 +101,7 @@ func TestThumbnailName(t *testing.T) {
 } // TestThumbnailName()
 
 func TestThumbnailRemove(t *testing.T) {
-	SetCalibreCachePath("./cache")
+	SetCalibreCachePath("./img")
 	SetCalibreLibraryPath("/var/opt/Calibre/")
 	d1 := &TDocument{
 		ID:   7628,
