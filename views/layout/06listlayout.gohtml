@@ -1,0 +1,76 @@
+{{- define "listlayout" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+{{- $qoc := $.QOC -}}<!-- query options container -->
+{{- $class := "even" -}}<!-- CSS class for even rows -->
+{{- $row := 1 -}}<!-- record row indicator -->
+{{- if $.Documents -}}
+	{{- range $i, $doc := $.Documents -}}
+		{{- if eq 1 $row -}}
+			{{- $class = "odd" -}}
+			{{- $row = 0 -}}
+		{{- else -}}
+			{{- $class = "even" -}}
+			{{- $row = 1 -}}
+		{{- end -}}
+		<article class="overview {{$class}}">
+			<div class="cover">
+				<a href="{{.DocLink}}{{$qoc}}"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a>
+			</div><div class="meta">
+				<p><strong>{{$doc.Title}}</strong>
+
+				{{- if $doc.Authors -}}
+					<br>{{if eq $lang "de"}}von{{else}}by{{end}} &shy;
+					{{- range $i, $author := $doc.Authors -}}
+						{{- $name := $author.Name -}}
+						{{- $url := $author.URL -}}
+						<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;
+					{{- end -}}
+				{{- end -}}
+				</p>
+
+				{{- if $doc.Series -}}
+					{{- $series := $doc.Series -}}
+					{{- $name := $series.Name -}}
+					{{- $url := $series.URL -}}
+					<p><em>{{$doc.SeriesIndex}}</em> {{if eq $lang "de"}}von{{else}}of{{end}} <em><a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a></em>
+					</p>
+				{{- end -}}
+
+				{{- if $doc.Tags -}}
+				<p>{{range $i, $tag := $doc.Tags -}}
+					{{- $name := $tag.Name -}}
+					{{- $url := $tag.URL -}}
+					<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;
+					{{- end -}}
+				</p>
+				{{- end -}}
+
+				{{- if $doc.Files -}}
+					<p>
+					{{- range $i, $file := $doc.Files -}}
+						{{- $name := $file.Name -}}
+						{{- $url := $file.URL -}}
+						<a class="button" href="{{$url}}{{$qoc}}" target="_extern" title="download {{$name}} file">{{$name}}</a> &shy;
+					{{- end -}}
+					</p>
+				{{- end -}}
+
+				{{- if $doc.Publisher -}}
+					<p>{{if eq $lang "de"}}Publiziert{{else}}Published{{end}} &shy; {{$doc.PubDate}} &shy;
+					{{- $pub := $doc.Publisher -}}
+					{{- $name := $pub.Name -}}
+					{{- $url := $pub.URL -}}
+					<em>{{if eq $lang "de"}}von{{else}}by{{end}}</em> &shy;
+					<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
+					</p>
+				{{- end -}}
+
+				{{- if $doc.Comment -}}
+					<blockquote class="comment">{{$doc.Comment}}</blockquote>
+				{{- end -}}
+			</div>
+		</article>
+	{{- end -}}<!-- range -->
+{{- end -}}<!-- $.Documents -->
+{{- end -}}<!-- "listlayout" -->
