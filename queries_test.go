@@ -412,7 +412,7 @@ func TestQueryBy(t *testing.T) {
 		// TODO: Add test cases.
 		{" 0", args{o0}, 5439, 1000, false},
 		{" 1", args{o1}, 14, 14, false},
-		{" 2", args{o2}, 4574, 50, false},
+		{" 2", args{o2}, 4575, 50, false},
 		{" 3", args{o3}, 42, 42, false},
 		{" 4", args{o4}, 350, 50, false},
 		{" 5", args{o5}, 448, 50, false},

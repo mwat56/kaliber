@@ -87,9 +87,18 @@ b.uuid,
 b.has_cover
 FROM books b `
 
+	// see `QueryBy()`. `QuerySearch()`
 	calibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
+	// see `QueryIDs()`
 	calibreIDQuery = `SELECT id, path FROM books `
+
+	// see `QueryDoc()`
+	calibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
+FROM data d WHERE d.book = b.id), "") formats,
+b.path,
+b.title
+FROM books b`
 )
 
 var (
@@ -291,8 +300,8 @@ func DBopen(aFilename string) error {
 	return sqliteDatabase.dbReopen()
 } // DBopen()
 
-// `docListQuery()` returns a list of documents.
-func docListQuery(aQuery string) (*TDocList, error) {
+// `doQueryAll()` returns a list of documents with all available fields.
+func doQueryAll(aQuery string) (*TDocList, error) {
 	rows, err := sqliteDatabase.Query(aQuery)
 	if nil != err {
 		return nil, err
@@ -317,7 +326,7 @@ func docListQuery(aQuery string) (*TDocList, error) {
 	}
 
 	return result, nil
-} // docListQuery()
+} // doQueryAll()
 
 // `goCheckFile()` checks in the background whether the original database
 // file has changed. If so, that file is copied into the cache directory
@@ -389,7 +398,7 @@ func orderBy(aOrder uint8, aDescending bool) string {
 		result += "size" + desc + ", b.author_sort" + desc + " "
 	case qoSortByTags:
 		result += "tags" + desc + ", b.author_sort" + desc + " "
-	case qoSortByTime: //b.pubdate
+	case qoSortByTime:
 		result += "b.timestamp" + desc + ", b.author_sort" + desc + " "
 	case qoSortByTitle:
 		result += "b.sort" + desc + ", b.author_sort" + desc + " "
@@ -581,7 +590,7 @@ func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 		}
 	}
 	if 0 < rCount {
-		rList, rErr = docListQuery(calibreBaseQuery +
+		rList, rErr = doQueryAll(calibreBaseQuery +
 			havIng(aOption.Entity, aOption.ID) +
 			orderBy(aOption.SortBy, aOption.Descending) +
 			limit(aOption.LimitStart, aOption.LimitLength))
@@ -590,22 +599,12 @@ func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	return
 } // QueryBy()
 
-const (
-	miniQueryString = `SELECT IFNULL((SELECT group_concat(d.format, ", ")
-	FROM data d WHERE d.book = b.id), "") formats,
-b.path,
-b.author_sort,
-b.title
-FROM books b
-WHERE b.id = %d`
-)
-
 // QueryDocMini returns the document identified by `aID`.
 //
 // This function fills only the document fields `ID`, `formats`,
-// `path`, `authorSort`, and `Title`.
+// `path`, and `Title`.
 func QueryDocMini(aID TID) *TDocument {
-	query := fmt.Sprintf(miniQueryString, aID)
+	query := calibreMiniQuery + fmt.Sprintf(` WHERE b.id = %d`, aID)
 	rows, err := sqliteDatabase.Query(query)
 	if nil != err {
 		return nil
@@ -614,9 +613,8 @@ func QueryDocMini(aID TID) *TDocument {
 		var formats tCSVstring
 		doc := newDocument()
 		doc.ID = aID
-		rows.Scan(&formats, &doc.path, &doc.authorSort, &doc.Title)
+		rows.Scan(&doc.ID, &formats, &doc.path, &doc.Title)
 		doc.formats = prepFormats(formats)
-		//doc.Pages = prepPages(doc.path)
 
 		return doc
 	}
@@ -626,7 +624,7 @@ func QueryDocMini(aID TID) *TDocument {
 
 // QueryDocument returns the `TDocument` identified by `aID`.
 func QueryDocument(aID TID) *TDocument {
-	list, _ := docListQuery(calibreBaseQuery + fmt.Sprintf("WHERE b.id=%d ", aID))
+	list, _ := doQueryAll(calibreBaseQuery + fmt.Sprintf("WHERE b.id=%d ", aID))
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
@@ -656,7 +654,7 @@ func QueryIDs() (*TDocList, error) {
 
 // QueryLimit returns a list of `TDocument` objects.
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
-	return docListQuery(calibreBaseQuery + limit(aStart, aLength))
+	return doQueryAll(calibreBaseQuery + limit(aStart, aLength))
 } // QueryLimit()
 
 // QuerySearch returns a list of documents
@@ -668,7 +666,7 @@ func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr erro
 		}
 	}
 	if 0 < rCount {
-		rList, rErr = docListQuery(calibreBaseQuery +
+		rList, rErr = doQueryAll(calibreBaseQuery +
 			where.Clause() +
 			orderBy(aOption.SortBy, aOption.Descending) +
 			limit(aOption.LimitStart, aOption.LimitLength))
