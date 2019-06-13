@@ -144,22 +144,27 @@ img, svg {
 	height: auto;
 	width: auto;
 }
-input[type="reset"], input[type="submit"],
+input[type="reset"],
+input[type="text"],
+input[type="submit"],
 select, select option {
 	border-radius: 0.5ex;
-	border-style: outset;
-	border-width: thin;
-	font-size: 89%;
+	border: thin outset transparent;
+	font-size: inherit; /* 89%; */
 	font-weight: 600;
 	hyphens: none;
-	padding: 0.2ex 0.6ex 0.3ex 0.6ex;
+	padding: 0 0.3ex 0.3ex 0.3ex;
 	vertical-align: baseline;
 }
-input[type="reset"], input[type="submit"],
+input[type="reset"],
+input[type="text"],
+input[type="submit"],
 select, select option {
-	height: 2.5em;
+	height: 4ex;
 }
-input[type="reset"]:hover, input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="text"]:hover,
+input[type="submit"]:hover,
 select:hover {
 	border-style: inset;
 }
@@ -261,9 +266,10 @@ img#logo {
 	max-width: 96px;
 }
 div#search_box {
-	font-size: 89%;
+	border-bottom: thin solid transparent;
+	font-size: 77%;
 	/* we need this to allow for wrapping on smaller screens: */
-	line-height: 2.5;
+	line-height: 2.2;
 	padding: 0 0 1ex 0;
 	text-align: right;
 }
@@ -301,15 +307,15 @@ blockquote.comment {
 	overflow: auto;
 	text-align: justify;
 }
-.document .meta div.comment {
+article.document div.meta div.comment {
 	margin: 1em 1ex 0 0;
 }
 div.cover {
 	display: inline-block;
 	vertical-align: top;
 }
-.document div.cover {
-	max-width: 40%;
+article.document div.cover {
+	max-width: 38%;
 	text-align: right;
 }
 
@@ -319,25 +325,44 @@ div.cover img.cover {
 	max-width: 99%;
 }
 
-.overview {
-	max-height: 22em;
+article.grid {
+	border-radius: 1ex;
+	border: thin solid transparent;
+	display: inline-block;
+	margin: 0 0.3ex;
+	padding: 0;
+	text-align: center;
+	width: 31%;
+}
+article.grid div.cover img.cover {
+	max-height: 46ex;
+}
+
+article div.cover img.cover {
+	border: thick outset transparent;
+	border-radius: 2ex;
+}
+article:hover div.cover img.cover,
+article div.cover:hover img.cover,
+article div.cover img.cover:hover {
+	border-style: inset;
+	max-width: 99%;
+}
+
+article.overview {
+	max-height: 40ex;
 	overflow: auto;
 	max-width: 100ex;
 }
-.overview {
+article.overview {
 	border-radius: 1ex;
 	border: thin solid transparent;
 	margin: 0 0 1ex 0;
 	padding: 0 0 1ex 0;
 }
-.overview div.cover {
+article.overview div.cover {
 	padding: 1ex 0 0 0;
 	width: 20%;
-}
-.overview:hover div.cover img.cover,
-.overview div.cover:hover img.cover,
-.overview div.cover img.cover:hover {
-	max-width: 94%;
 }
 
 .error {
@@ -365,12 +390,13 @@ div.meta {
 }
 .overview div.meta {
 	max-height: 22em;
-	width: 77%;
+	margin: 0 0 0 1ex;
+	width: 74%;
 }
 .overview .meta p,
 .meta tr td {
-	line-height: 1.6; /* make room for the button links */
-	padding: 0 0 0.3ex 0;
+	line-height: 1.5; /* make room for the button links */
+	padding: 0 0 0.2ex 0;
 }
 .overview .meta .comment {
 	border: 0;

@@ -362,7 +362,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.Request) {
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
-	case "": // the only POST destination
+	case "qo": // the only POST destination
 		qo := NewQueryOptions()
 		if qos := aRequest.FormValue("qos"); 0 < len(qos) {
 			qo.Scan(qos).Update(aRequest)
@@ -446,9 +446,11 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("HasLast", hasLast).
 		Set("HasNext", hasNext).
 		Set("HasPrev", hasPrev).
+		Set("IsGrid", qoLayoutGrid == aOption.Layout).
 		Set("Matching", aOption.Matching).
 		Set("QOC", aOption.CGI()).
 		Set("QOS", aOption.String()).
+		Set("SLO", aOption.SelectLayoutOptions()).
 		Set("SLL", aOption.SelectLimitOptions()).
 		Set("SOO", aOption.SelectOrderOptions()).
 		Set("SSB", aOption.SelectSortByOptions()).

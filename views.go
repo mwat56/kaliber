@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -37,11 +38,27 @@ func addExternURLtagets(aPage []byte) []byte {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+func authorList(aList *TEntityList) string {
+	if nil == aList {
+		return ""
+	}
+	result := ""
+	for _, author := range *aList {
+		result += author.Name + ", "
+	}
+	if strings.HasSuffix(result, ", ") {
+		result = result[:len(result)-2]
+	}
+
+	return result + ": "
+} // authorList()
+
 // `htmlSafe()` returns `aText` as template.HTML.
 func htmlSafe(aText string) template.HTML {
 	return template.HTML(aText)
 } // htmlSafe()
 
+// `selectOption()` returns the OPTION markup for `aValue`.
 func selectOption(aMap *TStringMap, aValue string) template.HTML {
 	if result, ok := (*aMap)[aValue]; ok {
 		return template.HTML(result)
@@ -51,9 +68,10 @@ func selectOption(aMap *TStringMap, aValue string) template.HTML {
 } // selectOption()
 
 var (
-	fMap = template.FuncMap{
+	viewFunctionMap = template.FuncMap{
+		"authorList":   authorList,   // returns a comma separated author list
 		"htmlSafe":     htmlSafe,     // returns `aText` as template.HTML
-		"selectOption": selectOption, //  Select Options
+		"selectOption": selectOption, // returns a Select Option
 	}
 )
 
@@ -86,7 +104,7 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 	files = append(files, bd+"/"+aName+".gohtml")
 
 	templ, err := template.New(aName).
-		Funcs(fMap).
+		Funcs(viewFunctionMap).
 		ParseFiles(files...)
 	if nil != err {
 		return nil, err

@@ -13,18 +13,17 @@ a:hover {
 a:visited {
 	color: #f30;
 }
-article.document div.cover img.cover {
-	border: thick inset #330;
-}
 article.even, footer, header {
 	background: #201919;
 }
-article.overview:hover div.cover img.cover,
-article.overview div.cover:hover img.cover {
-	border: thick outset #999;
+
+article div.cover img.cover {
+	border-color: #330;
 }
-article.overview div.cover img.cover:hover {
-	border: thick inset #999;
+article:hover div.cover img.cover,
+article div.cover:hover img.cover,
+article div.cover img.cover:hover {
+	border-color: #999;
 }
 article.overview div.meta p {
 	border-bottom: thin dashed #333;
@@ -49,10 +48,7 @@ div.meta table.meta tr {
 	border-bottom: thin dashed #333;
 }
 div#search_box {
-	border-bottom: thin solid #ffc;
-}
-dl dd {
-	background: #111100;
+	border-bottom-color: #ffc;
 }
 footer, header {
 	border: thin solid #ffc;
@@ -72,12 +68,16 @@ hr {
 	border-color: #ffc;
 	color: #ffc;
 }
-input[type="reset"], input[type="submit"],
+input[type="reset"],
+input[type="text"],
+input[type="submit"],
 select, select option {
 	background: #333;
 	color: #fff;
 }
-input[type="reset"]:hover, input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="text"]:hover,
+input[type="submit"]:hover,
 select:hover {
 	border-style: inset;
 	background: #fff;

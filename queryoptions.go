@@ -36,15 +36,22 @@ const (
 	qoSortByTitle
 )
 
+// Definition of the layout type
+const (
+	qoLayoutList = uint8(0)
+	qoLayoutGrid = uint8(1)
+)
+
 // Pattern used by `String()` and `Scan()`:
 const (
-	qoStringPattern = `|%d|%t|%q|%d|%d|%q|%d|%d|%d|`
-	//                   |  |  |  |  |  |  |  |  + SortBy
-	//                   |  |  |  |  |  |  |  + QueryCount
-	//                   |  |  |  |  |  |  + Navigation
-	//                   |  |  |  |  |  + Matching
-	//                   |  |  |  |  + LimitStart
-	//                   |  |  |  + LimitLength
+	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%q|%d|%d|%d|`
+	//                   |  |  |  |  |  |  |  |  |  + SortBy
+	//                   |  |  |  |  |  |  |  |  + QueryCount
+	//                   |  |  |  |  |  |  |  + Navigation
+	//                   |  |  |  |  |  |  + Matching
+	//                   |  |  |  |  |  + LimitStart
+	//                   |  |  |  |  + LimitLength
+	//                   |  |  |  + Layout
 	//                   |  |  + Entity
 	//                   |  + Descending
 	//                   + ID
@@ -59,6 +66,7 @@ type (
 		ID          TID    // an entity ID to lookup
 		Descending  bool   // sort direction
 		Entity      string // limiting query to a certain entity (author,publisher, series, tag)
+		Layout      uint8  // eiher `List` or `Grid`
 		LimitLength uint   // number of documents per page
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
@@ -97,12 +105,26 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 // Scan returns the options read from `aString`.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	fmt.Sscanf(aString, qoStringPattern,
-		&qo.ID, &qo.Descending, &qo.Entity,
+		&qo.ID, &qo.Descending, &qo.Entity, &qo.Layout,
 		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
 		&qo.Navigation, &qo.QueryCount, &qo.SortBy)
 
 	return qo
 } // Scan()
+
+// SelectLayoutOptions returns a list of SELECT/OPTIONs.
+func (qo *TQueryOptions) SelectLayoutOptions() *TStringMap {
+	result := make(TStringMap, 2)
+	if qoLayoutList == qo.Layout {
+		result["list"] = `<option SELECTED value="list">`
+		result["grid"] = `<option value="grid">`
+	} else {
+		result["list"] = `<option value="list">`
+		result["grid"] = `<option SELECTED value="grid">`
+	}
+
+	return &result
+} // SelectLayoutOptions()
 
 // SelectLimitOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectLimitOptions() *TStringMap {
@@ -164,7 +186,7 @@ func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort uint8, aIndex 
 // String returns the options as a `|` delimited string.
 func (qo *TQueryOptions) String() string {
 	return fmt.Sprintf(qoStringPattern,
-		qo.ID, qo.Descending, qo.Entity,
+		qo.ID, qo.Descending, qo.Entity, qo.Layout,
 		qo.LimitLength, qo.LimitStart, qo.Matching,
 		qo.Navigation, qo.QueryCount, qo.SortBy)
 } // String()
@@ -195,6 +217,19 @@ func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
 // Update returns a `TQueryOptions` instance with values
 // read from the `aRequest` data.
 func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
+	if fol := aRequest.FormValue("layout"); 0 < len(fol) {
+		var l uint8
+		switch fol {
+		case "grid":
+			l = qoLayoutGrid
+		default:
+			l = qoLayoutList
+		}
+		if l != qo.Layout {
+			qo.Layout = l
+			qo.LimitStart = 0
+		}
+	}
 	if fll := aRequest.FormValue("limitlength"); 0 < len(fll) {
 		if ll, err := strconv.Atoi(fll); nil == err {
 			limlen := uint(ll)
@@ -204,17 +239,17 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			}
 		}
 	}
+	matching := aRequest.FormValue("matching")
+	if matching != qo.Matching {
+		qo.Matching = matching
+		qo.LimitStart = 0
+	}
 	if fob := aRequest.FormValue("order"); 0 < len(fob) {
 		desc := ("descending" == fob)
 		if desc != qo.Descending {
 			qo.Descending = desc
 			qo.LimitStart = 0
 		}
-	}
-	matching := aRequest.FormValue("matching")
-	if matching != qo.Matching {
-		qo.Matching = matching
-		qo.LimitStart = 0
 	}
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
 		var sb uint8

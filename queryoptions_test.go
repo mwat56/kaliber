@@ -17,6 +17,7 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		ID:          3524,
 		Descending:  true,
 		Entity:      "author",
+		Layout:      qoLayoutList,
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
@@ -24,11 +25,12 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		QueryCount:  100,
 		SortBy:      qoSortByAuthor,
 	}
-	w1 := `?qoc="` + base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|25|0|""|4|100|1|`)) + `"`
+	w1 := `?qoc="` + base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|0|25|0|""|4|100|1|`)) + `"`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
+		Layout:      qoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -36,7 +38,7 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		QueryCount:  200,
 		SortBy:      qoSortByLanguage,
 	}
-	w2 := `?qoc="` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|50|0|""|4|200|2|`)) + `"`
+	w2 := `?qoc="` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|1|50|0|""|4|200|2|`)) + `"`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -58,11 +60,12 @@ func TestTQueryOptions_CGI(t *testing.T) {
 
 func TestTQueryOptions_Scan(t *testing.T) {
 	o1 := NewQueryOptions()
-	s1 := `|3524|true|"author"|25|0|""|4|100|1|`
+	s1 := `|3524|true|"author"|0|25|0|""|4|100|1|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
 		Entity:      "author",
+		Layout:      qoLayoutList,
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
@@ -71,11 +74,12 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		SortBy:      qoSortByAuthor,
 	}
 	o2 := NewQueryOptions()
-	s2 := `|1|false|"lang"|50|0|""|4|200|2|`
+	s2 := `|1|false|"lang"|1|50|0|""|4|200|2|`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
+		Layout:      qoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -159,6 +163,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		ID:          3524,
 		Descending:  true,
 		Entity:      "author",
+		Layout:      qoLayoutList,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -166,11 +171,12 @@ func TestTQueryOptions_String(t *testing.T) {
 		QueryCount:  100,
 		SortBy:      qoSortByAuthor,
 	}
-	w1 := `|3524|true|"author"|50|0|""|8|100|1|`
+	w1 := `|3524|true|"author"|0|50|0|""|8|100|1|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
+		Layout:      qoLayoutGrid,
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
@@ -178,7 +184,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		QueryCount:  200,
 		SortBy:      qoSortByLanguage,
 	}
-	w2 := `|1|false|"lang"|25|0|""|8|200|2|`
+	w2 := `|1|false|"lang"|1|25|0|""|8|200|2|`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -192,7 +198,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			qo := &tt.fields
 			if got := qo.String(); got != tt.want {
-				t.Errorf("TQueryOptions.String() = '%s',\nwant '%s'", got, tt.want)
+				t.Errorf("\nTQueryOptions.String() = '%s',\nwant '%s'", got, tt.want)
 			}
 		})
 	}
@@ -200,11 +206,12 @@ func TestTQueryOptions_String(t *testing.T) {
 
 func TestTQueryOptions_UnCGI(t *testing.T) {
 	o1 := NewQueryOptions()
-	c1 := base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|50|0|""|1|100|1|`))
+	c1 := base64.StdEncoding.EncodeToString([]byte(`|3524|true|"author"|0|50|0|""|1|100|1|`))
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
 		Entity:      "author",
+		Layout:      qoLayoutList,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -212,11 +219,12 @@ func TestTQueryOptions_UnCGI(t *testing.T) {
 		QueryCount:  100,
 		SortBy:      qoSortByAuthor,
 	}
-	c2 := `"` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|25|0|""|1|200|2|`)) + `"`
+	c2 := `"` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|1|25|0|""|1|200|2|`)) + `"`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
+		Layout:      qoLayoutGrid,
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",

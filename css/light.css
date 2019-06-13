@@ -13,18 +13,17 @@ a:hover {
 a:visited {
 	color: #300;
 }
-article.document div.cover img.cover {
-	border: thick inset #699;
-}
 article.even, footer, header {
 	background: #dedede;
 }
-article.overview:hover div.cover img.cover,
-article.overview div.cover:hover img.cover {
-	border: thick outset #666;
+
+article div.cover img.cover {
+	border-color: #699;
 }
-article.overview div.cover img.cover:hover {
-	border: thick inset #666;
+article:hover div.cover img.cover,
+article div.cover:hover img.cover,
+article div.cover img.cover:hover {
+	border-color: #ccc;
 }
 article.overview div.meta p {
 	border-bottom: thin dashed #ccc;
@@ -49,10 +48,7 @@ div.meta table.meta tr {
 	border-bottom: thin dashed #ccc;
 }
 div#search_box {
-	border-bottom: thin solid #333;
-}
-dl dd {
-	background: #f9f9f0;
+	border-bottom-color: #333;
 }
 footer, header {
 	border: thin solid #333;
@@ -72,15 +68,19 @@ hr {
 	border-color: #ccc;
 	color: #ccc;
 }
-input[type="reset"], input[type="submit"],
+input[type="reset"],
+input[type="text"],
+input[type="submit"],
 select, select option {
-	background: #ccc;
-	color: #000;
+	background: #fff;
+	color: #033;
 }
-input[type="reset"]:hover, input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="text"]:hover,
+input[type="submit"]:hover,
 select:hover {
 	border-style: inset;
-	background: #000;
+	background: #033;
 	color: #fff;
 }
 p.mainlinks {

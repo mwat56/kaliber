@@ -6,8 +6,8 @@
 
 - [Kaliber](#kaliber)
 	- [Purpose](#purpose)
-	- [Installation](#installation)
 	- [Features](#features)
+	- [Installation](#installation)
 	- [Usage](#usage)
 		- [Commandline options](#commandline-options)
 		- [User/password file & handling](#userpassword-file--handling)
@@ -15,6 +15,7 @@
 		- [INI file](#ini-file)
 	- [Directory structure](#directory-structure)
 	- [Caveats](#caveats)
+	- [Logging](#logging)
 	- [Libraries](#libraries)
 	- [Licence](#licence)
 
@@ -51,12 +52,25 @@ A _server_ is a _server_ which means it should _serve_.
 > When in a restaurant ordering a meal you surely expect it to be brought to you fully prepared and ready to be consumed.
 You'd probably were seriously annoyed if the waiter/server just brought you the ingredients and left it to you to prepare the meal.
 >
-> For some strange reason, however, that's exactly what happens on a growing number of web-presentations: Instead of delivering a ready-to-read web-page they send every user just program code and let your machine do the preparing of the page.
+> For some strange reason, however, that's exactly what happens on a growing number of web-presentations: Instead of delivering a ready-to-read web-page they send every user just program code and let the user's machine do the preparing of the page.
 > In other words: Instead of one server doing he work and delivering it to thousands of remote users nowaday the server forces thousands (or even millions) of remote users to spend time – and electricity – to just see a single web-page.
 
 Since I couldn't find a documentation of the database structure used by `Calibre` I had to reverse engineer the ways to access the stored book data.
 The same is true – to a certain lesser degree – for the web-pages served by `Kaliber`: it's kind of a mix of `Calibre`'s normal (i.e. JavaScript based) and `mobile` pages.
 The overall layout of the web-pages served by `Kaliber` is intentionally kept simple ([KISS](https://en.wikipedia.org/wiki/KISS_principle)).
+
+## Features
+
+* Simplicity of use;
+* Barrier-free (no JavaScript required);
+* Books list layout either `Cover Grid` or `Data List`;
+* Easy navigation (`First`, `Prev`, `Next`, `Last` button/links);
+* Fulltext search as well as datafield-based searches;
+* Ordered in either `ascending` or `descending` direction;
+* Selectable number of books per page;
+* Sortable by `author`, `date`, `language`, `publisher`, `rating`, `series`, `size`, `tags`, or `title`;
+* Anonymised access logging;
+* Optional user/password based access control.
 
 ## Installation
 
@@ -64,17 +78,7 @@ You can use `Go` to install this package for you:
 
     go get -u github.com/mwat56/kaliber
 
-## Features
-
-* Simplicity of use;
-* Barrier-free (no JavaScript required);
-* Easy navigation (`First`, `Prev`, `Next`, `Last` buttons);
-* Fulltext search as well as datafield-based searches;
-* Ordered in either `ascending` or `descending` direction;
-* Selectable number of books per page;
-* Sorted by `author`, `date`, `language`, `publisher`, `rating`, `series`, `size`, `tags`, or `title`;
-* Anonymised access logging;
-* Optional user/password based access control.
+	//TODO
 
 ## Usage
 
@@ -86,7 +90,7 @@ which should produce an executable binary.
 
 ### Commandline options
 
-	$ ./kaliber
+	$ ./kaliber -h
 	Usage: ./kaliber [OPTIONS]
 
 	-booksperpage int
@@ -177,7 +181,7 @@ If you want to remove a user the `-ud` will do the trick:
         removed 'testuser1' from list
     $ _
 
-When you want to know which users are stored in your password file `-ul` is your fried:
+When you want to know which users are stored in your password file `-ul` is your friend:
 
     $ ./kaliber -ul
     matthias
@@ -308,6 +312,13 @@ There are some `Calibre` features which are not available (yet) with `Kaliber` a
 * _book uploads_ are not planned to be included.
 
 Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided there's actually time to do it).
+
+## Logging
+
+Like almost every other web-server `Kaliber` writes all access data to a logfile (`logfile =` in the INI file and `-log` at the ommandline).
+As _**privacy**_ becomes a serious concern for a growing number of people (including law makers) – the IP address is definitely to be considered as _personal data_ – the [logging facility](https://github.com/mwat56/apachelogger) _anonymises_ the requesting users by setting the host-part of the respective remote address to zero (`0`).
+This option takes care of e.g. European servers who may _not without explicit consent_ of the users store personal data; this includes IP addresses in logfiles and elsewhere (eg. statistical data gathered from logfiles).
+Since the generated logfile resembles that of the popular `Apache` server you can use all tools written for `Apache` logfiles to anylyse the access data.
 
 ## Libraries
 
