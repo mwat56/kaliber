@@ -1,39 +1,38 @@
 {{- define "header" -}}
-<form method="post" action="/" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+<form method="post" action="/qo" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
 <input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
 <header>
 {{- if .ShowForm -}}
 <div id="search_box">
 	{{- $lang := "de" -}}
 	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	{{- if .SLL -}}
 	{{- if eq $lang "de" -}}
-	<label for="limitlength">Zeige</label>
+	<label for="limitlength">Zeige:</label>
 	{{- else -}}
-	<label for="limitlength">Show</label>
+	<label for="limitlength">Show:</label>
 	{{- end -}}
-	&nbsp;
 	<select id="limitlength" name="limitlength" form="pageform">
 		{{ selectOption .SLL "10" }}10</option>
 		{{ selectOption .SLL "25" }}25</option>
 		{{ selectOption .SLL "50" }}50</option>
 		{{ selectOption .SLL "100" }}100</option>
-	</select>
-	&nbsp;
+	</select> &shy;
+	{{- end -}}
 
 	{{- if eq $lang "de" -}}
-	<label for="matching">Bücher enthalten</label>
+	<label for="matching">Bücher enthalten:</label>
 	{{- else -}}
-	<label for="matching">books matching</label>
+	<label for="matching">books matching:</label>
 	{{- end -}}
-	&nbsp;<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform">
-	&nbsp;
+	<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform"> &shy;
 
+	{{- if .SSB -}}
 	{{- if eq $lang "de" -}}
-	<label for="sortby">sortiert nach</label>
+	<label for="sortby">sortiert nach:</label>
 	{{- else -}}
-	<label for="sortby">sorted by</label>
+	<label for="sortby">sorted by:</label>
 	{{- end -}}
-	&nbsp;
 	<select id="sortby" name="sortby" form="pageform">
 	{{- if eq $lang "de" -}}
 		{{ htmlSafe .SSB.author }}AutorIn</option>
@@ -56,14 +55,15 @@
 		{{ htmlSafe .SSB.tags }}tag</option>
 		{{ htmlSafe .SSB.title }}title</option>
 	{{- end -}}
-	</select>
-	&nbsp;
-	{{- if eq $lang "de" -}}
-	<label for="order">Folge</label>
-	{{- else -}}
-	<label for="order">order</label>
+	</select> &shy;
 	{{- end -}}
-	&nbsp;
+
+	{{- if .SOO -}}
+	{{- if eq $lang "de" -}}
+	<label for="order">Folge:</label>
+	{{- else -}}
+	<label for="order">order:</label>
+	{{- end -}}
 	<select id="order" name="order" form="pageform">
 	{{- if eq $lang "de" -}}
 		{{ htmlSafe .SOO.ascending }}aufsteigend</option>
@@ -72,10 +72,24 @@
 		{{ htmlSafe .SOO.ascending }}ascending</option>
 		{{ htmlSafe .SOO.descending }}descending</option>
 	{{- end -}}
-	</select>
-	&nbsp;
+	</select> &shy;
+	{{- end -}}
+
+	{{- if .SLO -}}
+	<label for="layout">Layout:</label>
+	<select id="layout" name="layout" form="pageform">
 	{{- if eq $lang "de" -}}
-	<input id="search" name="search" type="submit" value="Suche" form="pageform">
+		{{ htmlSafe .SLO.list }}Liste</option>
+		{{ htmlSafe .SLO.grid }}Gitter</option>
+	{{- else -}}
+		{{ htmlSafe .SLO.list }}list</option>
+		{{ htmlSafe .SLO.grid }}grid</option>
+	{{- end -}}
+	</select> &shy;
+	{{- end -}}
+
+	{{- if eq $lang "de" -}}
+	&nbsp;<input id="search" name="search" type="submit" value="Suche" form="pageform">
 	{{- else -}}
 	<input id="search" name="search" type="submit" value="Search" form="pageform">
 	{{- end -}}
