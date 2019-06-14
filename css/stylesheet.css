@@ -317,6 +317,30 @@ blockquote.comment {
 	overflow: auto;
 	text-align: justify;
 }
+article .comment h6 {
+	font-size: 2ex;
+	margin: 1ex auto;
+}
+article .comment h5 {
+	font-size: 2.1ex;
+	margin: 1ex auto;
+}
+article .comment h4 {
+	font-size: 2.2ex;
+	margin: 1ex auto;
+}
+article .comment h3 {
+	font-size: 2.3ex;
+	margin: 1ex auto;
+}
+article .comment h2 {
+	font-size: 2.4ex;
+	margin: 1ex auto;
+}
+article.comment h1 {
+	font-size: 2.5ex;
+	margin: 1ex auto;
+}
 article.document div.meta div.comment {
 	margin: 1em 1ex 0 0;
 }
@@ -328,11 +352,10 @@ article.document div.cover {
 	max-width: 38%;
 	text-align: right;
 }
-
 div.cover img.cover {
 	border-radius: 0.6ex;
-	max-height: 99%;
-	max-width: 99%;
+	max-height: 99.9%;
+	max-width: 99.9%;
 }
 
 article.grid {
