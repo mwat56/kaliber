@@ -5,6 +5,8 @@
 <footer>
 {{- if .ShowForm -}}
 	{{- template "naviline" . -}}
+{{- else -}}
+	{{- template "backline" . -}}
 {{- end -}}
 <p class="mainlinks"><small>
 	{{- if eq $lang "de" -}}

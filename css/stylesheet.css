@@ -79,6 +79,7 @@ em, .em, i, .italic {
 	font-style: italic;
 }
 footer, header {
+	border: thin solid transparent;
 	border-radius: 1ex;
 	clear: both;
 	padding: 1ex 0.5ex 0.5ex 0;
@@ -147,7 +148,8 @@ img, svg {
 input[type="reset"],
 input[type="text"],
 input[type="submit"],
-select, select option {
+select,
+select option {
 	border-radius: 0.5ex;
 	border: thin outset transparent;
 	font-size: inherit; /* 89%; */
@@ -159,13 +161,14 @@ select, select option {
 input[type="reset"],
 input[type="text"],
 input[type="submit"],
-select, select option {
+select {
 	height: 4ex;
 }
 input[type="reset"]:hover,
 input[type="text"]:hover,
 input[type="submit"]:hover,
-select:hover {
+select:hover,
+select option:hover  {
 	border-style: inset;
 }
 ol, ul {
@@ -204,6 +207,9 @@ pre, textarea {
 	text-align: left;
 	text-indent: 0;
 	white-space: pre-wrap;
+}
+pre {
+	border-left: thick solid transparent;
 }
 pre + p {
 	text-indent: 0;
@@ -273,7 +279,11 @@ div#search_box {
 	padding: 0 0 1ex 0;
 	text-align: right;
 }
-
+div.back p.back {
+	margin: 0 0 1ex 0;
+	padding: 0 0 0.3ex 1ex;
+	text-align: left;
+}
 a.button {
 	border: thin outset transparent;
 	cursor: pointer;
@@ -364,7 +374,9 @@ article.overview div.cover {
 	padding: 1ex 0 0 0;
 	width: 20%;
 }
-
+article.overview div.meta p {
+	border-bottom: thin dashed transparent;
+}
 .error {
 	padding: 1em 0 1em 0;
 }
@@ -378,6 +390,7 @@ td.label {
 	text-align: left;
 }
 p.mainlinks {
+	border-top: thin solid transparent;
 	margin: 0.5ex 0 0 0;
 }
 div.meta {
@@ -394,9 +407,12 @@ div.meta {
 	width: 74%;
 }
 .overview .meta p,
-.meta tr td {
+table.meta tr td {
 	line-height: 1.5; /* make room for the button links */
 	padding: 0 0 0.2ex 0;
+}
+div.meta table.meta tr {
+	border-bottom: thin dashed transparent;
 }
 .overview .meta .comment {
 	border: 0;

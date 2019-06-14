@@ -15,7 +15,7 @@
 		{{- end -}}
 		<article class="overview {{$class}}">
 			<div class="cover">
-				<a href="{{.DocLink}}{{$qoc}}"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a>
+				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}{{$qoc}}"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a>
 			</div><div class="meta">
 				<p><strong>{{$doc.Title}}</strong>
 

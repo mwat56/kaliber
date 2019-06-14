@@ -10,7 +10,7 @@
 				{{- if $doc.Authors -}}
 				{{- $author = authorList $doc.Authors -}}
 				{{- end -}}
-				<a href="{{.DocLink}}{{$qoc}}" title="{{$author}}{{$doc.Title}}"><img alt="{{$author}}{{$doc.Title}}" class="cover" src="{{$doc.Thumb}}"></a>
+				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}{{$qoc}}" title="{{$author}}{{$doc.Title}}"><img alt="{{$author}}{{$doc.Title}}" class="cover" src="{{$doc.Thumb}}"></a>
 			</div>
 		</article>
 	{{- end -}}<!-- range -->

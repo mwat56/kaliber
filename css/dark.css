@@ -16,7 +16,6 @@ a:visited {
 article.even, footer, header {
 	background: #201919;
 }
-
 article div.cover img.cover {
 	border-color: #330;
 }
@@ -26,7 +25,7 @@ article div.cover img.cover:hover {
 	border-color: #999;
 }
 article.overview div.meta p {
-	border-bottom: thin dashed #333;
+	border-bottom-color: #333;
 }
 a.button {
 	background-color: #090010;
@@ -34,7 +33,7 @@ a.button {
 }
 a.button:hover {
 	background: #333 none;
-	border: thin inset #ccc;
+	border-color: #ccc;
 	color: #fff;
 }
 code, .code, kbd, pre, textarea {
@@ -45,13 +44,13 @@ del {
 	color: #999;
 }
 div.meta table.meta tr {
-	border-bottom: thin dashed #333;
+	border-bottom-color: #333;
 }
 div#search_box {
 	border-bottom-color: #ffc;
 }
 footer, header {
-	border: thin solid #ffc;
+	border-color: #ffc;
 	border-right: 0;
 	border-left: 0;
 }
@@ -78,16 +77,16 @@ select, select option {
 input[type="reset"]:hover,
 input[type="text"]:hover,
 input[type="submit"]:hover,
-select:hover {
-	border-style: inset;
+select:hover,
+select option:hover {
 	background: #fff;
 	color: #333;
 }
 p.mainlinks {
-	border-top: thin solid #ffc;
+	border-top-color: #ffc;
 }
 pre {
-	border-left: thick solid #666;
+	border-left-color: #666;
 }
 table.prevnext tr td a {
 	background: #c0c0c0; /* matching the IMG's background */

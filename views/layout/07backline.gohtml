@@ -1,0 +1,13 @@
+{{- define "backline" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+{{- $doc := $.Document -}}
+{{- $qoc := $.QOC -}}
+<div class="back"><p class="back">
+	{{- if eq $lang "de" -}}
+	<a class="button" href="/back/{{$qoc}}#b{{$doc.ID}}" title="Zurück zur Übersicht">&laquo;&nbsp;Zurück</a>
+	{{- else -}}
+	<a class="button" href="/back/{{$qoc}}#b{{$doc.ID}}" title="Back to overview page">&laquo;&nbsp;Back</a>
+	{{- end -}}
+</p></div>
+{{- end -}}<!-- "backline"  -->

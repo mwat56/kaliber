@@ -200,7 +200,10 @@ var (
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
 	qo := NewQueryOptions() // in `queryoptions.go`
 	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
-		qo.UnCGI(qoc) // page GET
+		qo.UnCGI(qoc)                          // page GET
+		log.Printf("handleGET(UnCGI): %v", qo) //FIXME REMOVE
+	} else {
+		log.Printf("handleGET(missing): '%v'", qoc) //FIXME REMOVE
 	}
 	pageData := ph.basicTemplateData().
 		Set("SLL", qo.SelectLimitOptions()).
@@ -217,6 +220,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			qo.ID = id
 		}
 		qo.Entity = path
+		ph.handleQuery(qo, aWriter)
+
+	case "back":
+		log.Printf("handleGET(back): %v", qo) //FIXME REMOVE
+		qo.DecLimit()
+		qo.Navigation = qoNext
 		ph.handleQuery(qo, aWriter)
 
 	case "certs": // these files are handled internally
@@ -258,7 +267,8 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		pageData.
 			Set("Document", doc).
-			Set("QOC", qo.CGI())
+			Set("QOC", qo.CGI()).
+			Set("QOS", qo.String())
 		ph.viewList.Render("document", aWriter, pageData)
 
 	case "favicon.ico":
@@ -459,6 +469,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		//TODO better error handling
 		log.Printf("handleQuery() Render: %v\n", err)
 	}
+	log.Printf("handleQuery(sent): %v", aOption) //FIXME REMOVE
 } // handleQuery()
 
 // NeedAuthentication returns `true` if authentication is needed,
