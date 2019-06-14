@@ -200,8 +200,7 @@ var (
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
 	qo := NewQueryOptions() // in `queryoptions.go`
 	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
-		qo.UnCGI(qoc)                          // page GET
-		log.Printf("handleGET(UnCGI): %v", qo) //FIXME REMOVE
+		qo.UnCGI(qoc) // page GET
 	}
 	pageData := ph.basicTemplateData().
 		Set("SLL", qo.SelectLimitOptions()).
@@ -468,7 +467,6 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		//TODO better error handling
 		log.Printf("handleQuery() Render: %v\n", err)
 	}
-	log.Printf("handleQuery(sent): %v", aOption) //FIXME REMOVE
 } // handleQuery()
 
 // NeedAuthentication returns `true` if authentication is needed,
