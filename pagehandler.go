@@ -202,8 +202,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
 		qo.UnCGI(qoc)                          // page GET
 		log.Printf("handleGET(UnCGI): %v", qo) //FIXME REMOVE
-	} else {
-		log.Printf("handleGET(missing): '%v'", qoc) //FIXME REMOVE
 	}
 	pageData := ph.basicTemplateData().
 		Set("SLL", qo.SelectLimitOptions()).
@@ -220,6 +218,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			qo.ID = id
 		}
 		qo.Entity = path
+		qo.LimitStart = 0 // it's the first page of a new selection
 		ph.handleQuery(qo, aWriter)
 
 	case "back":
