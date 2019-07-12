@@ -58,26 +58,26 @@ const (
 )
 
 type (
-	// TQueryOptions holds properties configuring a query.
+	// TQueryOptions hold properties configuring a query.
 	//
 	// This type is used by the HTTP pagehandler when receiving
 	// a page's data.
 	TQueryOptions struct {
 		ID          TID    // an entity ID to lookup
 		Descending  bool   // sort direction
-		Entity      string // limiting query to a certain entity (author,publisher, series, tag)
-		Layout      uint8  // eiher `List` or `Grid`
+		Entity      string // limiting query to a certain entity (author, publisher, series, tag)
+		Layout      uint8  // either `qoLayoutList` or `qoLayoutGrid`
 		LimitLength uint   // number of documents per page
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
 		Navigation  uint8  // page navigation direction
-		SortBy      uint8  // display order of documents
+		SortBy      uint8  // display order of documents (`qoSortByXXX`)
 		QueryCount  uint   // number of DB records matching the query option
 	}
 )
 
 // CGI returns the object's query escaped string representation
-// fit for use as the `qos` CGI argument.
+// fit for use as the `qoc` CGI argument.
 func (qo *TQueryOptions) CGI() string {
 	return `?qoc="` + base64.StdEncoding.EncodeToString([]byte(qo.String())) + `"`
 } // CGI()
