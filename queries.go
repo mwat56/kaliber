@@ -306,6 +306,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 	if nil != err {
 		return nil, err
 	}
+	defer rows.Close()
 
 	result := newDocList()
 	for rows.Next() {
@@ -588,6 +589,7 @@ func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 		if rows.Next() {
 			rows.Scan(&rCount)
 		}
+		rows.Close()
 	}
 	if 0 < rCount {
 		rList, rErr = doQueryAll(calibreBaseQuery +
@@ -609,6 +611,7 @@ func QueryDocMini(aID TID) *TDocument {
 	if nil != err {
 		return nil
 	}
+	defer rows.Close()
 	if rows.Next() {
 		var formats tCSVstring
 		doc := newDocument()
@@ -664,6 +667,7 @@ func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr erro
 		if rows.Next() {
 			rows.Scan(&rCount)
 		}
+		rows.Close()
 	}
 	if 0 < rCount {
 		rList, rErr = doQueryAll(calibreBaseQuery +
