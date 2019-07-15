@@ -4,20 +4,20 @@
 [![view examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg?style=flat-square)](https://github.com/mwat56/kaliber/blob/master/app/kaliber.go)
 [![License](https://img.shields.io/eclipse-marketplace/l/notepad4e.svg)](https://github.com/mwat56/kaliber/blob/master/LICENSE)
 
-- [Kaliber](#kaliber)
-	- [Purpose](#purpose)
-	- [Features](#features)
-	- [Installation](#installation)
-	- [Usage](#usage)
-		- [Commandline options](#commandline-options)
-		- [User/password file & handling](#userpassword-file--handling)
-			- [Authentication](#authentication)
-		- [INI file](#ini-file)
-	- [Directory structure](#directory-structure)
-	- [Caveats](#caveats)
-	- [Logging](#logging)
-	- [Libraries](#libraries)
-	- [Licence](#licence)
+- [Kaliber](#Kaliber)
+	- [Purpose](#Purpose)
+	- [Features](#Features)
+	- [Installation](#Installation)
+	- [Usage](#Usage)
+		- [Commandline options](#Commandline-options)
+		- [User/password file & handling](#Userpassword-file--handling)
+			- [Authentication](#Authentication)
+		- [INI file](#INI-file)
+	- [Directory structure](#Directory-structure)
+	- [Caveats](#Caveats)
+	- [Logging](#Logging)
+	- [Libraries](#Libraries)
+	- [Licence](#Licence)
 
 ## Purpose
 
@@ -48,14 +48,15 @@ So even privacy or security conscious people or those who depend on assisting te
 
 As an aside:
 > I never really understood the desire to multiply the work needed to be done for a web page.
-A _server_ is a _server_ which means it should _serve_.
+>
+> A _server_ is a _server_ which means it should _serve_.
 > When in a restaurant ordering a meal you surely expect it to be brought to you fully prepared and ready to be consumed.
-You'd probably were seriously annoyed if the waiter/server just brought you the ingredients and left it to you to prepare the meal.
+You'd probably were seriously annoyed if the waiter/server just brought you the ingredients and left it to you to prepare the meal for yourself.
 >
 > For some strange reason, however, that's exactly what happens on a growing number of web-presentations: Instead of delivering a ready-to-read web-page they send every user just program code and let the user's machine do the preparing of the page.
-> In other words: Instead of one server doing he work and delivering it to thousands of remote users nowaday the server forces thousands (or even millions) of remote users to spend time – and electricity – to just see a single web-page.
+> In other words: Instead of one server doing he work and delivering it to thousands of remote users nowadays the server forces thousands (or even millions) of remote users to spend time and electricity to just see a single web-page.
 
-Since I couldn't find a documentation of the database structure used by `Calibre` I had to reverse engineer the ways to access the stored book data.
+Since I couldn't find a documentation of the database structure and/or API used by `Calibre` to store its meta-data I had to reverse engineer ways to access the stored book data.
 The same is true – to a certain lesser degree – for the web-pages served by `Kaliber`: it's kind of a mix of `Calibre`'s normal (i.e. JavaScript based) and `mobile` pages.
 The overall layout of the web-pages served by `Kaliber` is intentionally kept simple ([KISS](https://en.wikipedia.org/wiki/KISS_principle)).
 
@@ -125,6 +126,9 @@ which should produce an executable binary.
 	-realm string
 		(optional) <hostName> name of host/domain to secure by BasicAuth
 		(default "This Host")
+	-sidname string
+		(optional) <name> the name of the session ID to use
+		(default "sid")
 	-theme string
 		<name> the display theme to use ('light' or 'dark')
 		(default "light")

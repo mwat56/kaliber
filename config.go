@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/mwat56/ini"
+	"github.com/mwat56/sessions"
 )
 
 type (
@@ -200,6 +201,10 @@ func initArguments() {
 	flag.StringVar(&realStr, "realm", realStr,
 		"(optional) <hostName> name of host/domain to secure by BasicAuth\n")
 
+	sidStr, _ := AppArguments.Get("sidname")
+	flag.StringVar(&sidStr, "sidname", sidStr,
+		"(optional) <name> the name of the session ID to use\n")
+
 	themStr, _ := AppArguments.Get("theme")
 	flag.StringVar(&themStr, "theme", themStr,
 		"<name> the display theme to use ('light' or 'dark')\n")
@@ -302,6 +307,9 @@ func initArguments() {
 	AppArguments.set("port", fmt.Sprintf("%d", portInt))
 
 	AppArguments.set("realm", realStr)
+
+	sessions.SetSIDname(sidStr)
+
 	AppArguments.set("theme", themStr)
 	AppArguments.set("ua", uaStr)
 	AppArguments.set("uc", ucStr)
