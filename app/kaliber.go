@@ -12,12 +12,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 
 	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/errorhandler"
 	"github.com/mwat56/kaliber"
+	"github.com/mwat56/sessions"
 )
 
 // `setupSinals()` configures the capture of the interrupts `SIGINT`,
@@ -37,10 +37,7 @@ func setupSinals(aServer *http.Server) {
 	}()
 } // setupSinals()
 
-// Actually run the program …
 func main() {
-	// use all CPU cores for maximum performance
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	var (
 		err           error
 		handler       http.Handler
@@ -76,29 +73,39 @@ func main() {
 	}
 	handler = errorhandler.Wrap(ph, ph)
 
+	// inspect `sessiondir` commandline argument and setup the session handler
+	if s, err = kaliber.AppArguments.Get("sessiondir"); (nil == err) && (0 < len(s)) {
+		// we assume, an error means: no automatic session handling
+		handler = sessions.Wrap(handler, s)
+	}
+
 	// inspect `logfile` commandline argument and setup the `ApacheLogger`
 	if s, err = kaliber.AppArguments.Get("logfile"); (nil == err) && (0 < len(s)) {
 		// we assume, an error means: no logfile
 		handler = apachelogger.Wrap(handler, s)
 	}
-	// We need a `server` reference to use it in setupSinals() below
-	server := &http.Server{Addr: ph.Address(), Handler: handler}
+
+	// We need a `server` reference to use it in `setupSinals()`
+	server := &http.Server{
+		Addr:    ph.Address(),
+		Handler: handler,
+	}
 	setupSinals(server)
 
 	ck, _ = kaliber.AppArguments.Get("certKey")
 	cp, _ = kaliber.AppArguments.Get("certPem")
 
-	if 0 < len(ck) && (0 < len(cp)) {
+	if (0 < len(ck)) && (0 < len(cp)) {
 		log.Printf("%s listening HTTPS at: %s", os.Args[0], ph.Address())
 		if err = server.ListenAndServeTLS(cp, ck); nil != err {
-			log.Fatalf("%s: %v", os.Args[0], err)
+			log.Fatalf("%s HTTPS: %v", os.Args[0], err)
 		}
 		return
 	}
 
 	log.Printf("%s listening HTTP at: %s", os.Args[0], ph.Address())
 	if err = server.ListenAndServe(); nil != err {
-		log.Fatalf("%s: %v", os.Args[0], err)
+		log.Fatalf("%s HTTP: %v", os.Args[0], err)
 	}
 } // main()
 
