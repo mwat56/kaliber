@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/errorhandler"
@@ -85,10 +86,14 @@ func main() {
 		handler = apachelogger.Wrap(handler, s)
 	}
 
-	// We need a `server` reference to use it in `setupSinals()`
+	// We need a `server` reference to use it in `setupSinals()` below
+	// and to set some reasonable timeouts:
 	server := &http.Server{
-		Addr:    ph.Address(),
-		Handler: handler,
+		Addr:              ph.Address(),
+		Handler:           handler,
+		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      10 * time.Second,
 	}
 	setupSinals(server)
 
