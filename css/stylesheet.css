@@ -39,6 +39,7 @@ blockquote {
 }
 b, .bold, strong, .strong, .strong p {
 	color: inherit;
+	font-style: inherit;
 	font-weight: 900;
 	line-height: inherit;
 }
@@ -77,6 +78,7 @@ dt {
 em, .em, i, .italic {
 	color: inherit;
 	font-style: italic;
+	font-weight: inherit;
 }
 footer, header {
 	border: thin solid transparent;
