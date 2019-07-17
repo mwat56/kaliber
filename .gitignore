@@ -10,6 +10,7 @@ img/*
 kaliber*
 *.log
 metadata*
+sessions/
 *.sql
 TODO*
 .vscode/
