@@ -117,7 +117,7 @@ which should produce an executable binary.
 		Path name of/to the Calibre library
 		(default "/var/opt/Calibre")
 	-listen string
-		the host's IP to listen at  (default "127.0.0.1")
+		the host's IP to listen at (default "127.0.0.1")
 	-log string
 		(optional) name of the logfile to write to
 		(default "/dev/stdout")
@@ -126,6 +126,9 @@ which should produce an executable binary.
 	-realm string
 		(optional) <hostName> name of host/domain to secure by BasicAuth
 		(default "This Host")
+	-sessiondir string
+		<directory> (optional) the directory to store session files
+		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions")
 	-sidname string
 		(optional) <name> the name of the session ID to use
 		(default "sid")
@@ -334,6 +337,7 @@ The following external libraries were used building `Kaliber`:
 * [INI](https://github.com/mwat56/ini)
 * [PassList](https://github.com/mwat56/passlist)
 * [Resize](https://github.com/nfnt/resize)
+* [Sessions](https://github.com/mwat56/sessions)
 * [SQLite3](https://github.com/mattn/go-sqlite3)
 
 ## Licence

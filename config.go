@@ -28,7 +28,8 @@ type (
 )
 
 var (
-	// AppArguments is the list for the cmdline arguments and INI values.
+	// AppArguments is the merged list for the cmdline arguments
+	// and INI values for the application.
 	AppArguments tAguments
 )
 
@@ -45,6 +46,8 @@ func (al *tAguments) set(aKey, aValue string) {
 
 // Get returns the value associated with `aKey` and `nil` if found,
 // or an empty string and an error.
+//
+//	`aKey` The requested value's key to lookup.
 func (al *tAguments) Get(aKey string) (string, error) {
 	if result, ok := al.AsString(aKey); ok {
 		return result, nil
@@ -201,6 +204,11 @@ func initArguments() {
 	flag.StringVar(&realStr, "realm", realStr,
 		"(optional) <hostName> name of host/domain to secure by BasicAuth\n")
 
+	s, _ = AppArguments.Get("sessiondir")
+	sessStr := absolute(dataStr, s)
+	flag.StringVar(&sessStr, "sessiondir", sessStr,
+		"<directory> (optional) the directory to store session files\n")
+
 	sidStr, _ := AppArguments.Get("sidname")
 	flag.StringVar(&sidStr, "sidname", sidStr,
 		"(optional) <name> the name of the session ID to use\n")
@@ -308,6 +316,10 @@ func initArguments() {
 
 	AppArguments.set("realm", realStr)
 
+	if 0 < len(sessStr) {
+		logStr = absolute(dataStr, sessStr)
+	}
+	AppArguments.set("sessiondir", sessStr)
 	sessions.SetSIDname(sidStr)
 
 	AppArguments.set("theme", themStr)
