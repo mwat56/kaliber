@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/eclipse-marketplace/l/notepad4e.svg)](https://github.com/mwat56/kaliber/blob/master/LICENSE)
 
 - [Kaliber](#Kaliber)
+	- [Note](#Note)
 	- [Purpose](#Purpose)
 	- [Features](#Features)
 	- [Installation](#Installation)
@@ -18,6 +19,11 @@
 	- [Logging](#Logging)
 	- [Libraries](#Libraries)
 	- [Licence](#Licence)
+
+## Note
+
+> **Please _note_ that this is a work in progress.**
+> Changes – even API breaking changes – can happen at any time.
 
 ## Purpose
 
