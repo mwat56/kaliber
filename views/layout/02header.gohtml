@@ -1,6 +1,11 @@
 {{- define "header" -}}
 <form method="post" action="/qo" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
+{{- if .QOS -}}
 <input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
+{{- end -}}
+{{- if .SIDNAME -}}
+<input id="{{.SIDNAME}}" name="{{.SIDNAME}}" type="hidden" value="{{.SID}}" form="pageform">
+{{- end -}}
 <header>
 {{- if .ShowForm -}}
 <div id="search_box">

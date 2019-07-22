@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/mwat56/passlist"
+	"github.com/mwat56/sessions"
 )
 
 type (
@@ -198,6 +199,8 @@ var (
 
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
+	so := sessions.GetSession(aRequest)
+
 	qo := NewQueryOptions() // in `queryoptions.go`
 	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
 		qo.UnCGI(qoc) // page GET
@@ -209,6 +212,8 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
 	case "all", "author", "format", "lang", "publisher", "series", "tag":
+		so.Set("path", path).Set("tail", tail)                    //FIXME REMOVE
+		log.Println("SID:", so.ID(), "- for:", aRequest.URL.Path) //FIXME REMOVE
 		var (
 			id   TID
 			term string
@@ -218,18 +223,19 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		qo.Entity = path
 		qo.LimitStart = 0 // it's the first page of a new selection
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "back":
 		log.Printf("handleGET(back): %v", qo) //FIXME REMOVE
 		qo.DecLimit()
 		qo.Navigation = qoNext
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "certs": // these files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "cover":
+		so.Destroy() // no session data needed
 		var (
 			id    TID
 			dummy string
@@ -249,9 +255,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "css":
+		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
+		so.Destroy() // no session data needed
 		var (
 			id    TID
 			dummy string
@@ -270,9 +278,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.viewList.Render("document", aWriter, pageData)
 
 	case "favicon.ico":
+		so.Destroy() // no session data needed
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
 	case "file":
+		so.Destroy() // no session data needed
 		matches := fileParseRE.FindStringSubmatch(tail)
 		if (nil == matches) || (3 > len(matches)) {
 			http.NotFound(aWriter, aRequest)
@@ -294,12 +304,14 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "first":
 		qo.Navigation = qoFirst
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "fonts":
+		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "img":
+		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
@@ -307,29 +319,31 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "last":
 		qo.Navigation = qoLast
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "licence", "license", "lizenz":
 		ph.viewList.Render("licence", aWriter, pageData)
 
 	case "next":
 		qo.Navigation = qoNext
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "post":
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "prev":
 		qo.Navigation = qoPrev
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	case "privacy", "datenschutz":
 		ph.viewList.Render("privacy", aWriter, pageData)
 
 	case "robots.txt":
+		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "thumb":
+		so.Destroy() // no session data needed
 		var (
 			id    TID
 			dummy string
@@ -354,10 +368,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "views": // this files are handled internally
+		so.Destroy() // no session data needed
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
-		ph.handleQuery(qo, aWriter)
+		ph.handleQuery(qo, aWriter, so)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -388,7 +403,8 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		} else if next := aRequest.FormValue("next"); 0 < len(next) {
 			qo.Navigation = qoNext
 		}
-		ph.handleQuery(qo, aWriter)
+		so := sessions.GetSession(aRequest)
+		ph.handleQuery(qo, aWriter, so)
 
 	default:
 		// if nothing matched (above) reply to the request
@@ -398,7 +414,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleQuery()` serves the logical web-root directory.
-func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.ResponseWriter) {
+func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.ResponseWriter, aSession *sessions.TSession) {
 	var (
 		count   int
 		doclist *TDocList
@@ -458,11 +474,14 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("Matching", aOption.Matching).
 		Set("QOC", aOption.CGI()).
 		Set("QOS", aOption.String()).
+		Set("SIDNAME", sessions.SIDname()).
+		Set("SID", aSession.ID()).
 		Set("SLO", aOption.SelectLayoutOptions()).
 		Set("SLL", aOption.SelectLimitOptions()).
 		Set("SOO", aOption.SelectOrderOptions()).
 		Set("SSB", aOption.SelectSortByOptions()).
 		Set("ShowForm", true)
+	aSession.Set("QOS", aOption.String())
 	if err = ph.viewList.Render("index", aWriter, pageData); nil != err {
 		//TODO better error handling
 		log.Printf("handleQuery() Render: %v\n", err)
