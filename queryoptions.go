@@ -79,7 +79,7 @@ type (
 // CGI returns the object's query escaped string representation
 // fit for use as the `qoc` CGI argument.
 func (qo *TQueryOptions) CGI() string {
-	return `?qoc="` + base64.StdEncoding.EncodeToString([]byte(qo.String())) + `"`
+	return `?qoc=` + base64.StdEncoding.EncodeToString([]byte(qo.String()))
 } // CGI()
 
 // DecLimit decrements the LIMIT values.
@@ -195,15 +195,6 @@ func (qo *TQueryOptions) String() string {
 //
 // If there are errors during unescaping the current values remain unchanged.
 func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
-	sLen := len(aCGI) - 1
-	if 1 < sLen {
-		if '"' == aCGI[sLen] {
-			aCGI = aCGI[:sLen]
-		}
-		if '"' == aCGI[0] {
-			aCGI = aCGI[1:]
-		}
-	}
 	qoc, err := base64.StdEncoding.DecodeString(aCGI)
 	if nil != err {
 		//TODO better error handling
