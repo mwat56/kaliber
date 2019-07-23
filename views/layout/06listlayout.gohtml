@@ -1,7 +1,7 @@
 {{- define "listlayout" -}}
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
-{{- $qoc := $.QOC -}}<!-- query options container -->
+<!-- {{- $qoc := $.QOC -}}< !-- query options container -->
 {{- $class := "even" -}}<!-- CSS class for even rows -->
 {{- $row := 1 -}}<!-- record row indicator -->
 {{- if $.Documents -}}
@@ -15,7 +15,7 @@
 		{{- end -}}
 		<article class="overview {{$class}}">
 			<div class="cover">
-				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}{{$qoc}}"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a>
+				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></a>
 			</div><div class="meta">
 				<p><strong>{{$doc.Title}}</strong>
 
@@ -24,7 +24,7 @@
 					{{- range $i, $author := $doc.Authors -}}
 						{{- $name := $author.Name -}}
 						{{- $url := $author.URL -}}
-						<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;
+						<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;
 					{{- end -}}
 				{{- end -}}
 				</p>
@@ -33,7 +33,7 @@
 					{{- $series := $doc.Series -}}
 					{{- $name := $series.Name -}}
 					{{- $url := $series.URL -}}
-					<p><em>{{$doc.SeriesIndex}}</em> {{if eq $lang "de"}}von{{else}}of{{end}} <em><a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a></em>
+					<p><em>{{$doc.SeriesIndex}}</em> {{if eq $lang "de"}}von{{else}}of{{end}} <em><a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a></em>
 					</p>
 				{{- end -}}
 
@@ -41,7 +41,7 @@
 				<p>{{range $i, $tag := $doc.Tags -}}
 					{{- $name := $tag.Name -}}
 					{{- $url := $tag.URL -}}
-					<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a> &shy;
+					<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;
 					{{- end -}}
 				</p>
 				{{- end -}}
@@ -51,7 +51,7 @@
 					{{- range $i, $file := $doc.Files -}}
 						{{- $name := $file.Name -}}
 						{{- $url := $file.URL -}}
-						<a class="button" href="{{$url}}{{$qoc}}" target="_extern" title="download {{$name}} file">{{$name}}</a> &shy;
+						<a class="button" href="{{$url}}" target="_extern" title="download {{$name}} file">{{$name}}</a> &shy;
 					{{- end -}}
 					</p>
 				{{- end -}}
@@ -62,7 +62,7 @@
 					{{- $name := $pub.Name -}}
 					{{- $url := $pub.URL -}}
 					<em>{{if eq $lang "de"}}von{{else}}by{{end}}</em> &shy;
-					<a class="button" href="{{$url}}{{$qoc}}" title="{{$name}}">{{$name}}</a>
+					<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a>
 					</p>
 				{{- end -}}
 

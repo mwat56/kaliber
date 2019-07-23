@@ -1,7 +1,5 @@
 {{- define "gridlayout" -}}
-{{- $lang := "de" -}}
-{{- if .Lang}}{{$lang = .Lang}}{{end -}}
-{{- $qoc := $.QOC -}}<!-- query options container -->
+<!-- {{- $qoc := $.QOC -}}< !-- query options container -->
 {{- if $.Documents -}}
 	{{- range $i, $doc := $.Documents -}}
 		<article class="grid">
@@ -10,7 +8,7 @@
 				{{- if $doc.Authors -}}
 				{{- $author = authorList $doc.Authors -}}
 				{{- end -}}
-				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}{{$qoc}}" title="{{$author}}{{$doc.Title}}"><img alt="{{$author}}{{$doc.Title}}" class="cover" src="{{$doc.Thumb}}"></a>
+				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}" title="{{$author}}{{$doc.Title}}"><img alt="{{$author}}{{$doc.Title}}" class="cover" src="{{$doc.Thumb}}"></a>
 			</div>
 		</article>
 	{{- end -}}<!-- range -->
