@@ -258,10 +258,9 @@ li p {
 #body {
 	margin: 0 auto;
 	padding: 0;
-	max-width: 99ex;
+	max-width: 104ex;
 }
 #bodypage {
-	margin: 1ex 0;
 	min-height: 3em;
 	width: 100%;
 }
@@ -361,13 +360,14 @@ div.cover img.cover {
 }
 
 article.grid {
-	border-radius: 1ex;
 	border: thin solid transparent;
+	padding: 0 0.3ex;
+}
+article.grid {
 	display: inline-block;
-	margin: 0 0.3ex;
-	padding: 0;
+	margin: 0;
 	text-align: center;
-	width: 31%;
+	width: 33%;
 }
 article.grid div.cover img.cover {
 	max-height: 46ex;
@@ -375,13 +375,13 @@ article.grid div.cover img.cover {
 
 article div.cover img.cover {
 	border: thick outset transparent;
-	border-radius: 2ex;
+	border-radius: 1.5ex;
+	max-width: 98%;
 }
 article:hover div.cover img.cover,
 article div.cover:hover img.cover,
 article div.cover img.cover:hover {
 	border-style: inset;
-	max-width: 99%;
 }
 
 article.overview {
