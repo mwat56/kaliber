@@ -199,11 +199,12 @@ var (
 
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
-	so := sessions.GetSession(aRequest)
-
 	qo := NewQueryOptions() // in `queryoptions.go`
-	if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
-		qo.UnCGI(qoc) // page GET
+	so := sessions.GetSession(aRequest)
+	if qos, ok := so.GetString("QOS"); ok {
+		qo.Scan(qos)
+	} else if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
+		qo.UnCGI(qoc)
 	}
 	pageData := ph.basicTemplateData().
 		Set("SLL", qo.SelectLimitOptions()).
@@ -212,8 +213,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
 	case "all", "author", "format", "lang", "publisher", "series", "tag":
-		so.Set("path", path).Set("tail", tail)                    //FIXME REMOVE
-		log.Println("SID:", so.ID(), "- for:", aRequest.URL.Path) //FIXME REMOVE
 		var (
 			id   TID
 			term string
@@ -226,12 +225,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	case "back":
-		log.Printf("handleGET(back): %v", qo) //FIXME REMOVE
+		// log.Printf("handleGET(back): %v", qo) //FIXME REMOVE
 		qo.DecLimit()
 		qo.Navigation = qoNext
 		ph.handleQuery(qo, aWriter, so)
 
 	case "certs": // these files are handled internally
+		so.Destroy() // no session data needed
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "cover":
@@ -259,7 +259,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
-		so.Destroy() // no session data needed
 		var (
 			id    TID
 			dummy string
@@ -271,10 +270,8 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		pageData.
-			Set("Document", doc).
-			Set("QOC", qo.CGI()).
-			Set("QOS", qo.String())
+		pageData.Set("Document", doc)
+		so.Set("QOS", qo.String())
 		ph.viewList.Render("document", aWriter, pageData)
 
 	case "favicon.ico":
@@ -315,6 +312,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
+		so.Set("QOS", qo.String())
 		ph.viewList.Render("imprint", aWriter, pageData)
 
 	case "last":
@@ -322,6 +320,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	case "licence", "license", "lizenz":
+		so.Set("QOS", qo.String())
 		ph.viewList.Render("licence", aWriter, pageData)
 
 	case "next":
@@ -336,6 +335,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	case "privacy", "datenschutz":
+		so.Set("QOS", qo.String())
 		ph.viewList.Render("privacy", aWriter, pageData)
 
 	case "robots.txt":
@@ -368,7 +368,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "views": // this files are handled internally
-		so.Destroy() // no session data needed
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
@@ -378,6 +377,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		// if nothing matched (above) reply to the request
 		// with an HTTP 404 not found error.
 		http.NotFound(aWriter, aRequest)
+
 	} // switch
 } // handleGET()
 
@@ -385,9 +385,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.Request) {
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
-	case "qo": // the only POST destination
+	case "qo": // the only valid POST destination
 		qo := NewQueryOptions()
-		if qos := aRequest.FormValue("qos"); 0 < len(qos) {
+		so := sessions.GetSession(aRequest)
+		if qos, ok := so.GetString("QOS"); ok {
+			qo.Scan(qos).Update(aRequest)
+		} else if qos := aRequest.FormValue("qos"); 0 < len(qos) {
 			qo.Scan(qos).Update(aRequest)
 		}
 
@@ -403,7 +406,6 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		} else if next := aRequest.FormValue("next"); 0 < len(next) {
 			qo.Navigation = qoNext
 		}
-		so := sessions.GetSession(aRequest)
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
@@ -472,8 +474,6 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("HasPrev", hasPrev).
 		Set("IsGrid", qoLayoutGrid == aOption.Layout).
 		Set("Matching", aOption.Matching).
-		Set("QOC", aOption.CGI()).
-		Set("QOS", aOption.String()).
 		Set("SIDNAME", sessions.SIDname()).
 		Set("SID", aSession.ID()).
 		Set("SLO", aOption.SelectLayoutOptions()).
