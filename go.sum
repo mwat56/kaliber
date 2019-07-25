@@ -4,6 +4,10 @@ github.com/mattn/go-sqlite3 v1.11.0 h1:LDdKkqtYlom37fkvqs8rMPFKAMe8+SgjbwZ6ex1/A
 github.com/mattn/go-sqlite3 v1.11.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mwat56/apachelogger v1.1.2 h1:1/Cmoi5/uAJI8zZXsI4Ptz42soZ0l154BfQCaXM6VBs=
 github.com/mwat56/apachelogger v1.1.2/go.mod h1:45zInWy72WRwZCCl0dphgXIHjlzR3qQvxsXEZoMatFQ=
+github.com/mwat56/apachelogger v1.2.0 h1:0B6soR/g2izuBP1aBfdbmJmuT90CbiklxjgKbLuXT5Y=
+github.com/mwat56/apachelogger v1.2.0/go.mod h1:45zInWy72WRwZCCl0dphgXIHjlzR3qQvxsXEZoMatFQ=
+github.com/mwat56/apachelogger v1.2.1 h1:koWS20/0k1LI7nMF7R9JJVL39Hx1LKq3I12RfENDE5U=
+github.com/mwat56/apachelogger v1.2.1/go.mod h1:45zInWy72WRwZCCl0dphgXIHjlzR3qQvxsXEZoMatFQ=
 github.com/mwat56/errorhandler v1.0.2 h1:mlvQaV6A40YAnu6uTBxfdAuXWqLuuvdS5sPkoH+5dFo=
 github.com/mwat56/errorhandler v1.0.2/go.mod h1:NFz8HNMovjavnhZLyJOR/muQJnrLl1jHbkHp2lbz+/o=
 github.com/mwat56/ini v1.3.0 h1:Cy0MSGAdjHLG8LcJLjoVUiSP5/esLlKvZUGKWKM/EpQ=
@@ -45,6 +49,7 @@ golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn
 golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190628185345-da137c7871d7/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+golang.org/x/net v0.0.0-20190724013045-ca1201d0de80/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
@@ -63,3 +68,4 @@ golang.org/x/tools v0.0.0-20190716221150-e98af2309876/go.mod h1:jcCCGcm9btYwXyDq
 golang.org/x/tools v0.0.0-20190717194535-128ec6dfca09/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
 golang.org/x/tools v0.0.0-20190719005602-e377ae9d6386/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
 golang.org/x/tools v0.0.0-20190723021737-8bb11ff117ca/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
+golang.org/x/tools v0.0.0-20190724185037-8aa4eac1a7c1/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
