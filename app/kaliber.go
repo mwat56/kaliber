@@ -8,10 +8,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -45,12 +48,17 @@ func main() {
 		ph            *kaliber.TPageHandler
 		ck, cp, fn, s string
 	)
+	Me, _ := filepath.Abs(os.Args[0])
 	if err = kaliber.DBopen(kaliber.CalibreDatabasePath()); nil != err {
 		kaliber.ShowHelp()
-		log.Fatalf("%s: %v", os.Args[0], err)
+		s = fmt.Sprintf("%s: %v", Me, err)
+		apachelogger.Log("Kaliber/main", s)
+		runtime.Gosched() // let the logger write
+		log.Fatalln(s)
 	}
 
 	if fn, err = kaliber.AppArguments.Get("uf"); (nil == err) && (0 < len(fn)) {
+		// All the following `xxxUser()` calls terminate the program
 		if s, err = kaliber.AppArguments.Get("ua"); (nil == err) && (0 < len(s)) {
 			kaliber.AddUser(s, fn)
 		}
@@ -70,7 +78,10 @@ func main() {
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
 		kaliber.ShowHelp()
-		log.Fatalf("%s: %v", os.Args[0], err)
+		s = fmt.Sprintf("%s: %v", Me, err)
+		apachelogger.Log("Kaliber/main", s)
+		runtime.Gosched() // let the logger write
+		log.Fatalln(s)
 	}
 	handler = errorhandler.Wrap(ph, ph)
 
@@ -100,17 +111,27 @@ func main() {
 	ck, _ = kaliber.AppArguments.Get("certKey")
 	cp, _ = kaliber.AppArguments.Get("certPem")
 
-	if (0 < len(ck)) && (0 < len(cp)) {
-		log.Printf("%s listening HTTPS at: %s", os.Args[0], ph.Address())
+	if 0 < len(ck) && (0 < len(cp)) {
+		s = fmt.Sprintf("%s listening HTTPS at %s", Me, ph.Address())
+		log.Println(s)
+		apachelogger.Log("Kaliber/main", s)
 		if err = server.ListenAndServeTLS(cp, ck); nil != err {
-			log.Fatalf("%s HTTPS: %v", os.Args[0], err)
+			s = fmt.Sprintf("%s %v", Me, err)
+			apachelogger.Log("Kaliber/main", s)
+			runtime.Gosched() // let the logger write
+			log.Fatalln(s)
 		}
 		return
 	}
 
-	log.Printf("%s listening HTTP at: %s", os.Args[0], ph.Address())
+	s = fmt.Sprintf("%s listening HTTP at %s", Me, ph.Address())
+	log.Println(s)
+	apachelogger.Log("Kaliber/main", s)
 	if err = server.ListenAndServe(); nil != err {
-		log.Fatalf("%s HTTP: %v", os.Args[0], err)
+		s = fmt.Sprintf("%s %v", Me, err)
+		apachelogger.Log("Kaliber/main", s)
+		runtime.Gosched() // let the logger write
+		log.Fatalln(s)
 	}
 } // main()
 
