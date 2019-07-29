@@ -122,7 +122,6 @@ func newViewList(aDirectory string) (*TViewList, error) {
 
 var (
 	// RegEx to find path and possible added path components
-	// urlPartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?([§ÄÖÜß\w.?=:;/,_@-]*)?`)
 	urlPartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
 )
 
@@ -149,8 +148,7 @@ func URLparts(aURL string) (rDir, rPath string) {
 // implementing the `TErrorPager` interface.
 func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 	var empty []byte
-	pageData := ph.basicTemplateData().
-		Set("ShowForm", false)
+	pageData := ph.basicTemplateData().Set("ShowForm", false)
 
 	switch aStatus {
 	case 404:

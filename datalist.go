@@ -32,7 +32,7 @@ func (dl *TemplateData) Set(aKey string, aValue interface{}) *TemplateData {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// NewTemplateData returns a new (empty) TDataList instance.
+// NewTemplateData returns a new (empty) `TDataList` instance.
 func NewTemplateData() *TemplateData {
 	result := make(TemplateData, 32)
 

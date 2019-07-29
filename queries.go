@@ -348,7 +348,7 @@ func goCheckFile(aCheck <-chan bool, aDone chan<- bool) {
 	}
 } // goCheckFile()
 
-// `havIng()` returns a string limiting the query to the gieben `aID`.
+// `havIng()` returns a string limiting the query to the given `aID`.
 func havIng(aEntity string, aID TID) string {
 	if (0 == len(aEntity)) || ("all" == aEntity) || (0 == aID) {
 		return ""
