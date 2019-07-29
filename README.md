@@ -1,10 +1,12 @@
 # Kaliber
 
-[![Golang](https://img.shields.io/badge/Language-Go-green.svg?style=flat)](https://golang.org)
+[![Golang](https://img.shields.io/badge/Language-Go-green.svg)](https://golang.org)
 [![GoDoc](https://godoc.org/github.com/mwat56/kaliber?status.svg)](https://godoc.org/github.com/mwat56/kaliber)
-[![Tag](https://img.shields.io/github/tag/mwat56/kaliber.svg?style=flat-square)](https://github.com/mwat56/kaliber/releases)
-[![view examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg?style=flat-square)](https://github.com/mwat56/kaliber/blob/master/app/kaliber.go)
-[![License](https://img.shields.io/eclipse-marketplace/l/notepad4e.svg)](https://github.com/mwat56/kaliber/blob/master/LICENSE)
+[![Issues](https://img.shields.io/github/issues/mwat56/Kaliber.svg)](https://github.com/mwat56/Kaliber/issues?q=is%3Aopen+is%3Aissue)
+[![Size](https://img.shields.io/github/repo-size/mwat56/Kaliber.svg)](https://github.com/mwat56/Kaliber/)
+[![Tag](https://img.shields.io/github/tag/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/releases)
+[![License](https://img.shields.io/github/license/mwat56/Kaliber.svg)](https://github.com/mwat56/Kaliber/blob/master/LICENSE)
+[![View examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg)](https://github.com/mwat56/kaliber/blob/master/app/kaliber.go)
 
 - [Kaliber](#kaliber)
 	- [Note](#note)
