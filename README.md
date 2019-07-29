@@ -1,11 +1,11 @@
 # Kaliber
 
 [![Golang](https://img.shields.io/badge/Language-Go-green.svg)](https://golang.org)
-[![GoDoc](https://godoc.org/github.com/mwat56/kaliber?status.svg)](https://godoc.org/github.com/mwat56/kaliber)
-[![Issues](https://img.shields.io/github/issues/mwat56/Kaliber.svg)](https://github.com/mwat56/Kaliber/issues?q=is%3Aopen+is%3Aissue)
-[![Size](https://img.shields.io/github/repo-size/mwat56/Kaliber.svg)](https://github.com/mwat56/Kaliber/)
+[![GoDoc](https://godoc.org/github.com/mwat56/kaliber?status.svg)](https://godoc.org/github.com/mwat56/kaliber/)
+[![Issues](https://img.shields.io/github/issues/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/issues?q=is%3Aopen+is%3Aissue)
+[![Size](https://img.shields.io/github/repo-size/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/)
 [![Tag](https://img.shields.io/github/tag/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/releases)
-[![License](https://img.shields.io/github/license/mwat56/Kaliber.svg)](https://github.com/mwat56/Kaliber/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/blob/master/LICENSE)
 [![View examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg)](https://github.com/mwat56/kaliber/blob/master/app/kaliber.go)
 
 - [Kaliber](#kaliber)
@@ -37,14 +37,14 @@ Since I was a kid.
 Over the years several thousand books gathered in my flat; so many that I sort of ran out of space.
 Relunctantly I started to investigate and then use eBooks, first on my main desktop computer, later with a dedicated eBook reader.
 
-Soon – and again – there were so many that I started looking for some convenient way to handle, store, and retrieve them.
+Soon – and again – there were so many that I started looking for some convenient way to handle, store, and retrieve them for reading.
 That's when I became aquainted with [Calibre](https://calibre-ebook.com/), a great software for working with eBooks.
 Of course, there were some problems but since the software is actively maintained and extended all the time those problems either went away on their own with the next update or I found some way around them.
 And sure, it took some work to get all the eBooks into that library system, and since there are always coming new titles the work kind of never ends.
 
-Another question soom became urgent: How to access my books when I'm not at home?
+Another question soon became urgent: How to access my books when I'm not at home?
 As it turned out, `Calibre` comes bundled with its own web-server.
-After figuring out how to start it automatically when the machine gets restarted (which happens once in a while when some software upgrade requires it) the server did its job.
+After figuring out how to start it automatically when the machine gets restarted (which happens once in a while when some kernel software upgrade requires it) the server did its job.
 Quite another question, however, is _how_ it does its job.
 And there the problem lies.
 The web-server coming with `Calibre` serves pages that are heavily dependent on JavaScript; so much so that the pages simply don't appear or work at all if you have JavaScript disabled in your browser e.g. for privacy or security reasons.
@@ -64,7 +64,7 @@ As an aside:
 You'd probably were seriously annoyed if the waiter/server just brought you the ingredients and left it to you to prepare the meal for yourself.
 >
 > For some strange reason, however, that's exactly what happens on a growing number of web-presentations: Instead of delivering a ready-to-read web-page they send every user just program code and let the user's machine do the preparing of the page.
-> In other words: Instead of one server doing he work and delivering it to thousands of remote users nowadays the server forces thousands (or even millions) of remote users to spend time and electricity to just see a single web-page.
+> In other words: Instead of one server doing the work and delivering it to thousands of remote users nowadays the server forces thousands (or even millions) of remote users to spend time and electricity to just see a single web-page.
 
 Since I couldn't find a documentation of the database structure and/or API used by `Calibre` to store its meta-data I had to reverse engineer ways to access the stored book data.
 The same is true – to a certain lesser degree – for the web-pages served by `Kaliber`: it's kind of a mix of `Calibre`'s normal (i.e. JavaScript based) and `mobile` pages.
@@ -232,7 +232,7 @@ First we added (`-ua`) a new user, then we updated the password (`-uu`), and fin
 #### Authentication
 
 But why, you may ask, would you need an username/password file anyway?
-Well, there may be several reasons one of wish could be Copyright problems.
+Well, there may be several reasons one of wich could be Copyright problems.
 If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically_ available.
 In that case you're most likely the only actual remote user allowed to access the books in your library.
 
@@ -240,13 +240,13 @@ Whenever there's no password file given (either in the INI file or the command-l
 Depending on your country's legislation you may or may not include your family members.
 If in doubt please consult a Copyright expert.
 
-_Note_ that the password file generated and used by this system resembles the `htpasswd` used by the Apache web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
+_Note_ that the password file generated and used by this system resembles the `htpasswd` used by the _Apache_ web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
 
 ### INI file
 
 But relax!
-You don't have to give all those commandline options every time you want to start `Kaliber`.
-There's an INI file which can take all the options (apart from the user handling options) all in obe place:
+You don't have to give all those commandline options listed above every time you want to start `Kaliber`.
+There's an INI file which can take all the options (apart from the user handling options) all in one place:
 
 	$ cat kaliber.ini
 	# Default configuration file for the Kaliber server
@@ -324,15 +324,15 @@ However, please note: _I will not support any customisations_, you're on your ow
 There are some `Calibre` features which are not available (yet) with `Kaliber` and not currently supported:
 
 * _custom columns_ defined by the respective `Calibre` user;
-* _different libraries_ of the user to switch between;
+* _different/multiple libraries_ of the user to switch between;
 * _virtual libraries_ created by the `Calibre` user;
 * _book uploads_ are not planned to be included.
 
-Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided there's actually time to do it).
+Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided I find actually time to do it).
 
 ## Logging
 
-Like almost every other web-server `Kaliber` writes all access data to a logfile (`logfile =` in the INI file and `-log` at the ommandline).
+Like almost every other web-server `Kaliber` writes all access data to a logfile (`logfile =` in the INI file and `-log` at the commandline).
 As _**privacy**_ becomes a serious concern for a growing number of people (including law makers) – the IP address is definitely to be considered as _personal data_ – the [logging facility](https://github.com/mwat56/apachelogger) _anonymises_ the requesting users by setting the host-part of the respective remote address to zero (`0`).
 This option takes care of e.g. European servers who may _not without explicit consent_ of the users store personal data; this includes IP addresses in logfiles and elsewhere (eg. statistical data gathered from logfiles).
 Since the generated logfile resembles that of the popular `Apache` server you can use all tools written for `Apache` logfiles to anylyse the access data.
