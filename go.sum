@@ -2,12 +2,20 @@ github.com/mattn/go-sqlite3 v1.11.0 h1:LDdKkqtYlom37fkvqs8rMPFKAMe8+SgjbwZ6ex1/A
 github.com/mattn/go-sqlite3 v1.11.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mwat56/apachelogger v1.2.1 h1:koWS20/0k1LI7nMF7R9JJVL39Hx1LKq3I12RfENDE5U=
 github.com/mwat56/apachelogger v1.2.1/go.mod h1:45zInWy72WRwZCCl0dphgXIHjlzR3qQvxsXEZoMatFQ=
+github.com/mwat56/apachelogger v1.2.2 h1:WwDO/exIFy/DC++1PrJRNo707J/b3H8Xu0PDoVbZesU=
+github.com/mwat56/apachelogger v1.2.2/go.mod h1:45zInWy72WRwZCCl0dphgXIHjlzR3qQvxsXEZoMatFQ=
 github.com/mwat56/errorhandler v1.0.2 h1:mlvQaV6A40YAnu6uTBxfdAuXWqLuuvdS5sPkoH+5dFo=
 github.com/mwat56/errorhandler v1.0.2/go.mod h1:NFz8HNMovjavnhZLyJOR/muQJnrLl1jHbkHp2lbz+/o=
+github.com/mwat56/errorhandler v1.0.3 h1:toLU1cUjj9ro9HYaLgt6vtGJf0dhLJRjNtPVqOfh8+I=
+github.com/mwat56/errorhandler v1.0.3/go.mod h1:NFz8HNMovjavnhZLyJOR/muQJnrLl1jHbkHp2lbz+/o=
 github.com/mwat56/ini v1.3.0 h1:Cy0MSGAdjHLG8LcJLjoVUiSP5/esLlKvZUGKWKM/EpQ=
 github.com/mwat56/ini v1.3.0/go.mod h1:8o0vuCi7Vq9rKy5JRuPN5HLMcKMB58mqhc/fYhVmpWo=
+github.com/mwat56/ini v1.3.1 h1:ZPAdbGrY427WJRpSiqg7ge/R+V2l1wZDXen2x45CSOc=
+github.com/mwat56/ini v1.3.1/go.mod h1:8o0vuCi7Vq9rKy5JRuPN5HLMcKMB58mqhc/fYhVmpWo=
 github.com/mwat56/passlist v1.1.0 h1:LFGZ1R292V4MUH8K32ggQ/elZcrDQopBNylV4WYB0yg=
 github.com/mwat56/passlist v1.1.0/go.mod h1:m4H2fg/m7UqRTqHcpzJAmDEsNmKXsbgPFTIlghrBKfs=
+github.com/mwat56/passlist v1.1.1 h1:aNSycY2xQDZKqM2tfcUAwTJJQ5Va1sxFaZOLmkeA0zA=
+github.com/mwat56/passlist v1.1.1/go.mod h1:m4H2fg/m7UqRTqHcpzJAmDEsNmKXsbgPFTIlghrBKfs=
 github.com/mwat56/sessions v0.2.5 h1:/PMpRkVIFxVbyMVl9BOvTpyM9E+69/7SHWlHx24HM4I=
 github.com/mwat56/sessions v0.2.5/go.mod h1:1Opx0hrf67Flq0av9TY1Q/NPjAmJsHufFSrkB4ZXBEg=
 github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 h1:zYyBkD/k9seD2A7fsi6Oo2LfFZAehjjQMERAvZLEDnQ=
@@ -35,3 +43,4 @@ golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGm
 golang.org/x/tools v0.0.0-20190508025753-952990169864/go.mod h1:RgjU9mgBXZiqYHBnxXauZ1Gv1EHHAz9KjViQ78xBX0Q=
 golang.org/x/tools v0.0.0-20190724185037-8aa4eac1a7c1/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
 golang.org/x/tools v0.0.0-20190728063539-fc6e2057e7f6/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
+golang.org/x/tools v0.0.0-20190729092621-ff9f1409240a/go.mod h1:jcCCGcm9btYwXyDqrUWc6MKQKKGJCWEQ3AfLSRIbEuI=
