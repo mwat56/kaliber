@@ -84,7 +84,7 @@ func main() {
 		log.Fatalln(s)
 	}
 
-	// handle user maintainance:
+	// handle user maintenance:
 	userCmdline()
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
