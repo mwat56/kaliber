@@ -104,7 +104,7 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 
 // Scan returns the options read from `aString`.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
-	fmt.Sscanf(aString, qoStringPattern,
+	_, _ = fmt.Sscanf(aString, qoStringPattern,
 		&qo.ID, &qo.Descending, &qo.Entity, &qo.Layout,
 		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
 		&qo.Navigation, &qo.QueryCount, &qo.SortBy)

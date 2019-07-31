@@ -121,7 +121,7 @@ func (doc *TDocument) Authors() *TEntityList {
 
 // Comment returns the comments of the document.
 func (doc *TDocument) Comment() template.HTML {
-	return template.HTML(doc.comments)
+	return template.HTML(doc.comments) // #nosec G203
 } // Comment()
 
 // Cover returns the relative path-filename of the document's cover image.

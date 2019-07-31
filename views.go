@@ -55,13 +55,13 @@ func authorList(aList *TEntityList) string {
 
 // `htmlSafe()` returns `aText` as template.HTML.
 func htmlSafe(aText string) template.HTML {
-	return template.HTML(aText)
+	return template.HTML(aText) // #nosec G203
 } // htmlSafe()
 
 // `selectOption()` returns the OPTION markup for `aValue`.
 func selectOption(aMap *TStringMap, aValue string) template.HTML {
 	if result, ok := (*aMap)[aValue]; ok {
-		return template.HTML(result)
+		return template.HTML(result) // #nosec G203
 	}
 
 	return ""

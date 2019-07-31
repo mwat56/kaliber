@@ -50,7 +50,7 @@ func (so *TSearch) Clause() string {
 		so.Parse()
 	}
 	if 0 < len(so.where) {
-		return ` WHERE ` + so.where
+		return ` WHERE ` + so.where // #nosec G202
 	}
 
 	return ""

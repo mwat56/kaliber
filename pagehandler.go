@@ -157,7 +157,7 @@ func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 		}
 
 	default:
-		pageData = pageData.Set("Error", template.HTML(aData))
+		pageData = pageData.Set("Error", template.HTML(aData)) // #nosec G203
 		if page, err := ph.viewList.RenderedPage("error", pageData); nil == err {
 			return page
 		}
@@ -185,7 +185,7 @@ func (ph *TPageHandler) basicTemplateData() *TemplateData {
 		Set("Lang", ph.lang).
 		Set("LibraryName", ph.ln).
 		Set("Robots", "noindex,nofollow").
-		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d))
+		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d)) // #nosec G203
 } // basicTemplateData()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -238,7 +238,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			id    TID
 			dummy string
 		)
-		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
+		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		doc := QueryDocMini(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
@@ -261,7 +261,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			id    TID
 			dummy string
 		)
-		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
+		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
 		doc := QueryDocument(id)
 		if nil == doc {
@@ -270,7 +270,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		pageData.Set("Document", doc)
 		so.Set("QOS", qo.String())
-		ph.viewList.Render("document", aWriter, pageData)
+		_ = ph.viewList.Render("document", aWriter, pageData)
 
 	case "favicon.ico":
 		so.Destroy() // no session data needed
@@ -311,7 +311,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "imprint", "impressum":
 		so.Set("QOS", qo.String())
-		ph.viewList.Render("imprint", aWriter, pageData)
+		_ = ph.viewList.Render("imprint", aWriter, pageData)
 
 	case "last":
 		qo.Navigation = qoLast
@@ -319,7 +319,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "licence", "license", "lizenz":
 		so.Set("QOS", qo.String())
-		ph.viewList.Render("licence", aWriter, pageData)
+		_ = ph.viewList.Render("licence", aWriter, pageData)
 
 	case "next":
 		qo.Navigation = qoNext
@@ -334,7 +334,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "privacy", "datenschutz":
 		so.Set("QOS", qo.String())
-		ph.viewList.Render("privacy", aWriter, pageData)
+		_ = ph.viewList.Render("privacy", aWriter, pageData)
 
 	case "robots.txt":
 		so.Destroy() // no session data needed
@@ -346,7 +346,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			id    TID
 			dummy string
 		)
-		fmt.Sscanf(tail, "%d/%s", &id, &dummy)
+		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		doc := QueryDocMini(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)

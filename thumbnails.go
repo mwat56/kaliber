@@ -46,7 +46,7 @@ func makeThumbnail(aSrcName, aDstName string) error {
 		dFile, sFile *os.File
 	)
 
-	if sFile, err = os.Open(aSrcName); nil != err {
+	if sFile, err = os.Open(aSrcName); /* #nosec G304 */ nil != err {
 		return err
 	}
 	defer sFile.Close()
@@ -54,17 +54,17 @@ func makeThumbnail(aSrcName, aDstName string) error {
 	if sImg, _, err = image.Decode(sFile); nil != err {
 		return err
 	}
-	sFile.Close()
+	_ = sFile.Close()
 
 	dImg := makeThumbPrim(sImg)
 
-	if dFile, err = os.OpenFile(aDstName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644); nil != err {
+	if dFile, err = os.OpenFile(aDstName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0640); /* #nosec G302 */ nil != err {
 		return err
 	}
 	defer func() {
-		dFile.Close()
+		_ = dFile.Close()
 		if nil != err {
-			os.Remove(aDstName)
+			_ = os.Remove(aDstName)
 		}
 	}()
 	err = jpeg.Encode(dFile, dImg, &jpeg.Options{Quality: 100})
@@ -171,7 +171,7 @@ func ThumbnailUpdate() {
 	}
 	for _, doc := range *docList {
 		// here we ignore all errors but hope for the best
-		Thumbnail(&doc)
+		_, _ = Thumbnail(&doc)
 	}
 
 	//TODO implement reverse: delete all thumbnails no longer matching

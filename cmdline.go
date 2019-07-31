@@ -37,7 +37,7 @@ func AddUser(aUser, aFilename string) {
 		fmt.Fprintf(os.Stderr, "can't open/create password list '%s'\n", aFilename)
 		os.Exit(1)
 	}
-	ul.Load() // ignore error since the file might not exist yet
+	_ = ul.Load() // ignore error since the file might not exist yet
 	if ok := ul.Exists(aUser); ok {
 		fmt.Fprintf(os.Stderr, "\n\t'%s' already exists in list\n", aUser)
 		os.Exit(1)

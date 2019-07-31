@@ -201,7 +201,7 @@ func (db *tDataBase) dbReopen() error {
 	select {
 	case <-db.isDone:
 		if nil != db.DB {
-			db.DB.Close()
+			_ = db.DB.Close()
 		}
 		var err error
 		// "cache=shared" is essential to avoid running out of
@@ -242,11 +242,11 @@ func copyDatabaseFile(aSrc, aDst string) error {
 	)
 	defer func() {
 		if nil != sFile {
-			sFile.Close()
+			_ = sFile.Close()
 			sFile = nil
 		}
 		if nil != tFile {
-			tFile.Close()
+			_ = tFile.Close()
 			tFile = nil
 		}
 	}()
@@ -259,20 +259,20 @@ func copyDatabaseFile(aSrc, aDst string) error {
 		}
 	}
 
-	if sFile, err = os.Open(aSrc); err != nil {
+	if sFile, err = os.Open(aSrc); /* #nosec G304 */ err != nil {
 		return err
 	}
 
 	tName := aDst + `~`
-	if tFile, err = os.OpenFile(tName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+	if tFile, err = os.OpenFile(tName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0640); /* #nosec G302 */ err != nil {
 		return err
 	}
 
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return err
 	}
-	sFile.Close()
-	tFile.Close()
+	_ = sFile.Close()
+	_ = tFile.Close()
 
 	return os.Rename(tName, aDst)
 } // copyDatabaseFile()
@@ -314,7 +314,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			publisher, series, tags tCSVstring
 
 		doc := newDocument()
-		rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &language, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
+		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &language, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
 		doc.authors = prepAuthors(authors)
 		doc.formats = prepFormats(formats)
 		doc.identifiers = prepIdentifiers(identifiers)
@@ -506,7 +506,7 @@ func prepPages(aPath string) int {
 	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
 		return 0
 	}
-	metadata, err := ioutil.ReadFile(fName)
+	metadata, err := ioutil.ReadFile(fName) // #nosec G304
 	if nil != err {
 		return 0
 	}
@@ -587,9 +587,9 @@ func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	if rows, err := sqliteDatabase.Query(calibreCountQuery +
 		havIng(aOption.Entity, aOption.ID)); nil == err {
 		if rows.Next() {
-			rows.Scan(&rCount)
+			_ = rows.Scan(&rCount)
 		}
-		rows.Close()
+		_ = rows.Close()
 	}
 	if 0 < rCount {
 		rList, rErr = doQueryAll(calibreBaseQuery +
@@ -616,7 +616,7 @@ func QueryDocMini(aID TID) *TDocument {
 		var formats tCSVstring
 		doc := newDocument()
 		doc.ID = aID
-		rows.Scan(&doc.ID, &formats, &doc.path, &doc.Title)
+		_ = rows.Scan(&doc.ID, &formats, &doc.path, &doc.Title)
 		doc.formats = prepFormats(formats)
 
 		return doc
@@ -648,7 +648,7 @@ func QueryIDs() (*TDocList, error) {
 	result := newDocList()
 	for rows.Next() {
 		doc := newDocument()
-		rows.Scan(&doc.ID, &doc.path)
+		_ = rows.Scan(&doc.ID, &doc.path)
 		result.Add(doc)
 	}
 
@@ -665,9 +665,9 @@ func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr erro
 	where := NewSearch(aOption.Matching)
 	if rows, err := sqliteDatabase.Query(calibreCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
-			rows.Scan(&rCount)
+			_ = rows.Scan(&rCount)
 		}
-		rows.Close()
+		_ = rows.Close()
 	}
 	if 0 < rCount {
 		rList, rErr = doQueryAll(calibreBaseQuery +
