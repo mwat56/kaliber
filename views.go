@@ -311,7 +311,7 @@ var (
 	}
 )
 
-// RemoveWhiteSpace removes HTML comments and unneccessary whitespace.
+// RemoveWhiteSpace removes HTML comments and unnecessary whitespace.
 //
 // This function removes all unneeded/redundant whitespace
 // and HTML comments from the given <tt>aPage</tt>.

@@ -92,7 +92,6 @@ func iniData() {
 	}
 
 	// (3) ~user/
-	fName = ""
 	if usr, err := user.Current(); nil != err {
 		fName = os.Getenv("HOME")
 	} else {
