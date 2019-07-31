@@ -24,6 +24,33 @@ import (
 	"github.com/mwat56/sessions"
 )
 
+// `userCmdline()` checks for and executes user handling functions.
+func userCmdline() {
+	var (
+		err   error
+		fn, s string
+	)
+	if fn, err = kaliber.AppArguments.Get("uf"); (nil != err) || (0 == len(fn)) {
+		return // without user file nothing to do
+	}
+	// All the following `xxxUser()` calls terminate the program
+	if s, err = kaliber.AppArguments.Get("ua"); (nil == err) && (0 < len(s)) {
+		kaliber.AddUser(s, fn)
+	}
+	if s, err = kaliber.AppArguments.Get("uc"); (nil == err) && (0 < len(s)) {
+		kaliber.CheckUser(s, fn)
+	}
+	if s, err = kaliber.AppArguments.Get("ud"); (nil == err) && (0 < len(s)) {
+		kaliber.DeleteUser(s, fn)
+	}
+	if s, err = kaliber.AppArguments.Get("ul"); (nil == err) && (0 < len(s)) {
+		kaliber.ListUser(fn)
+	}
+	if s, err = kaliber.AppArguments.Get("uu"); (nil == err) && (0 < len(s)) {
+		kaliber.UpdateUser(s, fn)
+	}
+} // userCmdline()
+
 // `setupSinals()` configures the capture of the interrupts `SIGINT`,
 // `SIGKILL`, and `SIGTERM` to terminate the program gracefully.
 func setupSinals(aServer *http.Server) {
@@ -43,10 +70,10 @@ func setupSinals(aServer *http.Server) {
 
 func main() {
 	var (
-		err           error
-		handler       http.Handler
-		ph            *kaliber.TPageHandler
-		ck, cp, fn, s string
+		err       error
+		handler   http.Handler
+		ph        *kaliber.TPageHandler
+		ck, cp, s string
 	)
 	Me, _ := filepath.Abs(os.Args[0])
 	if err = kaliber.DBopen(kaliber.CalibreDatabasePath()); nil != err {
@@ -57,24 +84,8 @@ func main() {
 		log.Fatalln(s)
 	}
 
-	if fn, err = kaliber.AppArguments.Get("uf"); (nil == err) && (0 < len(fn)) {
-		// All the following `xxxUser()` calls terminate the program
-		if s, err = kaliber.AppArguments.Get("ua"); (nil == err) && (0 < len(s)) {
-			kaliber.AddUser(s, fn)
-		}
-		if s, err = kaliber.AppArguments.Get("uc"); (nil == err) && (0 < len(s)) {
-			kaliber.CheckUser(s, fn)
-		}
-		if s, err = kaliber.AppArguments.Get("ud"); (nil == err) && (0 < len(s)) {
-			kaliber.DeleteUser(s, fn)
-		}
-		if s, err = kaliber.AppArguments.Get("ul"); (nil == err) && (0 < len(s)) {
-			kaliber.ListUser(fn)
-		}
-		if s, err = kaliber.AppArguments.Get("uu"); (nil == err) && (0 < len(s)) {
-			kaliber.UpdateUser(s, fn)
-		}
-	}
+	// handle user maintainance:
+	userCmdline()
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
 		kaliber.ShowHelp()
