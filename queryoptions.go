@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"encoding/base64"
 	"fmt"

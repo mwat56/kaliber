@@ -6,6 +6,8 @@
 
 package main
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"context"
 	"fmt"
@@ -55,8 +57,8 @@ func userCmdline() {
 // `SIGKILL`, and `SIGTERM` to terminate the program gracefully.
 func setupSinals(aServer *http.Server) {
 	// handle `CTRL-C` and `kill(9)` and `kill(15)`.
-	c := make(chan os.Signal, 3)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		for signal := range c {

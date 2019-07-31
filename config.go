@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"flag"
 	"fmt"
@@ -53,6 +55,7 @@ func (al *tAguments) Get(aKey string) (string, error) {
 		return result, nil
 	}
 
+	//lint:ignore ST1005 – capitalisation wanted
 	return "", fmt.Errorf("Missing config value: %s", aKey)
 } // Get()
 

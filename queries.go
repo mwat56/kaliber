@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"database/sql"
 	"fmt"
@@ -122,11 +124,11 @@ const (
 
 type (
 	tDataBase struct {
-		*sql.DB      // the embedded database connection
-		doCheck      chan bool
-		fileName     string // the SQLite database file
-		isDone       chan bool
-		lastModified time.Time // modified time of SQLite database file
+		*sql.DB  // the embedded database connection
+		doCheck  chan bool
+		fileName string // the SQLite database file
+		isDone   chan bool
+		// lastModified time.Time // modified time of SQLite database file
 	}
 )
 

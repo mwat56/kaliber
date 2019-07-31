@@ -53,9 +53,6 @@ func TestTSearch_getExpression(t *testing.T) {
 		term:    "Hallo, hallo!",
 		op:      "",
 	}
-	type args struct {
-		aString string
-	}
 	tests := []struct {
 		name     string
 		fields   *TSearch

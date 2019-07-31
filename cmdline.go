@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 /*
  * This file provides functions to maintain a user/password list.
  */

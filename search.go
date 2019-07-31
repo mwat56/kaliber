@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"regexp"
 	"strings"
@@ -30,7 +32,7 @@ type (
 		op      string // how to concat with the next expression
 		term    string // what to lookup
 	}
-	tExpressionList []tExpression
+	// tExpressionList []tExpression
 )
 
 /*
@@ -68,7 +70,7 @@ var (
 )
 
 func (so *TSearch) getExpression() *tExpression {
-	exp := &tExpression{}
+	var exp *tExpression
 	matches := complexExpressionRE.FindStringSubmatch(so.raw)
 	if (nil == matches) || (0 == len(matches) || (0 == len(matches[0]))) {
 		// complex RegEx didn't match
