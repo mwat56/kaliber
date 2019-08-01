@@ -265,6 +265,8 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			sb = qoSortByTime
 		case "title":
 			sb = qoSortByTitle
+		case "":
+			sb = qoSortUnsorted // just to actually use this const
 		}
 		if sb != qo.SortBy {
 			qo.SortBy = sb
