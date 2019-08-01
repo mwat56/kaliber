@@ -137,7 +137,7 @@ func readPassword(aRepeat bool) (rPass string) {
 	)
 	for {
 		fmt.Print("\n password: ")
-		if bPW, err := terminal.ReadPassword(int(syscall.Stdin)); err == nil {
+		if bPW, err := terminal.ReadPassword(syscall.Stdin); err == nil {
 			if 0 < len(bPW) {
 				pw1 = string(bPW)
 			} else {
@@ -147,7 +147,7 @@ func readPassword(aRepeat bool) (rPass string) {
 		}
 		if aRepeat {
 			fmt.Print("\nrepeat pw: ")
-			if bPW, err := terminal.ReadPassword(int(syscall.Stdin)); err == nil {
+			if bPW, err := terminal.ReadPassword(syscall.Stdin); err == nil {
 				if 0 < len(bPW) {
 					pw2 = string(bPW)
 				} else {

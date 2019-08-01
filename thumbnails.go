@@ -84,7 +84,7 @@ func makeThumbPrim(img image.Image) image.Image {
 
 	// Preserve aspect ratio
 	if origWidth > thumbwidth {
-		newHeight = uint(origHeight * thumbwidth / origWidth)
+		newHeight = origHeight * thumbwidth / origWidth
 		if newHeight < 1 {
 			newHeight = 1
 		}
