@@ -274,7 +274,7 @@ img#logo {
 }
 div#search_box {
 	border-bottom: thin solid transparent;
-	font-size: 77%;
+	font-size: 92%;
 	/* we need this to allow for wrapping on smaller screens: */
 	line-height: 2.2;
 	padding: 0 0 1ex 0;
@@ -288,7 +288,7 @@ div.back p.back {
 a.button {
 	border: thin outset transparent;
 	cursor: pointer;
-	font-size: 89%;
+	font-size: 98%;
 	hyphens: none;
 	margin: 0 1pt 0 0;
 	padding: 0 0.3ex 0.2ex 0.3ex;
@@ -350,6 +350,7 @@ div.cover {
 	vertical-align: top;
 }
 article.document div.cover {
+	float: right;
 	max-width: 38%;
 	text-align: right;
 }
@@ -376,7 +377,7 @@ article.grid div.cover img.cover {
 article div.cover img.cover {
 	border: thick outset transparent;
 	border-radius: 1.5ex;
-	max-width: 98%;
+	/*max-width: 98%;	/*	*/
 }
 article:hover div.cover img.cover,
 article div.cover:hover img.cover,
@@ -387,7 +388,7 @@ article div.cover img.cover:hover {
 article.overview {
 	max-height: 40ex;
 	overflow: auto;
-	max-width: 100ex;
+	max-width: 104ex;
 }
 article.overview {
 	border-radius: 1ex;
@@ -424,12 +425,12 @@ div.meta {
 	vertical-align: top;
 }
 .document div.meta {
-	max-width: 58%;
+	width: 60%;
 }
 .overview div.meta {
 	max-height: 22em;
 	margin: 0 0 0 1ex;
-	width: 74%;
+	width: 78%;
 }
 .overview .meta p,
 table.meta tr td {
