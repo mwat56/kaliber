@@ -39,8 +39,8 @@ type (
 There are several forms to recognise:
 
 "just a search term" -> lookup ALL book entities;
-`entity:="searchterm"` -> lookup exact match of `searchterm` in `entity`;
-`entity:~"searchterm"` -> lookup `searchterm` contained in `entity`.
+`entity:"=searchterm"` -> lookup exact match of `searchterm` in `entity`;
+`entity:"~searchterm"` -> lookup `searchterm` contained in `entity`.
 
 All three expressions can be combined by AND and OR.
 All three expressions can be negated by a leading `!`.
@@ -60,8 +60,6 @@ func (so *TSearch) Clause() string {
 
 var (
 	complexExpressionRE = regexp.MustCompile(
-		// 	`(?i)^\s*((!?)(\w+):([=~]))?(["']([^"']*)["'])(\s+(AND|OR)\s*)?`)
-		// //           12   3     4       5    6            7   8
 		`(?i)^\s*((!?)(\w+):)?"([=~])([^"]*)"(\s+(AND|OR)\s*)?`)
 	//           12   3        4     5      6    7
 
@@ -79,11 +77,8 @@ func (so *TSearch) getExpression() *tExpression {
 			return nil
 		}
 		exp = &tExpression{
-			// entity:  strings.ToLower(matches[3]),
 			matcher: `~`,
 			term:    match2[1],
-			// op:      matches[8],
-			// not:     ("!" == matches[2]),
 		}
 		so.raw = so.raw[len(match2[0]):]
 	} else {
