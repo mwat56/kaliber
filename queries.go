@@ -124,11 +124,10 @@ const (
 
 type (
 	tDataBase struct {
-		*sql.DB  // the embedded database connection
-		doCheck  chan bool
-		fileName string // the SQLite database file
-		isDone   chan bool
-		// lastModified time.Time // modified time of SQLite database file
+		*sql.DB           // the embedded database connection
+		dbFileName string // the SQLite database file
+		doCheck    chan bool
+		isDone     chan bool
 	}
 )
 
@@ -142,6 +141,9 @@ var (
 	// The active `tDatabase` instance initialised by `DBopen()`.
 	// sqliteDatabase *sql.DB
 	sqliteDatabase tDataBase
+
+	// Optional file to log all SQL queries.
+	sqlTraceFile = ""
 )
 
 // CalibreCachePath returns the directory of the copied `Calibre` databse.
@@ -192,6 +194,26 @@ func CalibreDatabasePath() string {
 	return filepath.Join(calibreLibraryPath, calibreDatabaseName)
 } // CalibreDatabasePath()
 
+// SQLtraceFile returns the optional file used for logging all SQL queries.
+func SQLtraceFile() string {
+	return sqlTraceFile
+} // SQLtraceFile()
+
+// SetSQLtraceFile sets the filename to use for logging SQL queries.
+//
+// If the provided `aFilename` is empty the SQL logging gets disabled.
+//
+//	`aFilename` the tracefile to use; if empty tracing is disabled.
+func SetSQLtraceFile(aFilename string) {
+	if 0 < len(aFilename) {
+		if path, err := filepath.Abs(aFilename); nil == err {
+			sqlTraceFile = path
+			return
+		}
+	}
+	sqlTraceFile = ""
+} //SetSQLtraceFile ()
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // `dbReopen()` checks whether the SQLite database file has changed
@@ -210,10 +232,11 @@ func (db *tDataBase) dbReopen() error {
 		// file handles since each query holds its own file handle.
 		// "mode=ro" is self-explanatory since we don't change the
 		// DB in any way.
-		dsn := `file:` + db.fileName + `?cache=shared&mode=ro`
+		dsn := `file:` + db.dbFileName + `?cache=shared&mode=ro`
 		if db.DB, err = sql.Open("sqlite3", dsn); nil != err {
 			return err
 		}
+		go goSQLtrace("-- reOpened "+dsn, time.Now())
 		return db.DB.Ping()
 
 	default:
@@ -228,6 +251,7 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 		return nil, err
 	}
 
+	go goSQLtrace(aQuery, time.Now())
 	rows, err := db.DB.Query(aQuery, args...)
 	db.doCheck <- true
 
@@ -245,11 +269,9 @@ func copyDatabaseFile(aSrc, aDst string) error {
 	defer func() {
 		if nil != sFile {
 			_ = sFile.Close()
-			sFile = nil
 		}
 		if nil != tFile {
 			_ = tFile.Close()
-			tFile = nil
 		}
 	}()
 	if sFI, err = os.Stat(aSrc); nil != err {
@@ -273,8 +295,7 @@ func copyDatabaseFile(aSrc, aDst string) error {
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return err
 	}
-	_ = sFile.Close()
-	_ = tFile.Close()
+	go goSQLtrace("-- copied "+aSrc+" to "+aDst, time.Now())
 
 	return os.Rename(tName, aDst)
 } // copyDatabaseFile()
@@ -285,7 +306,7 @@ func copyDatabaseFile(aSrc, aDst string) error {
 func DBopen(aFilename string) error {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
-	sqliteDatabase.fileName = dName
+	sqliteDatabase.dbFileName = dName
 	sqliteDatabase.doCheck = make(chan bool, 32)
 	sqliteDatabase.isDone = make(chan bool, 32)
 
@@ -293,7 +314,7 @@ func DBopen(aFilename string) error {
 	if err := copyDatabaseFile(sName, dName); nil != err {
 		return err
 	}
-	// signal for `fileTime()`:
+	// signal for `dbReopen()`:
 	sqliteDatabase.isDone <- true
 
 	// start monitoring the original database file:
@@ -349,6 +370,23 @@ func goCheckFile(aCheck <-chan bool, aDone chan<- bool) {
 		}
 	}
 } // goCheckFile()
+
+// `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
+func goSQLtrace(aQuery string, aTime time.Time) {
+	if 0 == len(sqlTraceFile) {
+		return
+	}
+	aQuery = strings.ReplaceAll(aQuery, "\t", " ")
+	aQuery = strings.ReplaceAll(aQuery, "\n", " ")
+	file, err := os.OpenFile(sqlTraceFile,
+		os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640) // #nosec G302
+	if nil != err {
+		return
+	}
+	defer file.Close()
+
+	fmt.Fprintln(file, aTime.Format("2006-01-02 15:04:05 ")+strings.ReplaceAll(aQuery, "  ", " "))
+} // goSQLtrace()
 
 // `havIng()` returns a string limiting the query to the given `aID`.
 func havIng(aEntity string, aID TID) string {

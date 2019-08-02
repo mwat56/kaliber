@@ -215,6 +215,11 @@ func initArguments() {
 	flag.StringVar(&sidStr, "sidname", sidStr,
 		"(optional) <name> the name of the session ID to use\n")
 
+	s, _ = AppArguments.Get("sqltrace")
+	sqlStr := absolute(dataStr, s)
+	flag.StringVar(&sqlStr, "sqltrace", sqlStr,
+		"(optional) name of the SQL logfile to write to\n")
+
 	themStr, _ := AppArguments.Get("theme")
 	flag.StringVar(&themStr, "theme", themStr,
 		"<name> the display theme to use ('light' or 'dark')\n")
@@ -323,6 +328,11 @@ func initArguments() {
 	}
 	AppArguments.set("sessiondir", sessStr)
 	sessions.SetSIDname(sidStr)
+
+	if 0 < len(sqlStr) {
+		sqlStr = absolute(dataStr, sqlStr)
+	}
+	SetSQLtraceFile(sqlStr)
 
 	AppArguments.set("theme", themStr)
 	AppArguments.set("ua", uaStr)

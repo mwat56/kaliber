@@ -19,6 +19,7 @@ func openDBforTesting() {
 	if err := DBopen(CalibreDatabasePath()); nil != err {
 		log.Fatalf("DBopen: %v", err)
 	}
+	SetSQLtraceFile("./SQLtrace.sql")
 } // openDBforTesting()
 
 func Test_prepAuthors(t *testing.T) {
@@ -410,9 +411,9 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 5460, 1000, false},
+		{" 0", args{o0}, 5462, 1000, false},
 		{" 1", args{o1}, 14, 14, false},
-		{" 2", args{o2}, 4582, 50, false},
+		{" 2", args{o2}, 4584, 50, false},
 		{" 3", args{o3}, 42, 42, false},
 		{" 4", args{o4}, 358, 50, false},
 		{" 5", args{o5}, 448, 50, false},
@@ -457,7 +458,7 @@ func TestQueryLimit(t *testing.T) {
 		{" 7", args{3500, 500}, 500, false},
 		{" 8", args{4000, 500}, 500, false},
 		{" 9", args{4500, 500}, 500, false},
-		{"10", args{5000, 500}, 460, false},
+		{"10", args{5000, 500}, 462, false},
 		{"11", args{5500, 500}, 0, false},
 	}
 	for _, tt := range tests {
