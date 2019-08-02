@@ -51,7 +51,7 @@ br, div {
 	text-indent: 0;
 }
 code, .code, input, kbd, pre, textarea {
-	color: inherit;
+	/*color: inherit;	/*	*/
 	font-family: monospace;
 	font-size: 0.987em;
 	font-weight: inherit;
@@ -274,7 +274,7 @@ img#logo {
 }
 div#search_box {
 	border-bottom: thin solid transparent;
-	font-size: 92%;
+	font-size: 82%;
 	/* we need this to allow for wrapping on smaller screens: */
 	line-height: 2.2;
 	padding: 0 0 1ex 0;
@@ -430,7 +430,7 @@ div.meta {
 .overview div.meta {
 	max-height: 22em;
 	margin: 0 0 0 1ex;
-	width: 78%;
+	width: 76%;
 }
 .overview .meta p,
 table.meta tr td {
