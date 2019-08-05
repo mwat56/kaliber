@@ -13,11 +13,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3" // anonymous import
@@ -206,13 +208,19 @@ func SQLtraceFile() string {
 //	`aFilename` the tracefile to use; if empty tracing is disabled.
 func SetSQLtraceFile(aFilename string) {
 	if 0 < len(aFilename) {
-		if path, err := filepath.Abs(aFilename); nil == err {
-			sqlTraceFile = path
-			return
-		}
+		var doOnce sync.Once
+		doOnce.Do(func() {
+			if path, err := filepath.Abs(aFilename); nil == err {
+				sqlTraceFile = path
+				// start the background writer:
+				go goWrite(sqlTraceFile, sqlTraceQueue)
+			}
+		})
+
+		return
 	}
 	sqlTraceFile = ""
-} //SetSQLtraceFile ()
+} // SetSQLtraceFile()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -378,15 +386,80 @@ func goSQLtrace(aQuery string, aTime time.Time) {
 	}
 	aQuery = strings.ReplaceAll(aQuery, "\t", " ")
 	aQuery = strings.ReplaceAll(aQuery, "\n", " ")
-	file, err := os.OpenFile(sqlTraceFile,
-		os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640) // #nosec G302
-	if nil != err {
-		return
-	}
-	defer file.Close()
 
-	fmt.Fprintln(file, aTime.Format("2006-01-02 15:04:05 ")+strings.ReplaceAll(aQuery, "  ", " "))
+	sqlTraceQueue <- aTime.Format("2006-01-02 15:04:05 ") +
+		strings.ReplaceAll(aQuery, "  ", " ")
 } // goSQLtrace()
+
+const (
+	// Half a second to sleep in `goWrite()`.
+	halfSecond = 500 * time.Millisecond
+)
+
+var (
+	// The channel to send SQL to and read messages from
+	sqlTraceQueue = make(chan string, 64)
+)
+
+// `goWrite()` performs the actual file write.
+//
+// This function is run only once, handling all write requests.
+//
+//	`aLogfile` The name of the logfile to write to.
+//	`aSource` The source of log messages to write.
+func goWrite(aLogfile string, aSource <-chan string) {
+	var (
+		err  error
+		file *os.File
+		more bool
+		txt  string
+	)
+	defer func() {
+		if os.Stderr != file {
+			_ = file.Close()
+		}
+	}()
+
+	// let the application initialise:
+	time.Sleep(halfSecond)
+
+	for { // wait for strings to write
+		select {
+		case txt, more = <-aSource:
+			if !more { // channel closed
+				log.Println("queries.goWrite(): message channel closed")
+				return
+			}
+			if nil == file {
+				if file, err = os.OpenFile(aLogfile,
+					os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640); /* #nosec G302 */ nil != err {
+					file = os.Stderr // a last resort
+				}
+			}
+			fmt.Fprintln(file, txt)
+
+			// let's handle waiting messages
+			cCap := cap(aSource)
+			for txt = range aSource {
+				fmt.Fprintln(file, txt)
+				cCap--
+				if 0 == cCap {
+					break // give a chance to close the file
+				}
+			}
+
+		default:
+			if nil == file {
+				time.Sleep(halfSecond)
+			} else {
+				if os.Stderr != file {
+					_ = file.Close()
+				}
+				file = nil
+			}
+		}
+	}
+} // goWrite()
 
 // `havIng()` returns a string limiting the query to the given `aID`.
 func havIng(aEntity string, aID TID) string {
