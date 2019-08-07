@@ -16,6 +16,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -619,6 +620,11 @@ func prepLanguage(aLanguage tCSVstring) *tLanguage {
 
 	return nil
 } // prepLanguage()
+
+var (
+	// RegEx to find a document's number of pages
+	pagesRE = regexp.MustCompile(`(?si)<meta name="calibre:user_metadata:#pages" .*?, &quot;#value#&quot;: (\d+),`)
+)
 
 func prepPages(aPath string) int {
 	fName := filepath.Join(calibreLibraryPath, aPath, "metadata.opf")
