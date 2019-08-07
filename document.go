@@ -13,19 +13,19 @@ import (
 	"html/template"
 	"net/url"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 )
 
 /*
 
-This file provides functions and method to handle a single document.
+This file provides functions and methods to handle a single document.
 
 */
 
 type (
-	tCSVstring = string // comma separated list
+	// A comma separated value list
+	tCSVstring = string
 
 	// TID is the database index type.
 	TID = int
@@ -40,16 +40,16 @@ type (
 	// TEntityList is a list of entities
 	TEntityList []TEntity
 
-	// a list of authors
+	// A list of authors
 	tAuthorList = TEntityList
 
-	// a list of formats
+	// A list of formats
 	tFormatList = TEntityList
 
-	// a list of identifiers
+	// A list of identifiers
 	tIdentifierList = TEntityList
 
-	// a single language code
+	// A single language code
 	tLanguage = TEntity
 
 	// TStringMap is a map of strings indexed by string.
@@ -59,16 +59,16 @@ type (
 	// respective library file.
 	TPathList TStringMap
 
-	// a single publisher
+	// A single publisher
 	tPublisher = TEntity
 
-	// a single series
+	// A single series
 	tSeries = TEntity
 
-	// a list of tags
+	// A list of tags
 	tTagList = TEntityList
 
-	// a single document (e.g. book, magazin etc.)
+	// A single document (e.g. book, magazin etc.)
 	tDocument struct {
 		ID          TID
 		authors     *tAuthorList
@@ -126,12 +126,12 @@ func (doc *TDocument) Comment() template.HTML {
 	return template.HTML(doc.comments) // #nosec G203
 } // Comment()
 
-// Cover returns the relative path-filename of the document's cover image.
+// Cover returns the absolute URL path-filename of the document's cover image.
 func (doc *TDocument) Cover() string {
 	return fmt.Sprintf("/cover/%d/cover.gif", doc.ID)
 } // Cover()
 
-// `cover()` returns the absolute path-filename of the document's cover image.
+// `coverAbs()` returns the path-filename of the document's cover image.
 func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	dir := filepath.Join(calibreLibraryPath, doc.path)
 	filenames, err := filepath.Glob(dir + "/cover.*")
@@ -174,7 +174,7 @@ func (doc *TDocument) Filenames() *TPathList {
 	dir := filepath.Join(calibreLibraryPath, doc.path)
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
-			continue // we don't need these documents
+			continue // we ignore these documents
 		}
 		ext := strings.ToLower(format.Name)
 		if filenames, err := filepath.Glob(dir + "/*." + ext); nil == err {
@@ -193,7 +193,7 @@ func (doc *TDocument) Files() *TEntityList {
 	result := make(TEntityList, 0, len(*doc.formats))
 	for _, file := range *doc.formats {
 		if "ORIGINAL_EPUB" == file.Name {
-			continue
+			continue // we ignore this format
 		}
 		fName := url.PathEscape(strings.ReplaceAll(doc.Title, ` `, `_`)) + `.` + strings.ToLower(file.Name)
 		ent := TEntity{
@@ -218,7 +218,7 @@ func (doc *TDocument) Formats() *TEntityList {
 	result := make(TEntityList, 0, len(*doc.formats))
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
-			continue
+			continue // we ignore this format
 		}
 		ent := TEntity{
 			ID:   format.ID,
@@ -275,7 +275,7 @@ func (doc *TDocument) Identifiers() *TEntityList {
 	return nil
 } // Identifiers()
 
-// Language returns an ID/Name series struct.
+// Language returns an ID/Name/URL language struct.
 func (doc *TDocument) Language() *TEntity {
 	if nil == doc.language {
 		return nil
@@ -299,7 +299,7 @@ func (doc *TDocument) PubDate() string {
 	return fmt.Sprintf("%d-%02d", y, m)
 } // PubDate()
 
-// Publisher returns an ID/Name publisher struct.
+// Publisher returns an ID/Name/URL publisher struct.
 func (doc *TDocument) Publisher() *TEntity {
 	if nil == doc.publisher {
 		return nil
@@ -313,7 +313,7 @@ func (doc *TDocument) Publisher() *TEntity {
 	return &result
 } // Publisher ()
 
-// Series returns an ID/Name series struct.
+// Series returns an ID/Name/URL series struct.
 func (doc *TDocument) Series() *TEntity {
 	if nil == doc.series {
 		return nil
@@ -338,12 +338,7 @@ func (doc *TDocument) SeriesIndex() string {
 	return result
 } // SeriesIndex()
 
-var (
-	// RegEx to find a document's number of pages
-	pagesRE = regexp.MustCompile(`(?si)<meta name="calibre:user_metadata:#pages" .*?, &quot;#value#&quot;: (\d+),`)
-)
-
-// Tags returns a list of ID/Name tag fields.
+// Tags returns a list of ID/Name/URL tag fields.
 func (doc *TDocument) Tags() *TEntityList {
 	if nil == doc.tags {
 		return nil
@@ -364,7 +359,7 @@ func (doc *TDocument) Tags() *TEntityList {
 	return nil
 } // Tags()
 
-// Thumb returns the relative path-filename of the document's cover image.
+// Thumb returns the path-filename of the document's thumbnail image.
 func (doc *TDocument) Thumb() string {
 	return fmt.Sprintf("/thumb/%d/cover.jpg", doc.ID)
 } // Thumb()
@@ -376,7 +371,7 @@ func (doc *TDocument) Timestamp() string {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// Add appends `aDoc` to the list.
+// Add appends `aDoc` to the list of documents.
 func (dl *TDocList) Add(aDoc *TDocument) *TDocList {
 	*dl = append(*dl, *aDoc)
 
