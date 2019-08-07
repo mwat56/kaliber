@@ -203,8 +203,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	so := sessions.GetSession(aRequest)
 	if qos, ok := so.GetString("QOS"); ok {
 		qo.Scan(qos)
-	} else if qoc := aRequest.FormValue("qoc"); 0 < len(qoc) {
-		qo.UnCGI(qoc)
 	}
 	pageData := ph.basicTemplateData().
 		Set("SLL", qo.SelectLimitOptions()).
@@ -389,10 +387,9 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		qo := NewQueryOptions()
 		so := sessions.GetSession(aRequest)
 		if qos, ok := so.GetString("QOS"); ok {
-			qo.Scan(qos).Update(aRequest)
-		} else if qos := aRequest.FormValue("qos"); 0 < len(qos) {
-			qo.Scan(qos).Update(aRequest)
+			qo.Scan(qos)
 		}
+		qo.Update(aRequest)
 
 		// check which of the four possible SUBMIT buttons was activated
 		if search := aRequest.FormValue("search"); 0 < len(search) {
@@ -474,8 +471,8 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("HasPrev", hasPrev).
 		Set("IsGrid", qoLayoutGrid == aOption.Layout).
 		Set("Matching", aOption.Matching).
-		Set("SIDNAME", sessions.SIDname()).
 		Set("SID", aSession.ID()).
+		Set("SIDNAME", sessions.SIDname()).
 		Set("SLO", aOption.SelectLayoutOptions()).
 		Set("SLL", aOption.SelectLimitOptions()).
 		Set("SOO", aOption.SelectOrderOptions()).
