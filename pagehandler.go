@@ -390,19 +390,20 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			qo.Scan(qos)
 		}
 		qo.Update(aRequest)
-
-		// check which of the four possible SUBMIT buttons was activated
-		if search := aRequest.FormValue("search"); 0 < len(search) {
-			qo.DecLimit()
-		} else if first := aRequest.FormValue("first"); 0 < len(first) {
-			qo.Navigation = qoFirst
-		} else if last := aRequest.FormValue("last"); 0 < len(last) {
-			qo.Navigation = qoLast
-		} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
-			qo.Navigation = qoPrev
-		} else if next := aRequest.FormValue("next"); 0 < len(next) {
-			qo.Navigation = qoNext
-		}
+		/*
+			// check which of the four possible SUBMIT buttons was activated
+			if search := aRequest.FormValue("search"); 0 < len(search) {
+				qo.DecLimit()
+			} else if first := aRequest.FormValue("first"); 0 < len(first) {
+				qo.Navigation = qoFirst
+			} else if last := aRequest.FormValue("last"); 0 < len(last) {
+				qo.Navigation = qoLast
+			} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
+				qo.Navigation = qoPrev
+			} else if next := aRequest.FormValue("next"); 0 < len(next) {
+				qo.Navigation = qoNext
+			}
+		*/
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
