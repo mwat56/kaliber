@@ -39,6 +39,19 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		SortBy:      qoSortByLanguage,
 	}
 	w2 := `?qoc=` + base64.StdEncoding.EncodeToString([]byte(`|1|false|"lang"|1|50|0|""|4|200|2|`))
+	o3 := TQueryOptions{
+		ID:          1,
+		Descending:  false,
+		Entity:      "",
+		Layout:      qoLayoutGrid,
+		LimitLength: 50,
+		LimitStart:  0,
+		Matching:    `tag:"=Golang"`,
+		Navigation:  qoNext,
+		QueryCount:  200,
+		SortBy:      qoSortByLanguage,
+	}
+	w3 := `?qoc=` + base64.StdEncoding.EncodeToString([]byte(`|1|false|""|1|50|0|"tag:\"=Golang\""|4|200|2|`))
 	tests := []struct {
 		name   string
 		fields TQueryOptions
@@ -47,6 +60,7 @@ func TestTQueryOptions_CGI(t *testing.T) {
 		// TODO: Add test cases.
 		{" 1", o1, w1},
 		{" 2", o2, w2},
+		{" 3", o3, w3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -283,7 +283,6 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 func NewQueryOptions() *TQueryOptions {
 	result := TQueryOptions{
 		Descending:  true,
-		Entity:      "all",
 		LimitLength: 25,
 		SortBy:      qoSortByTime,
 	}
