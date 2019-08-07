@@ -102,7 +102,7 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 	qo.LimitStart += qo.LimitLength
 
 	return qo
-} // decLimit()
+} // IncLimit()
 
 // Scan returns the options read from `aString`.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
