@@ -129,7 +129,7 @@ type (
 		*sql.DB           // the embedded database connection
 		dbFileName string // the SQLite database file
 		doCheck    chan bool
-		isDone     chan bool
+		wasCopied  chan bool
 	}
 )
 
@@ -224,18 +224,20 @@ func SetSQLtraceFile(aFilename string) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// `dbReopen()` checks whether the SQLite database file has changed
-// since the last access. If so, the current database connection is
-// closed and a new one is established.
-//
+// `dbReopen()` checks whether the SQLite database file has changed since
+// the last access. If so, the current database connection is closed and
+// a new one is established.
 func (db *tDataBase) dbReopen() error {
 	// check whether the DB file changed:
 	select {
-	case <-db.isDone:
+	case _, more := <-db.wasCopied:
 		if nil != db.DB {
 			_ = db.DB.Close()
 		}
 		var err error
+		if !more {
+			return err // channel closed
+		}
 		// "cache=shared" is essential to avoid running out of
 		// file handles since each query holds its own file handle.
 		// "mode=ro" is self-explanatory since we don't change the
@@ -258,8 +260,8 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 	if err := db.dbReopen(); nil != err {
 		return nil, err
 	}
-
 	go goSQLtrace(aQuery, time.Now())
+
 	rows, err := db.DB.Query(aQuery, args...)
 	db.doCheck <- true
 
@@ -268,7 +270,8 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-func copyDatabaseFile(aSrc, aDst string) error {
+// `copyDatabaseFile()` copies Calibre's database file to our cache directory.
+func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 	var (
 		err          error
 		sFile, tFile *os.File
@@ -283,29 +286,29 @@ func copyDatabaseFile(aSrc, aDst string) error {
 		}
 	}()
 	if sFI, err = os.Stat(aSrc); nil != err {
-		return err
+		return false, err
 	}
 	if dFI, err = os.Stat(aDst); nil == err {
 		if sFI.ModTime().Before(dFI.ModTime()) {
-			return nil
+			return false, nil
 		}
 	}
 
 	if sFile, err = os.Open(aSrc); /* #nosec G304 */ err != nil {
-		return err
+		return false, err
 	}
 
 	tName := aDst + `~`
-	if tFile, err = os.OpenFile(tName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0640); /* #nosec G302 */ err != nil {
-		return err
+	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
+		return false, err
 	}
 
 	if _, err = io.Copy(tFile, sFile); nil != err {
-		return err
+		return false, err
 	}
 	go goSQLtrace("-- copied "+aSrc+" to "+aDst, time.Now())
 
-	return os.Rename(tName, aDst)
+	return true, os.Rename(tName, aDst)
 } // copyDatabaseFile()
 
 // DBopen establishes a new database connection.
@@ -315,18 +318,18 @@ func DBopen(aFilename string) error {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
 	sqliteDatabase.dbFileName = dName
-	sqliteDatabase.doCheck = make(chan bool, 32)
-	sqliteDatabase.isDone = make(chan bool, 32)
+	sqliteDatabase.doCheck = make(chan bool, 64)
+	sqliteDatabase.wasCopied = make(chan bool, 1)
 
 	// prepare the local database copy:
-	if err := copyDatabaseFile(sName, dName); nil != err {
+	if _, err := copyDatabaseFile(sName, dName); nil != err {
 		return err
 	}
 	// signal for `dbReopen()`:
-	sqliteDatabase.isDone <- true
+	sqliteDatabase.wasCopied <- true
 
 	// start monitoring the original database file:
-	go goCheckFile(sqliteDatabase.doCheck, sqliteDatabase.isDone)
+	go goCheckFile(sqliteDatabase.doCheck, sqliteDatabase.wasCopied)
 
 	return sqliteDatabase.dbReopen()
 } // DBopen()
@@ -363,15 +366,18 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 // `goCheckFile()` checks in the background whether the original database
 // file has changed. If so, that file is copied into the cache directory
 // from where it is read and used by the `sqliteDatabase` instance.
-func goCheckFile(aCheck <-chan bool, aDone chan<- bool) {
+func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
 
 	for { // wait for a signal to arrive
 		select {
-		case <-aCheck:
-			if err := copyDatabaseFile(sName, dName); nil == err {
-				aDone <- true
+		case _, more := <-aCheck:
+			if !more {
+				return // channel closed
+			}
+			if copied, err := copyDatabaseFile(sName, dName); copied && (nil == err) {
+				wasCopied <- true
 			}
 		default:
 			time.Sleep(time.Second)
