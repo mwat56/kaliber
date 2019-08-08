@@ -149,25 +149,28 @@ img, svg {
 }
 input[type="reset"],
 input[type="text"],
+input[type="search"],
 input[type="submit"],
 select,
 select option {
-	border-radius: 0.5ex;
+	border-radius: 1ex;
 	border: thin outset transparent;
-	font-size: inherit; /* 89%; */
+	font-size: inherit;
 	font-weight: 600;
 	hyphens: none;
-	padding: 0 0.3ex 0.3ex 0.3ex;
+	padding: 0 0.1ex 0.3ex 0.1ex;
 	vertical-align: baseline;
 }
 input[type="reset"],
 input[type="text"],
+input[type="search"],
 input[type="submit"],
 select {
 	height: 4ex;
 }
 input[type="reset"]:hover,
 input[type="text"]:hover,
+input[type="search"]:hover,
 input[type="submit"]:hover,
 select:hover,
 select option:hover  {
@@ -274,7 +277,7 @@ img#logo {
 }
 div#search_box {
 	border-bottom: thin solid transparent;
-	font-size: 82%;
+	font-size: 84%;
 	/* we need this to allow for wrapping on smaller screens: */
 	line-height: 2.2;
 	padding: 0 0 1ex 0;
