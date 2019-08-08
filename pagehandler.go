@@ -229,11 +229,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	case "certs": // these files are handled internally
-		so.Destroy() // no session data needed
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "cover":
-		so.Destroy() // no session data needed
 		var (
 			id    TID
 			dummy string
@@ -253,7 +251,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "css":
-		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
@@ -273,11 +270,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		_ = ph.viewList.Render("document", aWriter, pageData)
 
 	case "favicon.ico":
-		so.Destroy() // no session data needed
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
 	case "file":
-		so.Destroy() // no session data needed
 		matches := fileParseRE.FindStringSubmatch(tail)
 		if (nil == matches) || (3 > len(matches)) {
 			http.NotFound(aWriter, aRequest)
@@ -299,14 +294,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "first":
 		qo.Navigation = qoFirst
+		qo.LimitStart = 0
 		ph.handleQuery(qo, aWriter, so)
 
 	case "fonts":
-		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "img":
-		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
@@ -315,6 +309,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "last":
 		qo.Navigation = qoLast
+		if qo.QueryCount <= qo.LimitLength {
+			qo.LimitStart = 0
+		} else {
+			qo.LimitStart = qo.QueryCount - qo.LimitLength
+		}
 		ph.handleQuery(qo, aWriter, so)
 
 	case "licence", "license", "lizenz":
@@ -330,6 +329,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "prev":
 		qo.Navigation = qoPrev
+		// Since the current LimitStart points to the _next_ query
+		// start we have to decrement the value twice to get _before_.
+		qo.DecLimit().DecLimit()
 		ph.handleQuery(qo, aWriter, so)
 
 	case "privacy", "datenschutz":
@@ -337,11 +339,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		_ = ph.viewList.Render("privacy", aWriter, pageData)
 
 	case "robots.txt":
-		so.Destroy() // no session data needed
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "thumb":
-		so.Destroy() // no session data needed
 		var (
 			id    TID
 			dummy string
@@ -390,20 +390,6 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			qo.Scan(qos)
 		}
 		qo.Update(aRequest)
-		/*
-			// check which of the four possible SUBMIT buttons was activated
-			if search := aRequest.FormValue("search"); 0 < len(search) {
-				qo.DecLimit()
-			} else if first := aRequest.FormValue("first"); 0 < len(first) {
-				qo.Navigation = qoFirst
-			} else if last := aRequest.FormValue("last"); 0 < len(last) {
-				qo.Navigation = qoLast
-			} else if prev := aRequest.FormValue("prev"); 0 < len(prev) {
-				qo.Navigation = qoPrev
-			} else if next := aRequest.FormValue("next"); 0 < len(next) {
-				qo.Navigation = qoNext
-			}
-		*/
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
@@ -434,22 +420,22 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	} else {
 		aOption.QueryCount = 0
 	}
-
-	switch aOption.Navigation {
-	case qoFirst:
-		aOption.LimitStart = 0
-	case qoPrev:
-		aOption.DecLimit().DecLimit()
-	case qoLast:
-		if aOption.QueryCount <= aOption.LimitLength {
-			aOption.LimitStart = 0
-		} else {
-			aOption.LimitStart = aOption.QueryCount - aOption.LimitLength
+	/*
+		switch aOption.Navigation {
+		// case qoFirst:
+		// 	aOption.LimitStart = 0
+		// case qoPrev:
+		// 	aOption.DecLimit().DecLimit()
+		case qoLast:
+			if aOption.QueryCount <= aOption.LimitLength {
+				aOption.LimitStart = 0
+			} else {
+				aOption.LimitStart = aOption.QueryCount - aOption.LimitLength
+			}
+		default:
+			// qoNext: nothing to do here
 		}
-	default:
-		// qoNext: nothing to do here
-	}
-
+	*/
 	BFirst := aOption.LimitStart + 1 // zero-based to one-based
 	BCount := aOption.QueryCount
 	BLast := aOption.LimitStart + aOption.LimitLength
@@ -458,8 +444,8 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	}
 	hasFirst := 0 < aOption.LimitStart
 	hasLast := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength + 1)
-	hasNext := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength)
-	hasPrev := aOption.LimitStart > aOption.LimitLength
+	hasNext := aOption.QueryCount >= (aOption.LimitStart + aOption.LimitLength)
+	hasPrev := aOption.LimitStart >= aOption.LimitLength
 	aOption.IncLimit()
 	pageData := ph.basicTemplateData().
 		Set("BFirst", BFirst).
