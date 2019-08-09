@@ -28,16 +28,17 @@ article.overview div.meta p {
 	border-bottom-color: #ccc;
 }
 a.button {
-	background-color: #f9f0e0;
+	background: #f9f0e0 none;
+	border-color: #333;
 	color: #000;
 }
 a.button:hover {
-	border-color: #333;
 	background: #fefeff none;
+	border-color: #333;
 	color: #003;
 }
 code, .code, kbd, pre, textarea {
-	background: #ebebeb;
+	background: #ebebeb none;
 	color: #333;
 }
 del {

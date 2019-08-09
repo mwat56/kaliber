@@ -294,7 +294,7 @@ a.button {
 	font-size: 98%;
 	hyphens: none;
 	margin: 0 1pt 0 0;
-	padding: 0 0.3ex 0.2ex 0.3ex;
+	padding: 0 0.3ex 0.1ex 0.2ex;
 	text-align: center;
 	text-decoration: none;
 	vertical-align: baseline;
@@ -371,7 +371,7 @@ article.grid {
 	display: inline-block;
 	margin: 0;
 	text-align: center;
-	width: 33%;
+	width: 32%;
 }
 article.grid div.cover img.cover {
 	max-height: 46ex;

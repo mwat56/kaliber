@@ -28,7 +28,8 @@ article.overview div.meta p {
 	border-bottom-color: #333;
 }
 a.button {
-	background-color: #090010;
+	background: #090010 none;
+	border-color: #ccc;
 	color: #eeeeee;
 }
 a.button:hover {
