@@ -225,7 +225,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "back":
 		// log.Printf("handleGET(back): %v", qo) //FIXME REMOVE
 		qo.DecLimit()
-		qo.Navigation = qoNext
 		ph.handleQuery(qo, aWriter, so)
 
 	case "certs": // these files are handled internally
@@ -293,7 +292,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "first":
-		qo.Navigation = qoFirst
 		qo.LimitStart = 0
 		ph.handleQuery(qo, aWriter, so)
 
@@ -308,7 +306,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		_ = ph.viewList.Render("imprint", aWriter, pageData)
 
 	case "last":
-		qo.Navigation = qoLast
 		if qo.QueryCount <= qo.LimitLength {
 			qo.LimitStart = 0
 		} else {
@@ -321,14 +318,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		_ = ph.viewList.Render("licence", aWriter, pageData)
 
 	case "next":
-		qo.Navigation = qoNext
 		ph.handleQuery(qo, aWriter, so)
 
 	case "post":
 		ph.handleQuery(qo, aWriter, so)
 
 	case "prev":
-		qo.Navigation = qoPrev
 		// Since the current LimitStart points to the _next_ query
 		// start we have to decrement the value twice to get _before_.
 		qo.DecLimit().DecLimit()
@@ -369,6 +364,15 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
+		// qo.ID = 0
+		// qo.Entity = ""
+		// qo.Matching = ""
+		// qo.LimitStart = 0
+		newQO := NewQueryOptions()
+		newQO.Descending = qo.Descending
+		newQO.LimitLength = qo.LimitLength
+		newQO.SortBy = qo.SortBy
+
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
@@ -420,22 +424,6 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	} else {
 		aOption.QueryCount = 0
 	}
-	/*
-		switch aOption.Navigation {
-		// case qoFirst:
-		// 	aOption.LimitStart = 0
-		// case qoPrev:
-		// 	aOption.DecLimit().DecLimit()
-		case qoLast:
-			if aOption.QueryCount <= aOption.LimitLength {
-				aOption.LimitStart = 0
-			} else {
-				aOption.LimitStart = aOption.QueryCount - aOption.LimitLength
-			}
-		default:
-			// qoNext: nothing to do here
-		}
-	*/
 	BFirst := aOption.LimitStart + 1 // zero-based to one-based
 	BCount := aOption.QueryCount
 	BLast := aOption.LimitStart + aOption.LimitLength

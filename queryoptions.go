@@ -16,14 +16,6 @@ import (
 	"strconv"
 )
 
-// Constants defining the navigation direction
-const (
-	qoFirst = uint8(1 << iota)
-	qoPrev
-	qoNext
-	qoLast
-)
-
 // Constants defining the ORDER_BY clause
 const (
 	qoSortUnsorted = uint8(iota)
@@ -44,21 +36,6 @@ const (
 	qoLayoutGrid = uint8(1)
 )
 
-// Pattern used by `String()` and `Scan()`:
-const (
-	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%q|%d|%d|%d|`
-	//                   |  |  |  |  |  |  |  |  |  + SortBy
-	//                   |  |  |  |  |  |  |  |  + QueryCount
-	//                   |  |  |  |  |  |  |  + Navigation
-	//                   |  |  |  |  |  |  + Matching
-	//                   |  |  |  |  |  + LimitStart
-	//                   |  |  |  |  + LimitLength
-	//                   |  |  |  + Layout
-	//                   |  |  + Entity
-	//                   |  + Descending
-	//                   + ID
-)
-
 type (
 	// TQueryOptions hold properties configuring a query.
 	//
@@ -72,10 +49,23 @@ type (
 		LimitLength uint   // number of documents per page
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
-		Navigation  uint8  // page navigation direction
 		SortBy      uint8  // display order of documents (`qoSortByXXX`)
 		QueryCount  uint   // number of DB records matching the query option
 	}
+)
+
+// Pattern used by `String()` and `Scan()`:
+const (
+	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%q|%d|%d|`
+	//                   |  |  |  |  |  |  |  |  + SortBy
+	//                   |  |  |  |  |  |  |  + QueryCount
+	//                   |  |  |  |  |  |  + Matching
+	//                   |  |  |  |  |  + LimitStart
+	//                   |  |  |  |  + LimitLength
+	//                   |  |  |  + Layout
+	//                   |  |  + Entity
+	//                   |  + Descending
+	//                   + ID
 )
 
 // CGI returns the object's query escaped string representation
@@ -109,7 +99,7 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	_, _ = fmt.Sscanf(aString, qoStringPattern,
 		&qo.ID, &qo.Descending, &qo.Entity, &qo.Layout,
 		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
-		&qo.Navigation, &qo.QueryCount, &qo.SortBy)
+		&qo.QueryCount, &qo.SortBy)
 
 	return qo
 } // Scan()
@@ -190,7 +180,7 @@ func (qo *TQueryOptions) String() string {
 	return fmt.Sprintf(qoStringPattern,
 		qo.ID, qo.Descending, qo.Entity, qo.Layout,
 		qo.LimitLength, qo.LimitStart, qo.Matching,
-		qo.Navigation, qo.QueryCount, qo.SortBy)
+		qo.QueryCount, qo.SortBy)
 } // String()
 
 // UnCGI unescapes the given `aCGI`.
