@@ -69,18 +69,26 @@ hr {
 	color: #ccc;
 }
 input[type="reset"],
-input[type="text"],
+input[type="search"],
 input[type="submit"],
+input[type="text"],
 select, select option {
 	background: #fff;
-	color: #033;
+	color: #030;
 }
+input[type="reset"]:focus,
+input[type="search"]:focus,
+input[type="submit"]:focus,
+input[type="text"]:focus,
+select:focus,
+select option:focus,
 input[type="reset"]:hover,
-input[type="text"]:hover,
+input[type="search"]:hover,
 input[type="submit"]:hover,
+input[type="text"]:hover,
 select:hover,
 select option:hover  {
-	background: #033;
+	background: #030;
 	color: #fff;
 }
 p.mainlinks {

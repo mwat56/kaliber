@@ -148,33 +148,41 @@ img, svg {
 	width: auto;
 }
 input[type="reset"],
-input[type="text"],
 input[type="search"],
 input[type="submit"],
+input[type="text"],
 select,
 select option {
 	border-radius: 1ex;
 	border: thin outset transparent;
 	font-size: inherit;
-	font-weight: 600;
 	hyphens: none;
-	padding: 0 0.1ex 0.3ex 0.1ex;
+	padding: 0 0.2ex 0.1ex 0.2ex;
 	vertical-align: baseline;
 }
 input[type="reset"],
-input[type="text"],
 input[type="search"],
 input[type="submit"],
+input[type="text"],
 select {
-	height: 4ex;
+	height: 3ex;
 }
+input[type="reset"]:focus,
+input[type="search"]:focus,
+input[type="submit"]:focus,
+input[type="text"]:focus,
+select:focus,
+select option:focus,
 input[type="reset"]:hover,
-input[type="text"]:hover,
 input[type="search"]:hover,
 input[type="submit"]:hover,
+input[type="text"]:hover,
 select:hover,
-select option:hover  {
+select option:hover {
 	border-style: inset;
+}
+input[type="submit"] {
+	padding: 0 1ex 0.1ex 1ex;
 }
 ol, ul {
 	list-style-type: decimal;
@@ -282,6 +290,13 @@ div#search_box {
 	line-height: 2.5;
 	padding: 0 0 1ex 0;
 	text-align: right;
+}
+div#search_box table {
+	border: 0;
+}
+div#search_box table tr td {
+	padding: 0.2ex;
+	vertical-align: middle;
 }
 div.back p.back {
 	margin: 0 0 1ex 0;

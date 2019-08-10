@@ -69,19 +69,27 @@ hr {
 	color: #ffc;
 }
 input[type="reset"],
-input[type="text"],
+input[type="search"],
 input[type="submit"],
+input[type="text"],
 select, select option {
-	background: #333;
+	background: #030;
 	color: #fff;
 }
+input[type="reset"]:focus,
+input[type="search"]:focus,
+input[type="submit"]:focus,
+input[type="text"]:focus,
+select:focus,
+select option:focus,
 input[type="reset"]:hover,
-input[type="text"]:hover,
+input[type="search"]:hover,
 input[type="submit"]:hover,
+input[type="text"]:hover,
 select:hover,
 select option:hover {
 	background: #fff;
-	color: #333;
+	color: #030;
 }
 p.mainlinks {
 	border-top-color: #ffc;
