@@ -11,7 +11,6 @@ package kaliber
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/passlist"
 	"github.com/mwat56/sessions"
 )
@@ -74,9 +74,11 @@ func NewPageHandler() (*TPageHandler, error) {
 	result.staticFS = http.FileServer(http.Dir(result.dd))
 
 	if s, err = AppArguments.Get("uf"); nil != err {
-		log.Printf("NewPageHandler(): %v\nAUTHENTICATION DISABLED!", err)
+		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
+		apachelogger.Log("NewPageHandler()", s)
 	} else if result.ul, err = passlist.LoadPasswords(s); nil != err {
-		log.Printf("NewPageHandler(): %v\nAUTHENTICATION DISABLED!", err)
+		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
+		apachelogger.Log("NewPageHandler()", s)
 		result.ul = nil
 	}
 
@@ -150,7 +152,9 @@ func URLparts(aURL string) (rDir, rPath string) {
 // implementing the `TErrorPager` interface.
 func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 	var empty []byte
-	pageData := ph.basicTemplateData().Set("ShowForm", false)
+	qo := NewQueryOptions()
+	pageData := ph.basicTemplateData(qo).
+		Set("ShowForm", false)
 
 	switch aStatus {
 	case 404:
@@ -159,7 +163,7 @@ func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 		}
 
 	default:
-		pageData = pageData.Set("Error", template.HTML(aData)) // #nosec G203
+		pageData.Set("Error", template.HTML(aData)) // #nosec G203
 		if page, err := ph.viewList.RenderedPage("error", pageData); nil == err {
 			return page
 		}
@@ -176,17 +180,30 @@ func (ph *TPageHandler) Address() string {
 } // Address()
 
 // `basicTemplateData()` returns a list of common Head entries.
-func (ph *TPageHandler) basicTemplateData() *TemplateData {
+func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData {
 	y, m, d := time.Now().Date()
 
+	theme := ph.theme
+	switch aOptions.Theme {
+	case qoThemeDark:
+		theme = "dark"
+	case qoThemeLight:
+		theme = "light"
+	}
 	return NewTemplateData().
-		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+ph.theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
+		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
 		Set("HasLast", false).
 		Set("HasNext", false).
 		Set("HasPrev", false).
+		Set("IsGrid", qoLayoutGrid == aOptions.Layout).
 		Set("Lang", ph.lang).
 		Set("LibraryName", ph.ln).
 		Set("Robots", "noindex,nofollow").
+		Set("SLO", aOptions.SelectLayoutOptions()).
+		Set("SLL", aOptions.SelectLimitOptions()).
+		Set("SOO", aOptions.SelectOrderOptions()).
+		Set("SSB", aOptions.SelectSortByOptions()).
+		Set("THEME", aOptions.SelectThemeOptions()).
 		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d)) // #nosec G203
 } // basicTemplateData()
 
@@ -204,10 +221,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	if qos, ok := so.GetString("QOS"); ok {
 		qo.Scan(qos)
 	}
-	pageData := ph.basicTemplateData().
-		Set("SLL", qo.SelectLimitOptions()).
-		Set("SSB", qo.SelectSortByOptions()).
-		Set("SOO", qo.SelectOrderOptions())
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
 	case "all", "author", "format", "lang", "publisher", "series", "tag":
@@ -223,7 +236,6 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	case "back":
-		// log.Printf("handleGET(back): %v", qo) //FIXME REMOVE
 		qo.DecLimit()
 		ph.handleQuery(qo, aWriter, so)
 
@@ -264,9 +276,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		pageData.Set("Document", doc)
+		pageData := ph.basicTemplateData(qo).
+			Set("Document", doc)
 		so.Set("QOS", qo.String())
-		_ = ph.viewList.Render("document", aWriter, pageData)
+		if err := ph.viewList.Render("document", aWriter, pageData); nil != err {
+			msg := fmt.Sprintf("viewList.Render: %v", err)
+			apachelogger.Log("TPageHandler.handleGET()", msg)
+		}
 
 	case "favicon.ico":
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
@@ -303,7 +319,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "imprint", "impressum":
 		so.Set("QOS", qo.String())
-		_ = ph.viewList.Render("imprint", aWriter, pageData)
+		if err := ph.viewList.Render("imprint", aWriter, ph.basicTemplateData(qo)); nil != err {
+			msg := fmt.Sprintf("viewList.Render: %v", err)
+			apachelogger.Log("TPageHandler.handleGET()", msg)
+		}
 
 	case "last":
 		if qo.QueryCount <= qo.LimitLength {
@@ -315,7 +334,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "licence", "license", "lizenz":
 		so.Set("QOS", qo.String())
-		_ = ph.viewList.Render("licence", aWriter, pageData)
+		if err := ph.viewList.Render("licence", aWriter, ph.basicTemplateData(qo)); nil != err {
+			msg := fmt.Sprintf("viewList.Render: %v", err)
+			apachelogger.Log("TPageHandler.handleGET()", msg)
+		}
 
 	case "next":
 		ph.handleQuery(qo, aWriter, so)
@@ -331,7 +353,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "privacy", "datenschutz":
 		so.Set("QOS", qo.String())
-		_ = ph.viewList.Render("privacy", aWriter, pageData)
+		if err := ph.viewList.Render("privacy", aWriter, ph.basicTemplateData(qo)); nil != err {
+			msg := fmt.Sprintf("viewList.Render: %v", err)
+			apachelogger.Log("TPageHandler.handleGET()", msg)
+		}
 
 	case "robots.txt":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
@@ -364,15 +389,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
-		// qo.ID = 0
-		// qo.Entity = ""
-		// qo.Matching = ""
-		// qo.LimitStart = 0
-		newQO := NewQueryOptions()
-		newQO.Descending = qo.Descending
-		newQO.LimitLength = qo.LimitLength
-		newQO.SortBy = qo.SortBy
-
+		qo.ID = 0         // reset fields
+		qo.Entity = ""    // dito
+		qo.LimitStart = 0 //
+		qo.Matching = ""  //
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
@@ -416,8 +436,8 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		count, doclist, err = QueryBy(aOption)
 	}
 	if nil != err {
-		//TODO better error handling
-		log.Printf("handleQuery() QeueryBy/QuerySearch: %v\n", err)
+		msg := fmt.Sprintf("QeueryBy/QuerySearch: %v", err)
+		apachelogger.Log("TPageHandler.handleQuery()", msg)
 	}
 	if 0 < count {
 		aOption.QueryCount = uint(count)
@@ -435,7 +455,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	hasNext := aOption.QueryCount >= (aOption.LimitStart + aOption.LimitLength)
 	hasPrev := aOption.LimitStart >= aOption.LimitLength
 	aOption.IncLimit()
-	pageData := ph.basicTemplateData().
+	pageData := ph.basicTemplateData(aOption).
 		Set("BFirst", BFirst).
 		Set("BLast", BLast).
 		Set("BCount", BCount).
@@ -444,19 +464,14 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("HasLast", hasLast).
 		Set("HasNext", hasNext).
 		Set("HasPrev", hasPrev).
-		Set("IsGrid", qoLayoutGrid == aOption.Layout).
 		Set("Matching", aOption.Matching).
 		Set("SID", aSession.ID()).
 		Set("SIDNAME", sessions.SIDname()).
-		Set("SLO", aOption.SelectLayoutOptions()).
-		Set("SLL", aOption.SelectLimitOptions()).
-		Set("SOO", aOption.SelectOrderOptions()).
-		Set("SSB", aOption.SelectSortByOptions()).
 		Set("ShowForm", true)
 	aSession.Set("QOS", aOption.String())
 	if err = ph.viewList.Render("index", aWriter, pageData); nil != err {
-		//TODO better error handling
-		log.Printf("handleQuery() Render: %v\n", err)
+		msg := fmt.Sprintf("viewList.Render: %v", err)
+		apachelogger.Log("TPageHandler.handleQuery()", msg)
 	}
 } // handleQuery()
 
@@ -485,6 +500,9 @@ func (ph TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Req
 		ph.handlePOST(aWriter, aRequest)
 
 	default:
+		msg := fmt.Sprintf("unsupported request method: %v", aRequest.Method)
+		apachelogger.Log("TPageHandler.ServeHTTP()", msg)
+
 		http.Error(aWriter, "HTTP Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 } // ServeHTTP()

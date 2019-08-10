@@ -9,9 +9,7 @@ package kaliber
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
-	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -36,6 +34,12 @@ const (
 	qoLayoutGrid = uint8(1)
 )
 
+// Definition of the CSS theme to use
+const (
+	qoThemeLight = uint8(0)
+	qoThemeDark  = uint8(1)
+)
+
 type (
 	// TQueryOptions hold properties configuring a query.
 	//
@@ -49,14 +53,16 @@ type (
 		LimitLength uint   // number of documents per page
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
-		SortBy      uint8  // display order of documents (`qoSortByXXX`)
 		QueryCount  uint   // number of DB records matching the query option
+		SortBy      uint8  // display order of documents (`qoSortByXXX`)
+		Theme       uint8  // CSS presentation theme
 	}
 )
 
 // Pattern used by `String()` and `Scan()`:
 const (
-	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%q|%d|%d|`
+	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%q|%d|%d|%d|`
+	//                   |  |  |  |  |  |  |  |  |  + Theme
 	//                   |  |  |  |  |  |  |  |  + SortBy
 	//                   |  |  |  |  |  |  |  + QueryCount
 	//                   |  |  |  |  |  |  + Matching
@@ -68,11 +74,13 @@ const (
 	//                   + ID
 )
 
+/*
 // CGI returns the object's query escaped string representation
 // fit for use as the `qoc` CGI argument.
 func (qo *TQueryOptions) CGI() string {
 	return `?qoc=` + base64.StdEncoding.EncodeToString([]byte(qo.String()))
 } // CGI()
+*/
 
 // DecLimit decrements the LIMIT values.
 func (qo *TQueryOptions) DecLimit() *TQueryOptions {
@@ -99,7 +107,7 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	_, _ = fmt.Sscanf(aString, qoStringPattern,
 		&qo.ID, &qo.Descending, &qo.Entity, &qo.Layout,
 		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
-		&qo.QueryCount, &qo.SortBy)
+		&qo.QueryCount, &qo.SortBy, &qo.Theme)
 
 	return qo
 } // Scan()
@@ -180,9 +188,25 @@ func (qo *TQueryOptions) String() string {
 	return fmt.Sprintf(qoStringPattern,
 		qo.ID, qo.Descending, qo.Entity, qo.Layout,
 		qo.LimitLength, qo.LimitStart, qo.Matching,
-		qo.QueryCount, qo.SortBy)
+		qo.QueryCount, qo.SortBy, qo.Theme)
 } // String()
 
+// SelectThemeOptions returns a list of two SELECT/OPTIONs.
+func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
+	result := make(TStringMap, 2)
+	switch qo.Theme {
+	case qoThemeLight:
+		result["light"] = `<option SELECTED value="light">`
+		result["dark"] = `<option value="dark">`
+	case qoThemeDark:
+		result["light"] = `<option value="light">`
+		result["dark"] = `<option SELECTED value="dark">`
+	}
+
+	return &result
+} // SelectThemeOptions()
+
+/*
 // UnCGI unescapes the given `aCGI`.
 //
 // If there are errors during unescaping the current values remain unchanged.
@@ -196,21 +220,18 @@ func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
 
 	return qo.Scan(string(qoc))
 } // UnCGI()
+*/
 
 // Update returns a `TQueryOptions` instance with values
 // read from the `aRequest` data.
 func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
-	if fol := aRequest.FormValue("layout"); 0 < len(fol) {
-		var l uint8
-		switch fol {
-		case "grid":
+	if lt := aRequest.FormValue("layout"); 0 < len(lt) {
+		var l uint8 // default to `0` == `qoLayoutList`
+		if "grid" == lt {
 			l = qoLayoutGrid
-		default:
-			l = qoLayoutList
 		}
 		if l != qo.Layout {
 			qo.Layout = l
-			qo.LimitStart = 0
 		}
 	}
 	if fll := aRequest.FormValue("limitlength"); 0 < len(fll) {
@@ -261,6 +282,15 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		if sb != qo.SortBy {
 			qo.SortBy = sb
 			qo.LimitStart = 0
+		}
+	}
+	if theme := aRequest.FormValue("theme"); 0 < len(theme) {
+		var t uint8 // defaults to `0` == `qoThemeLight`
+		if "dark" == theme {
+			t = qoThemeDark
+		}
+		if t != qo.Theme {
+			qo.Theme = t
 		}
 	}
 

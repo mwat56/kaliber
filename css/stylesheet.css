@@ -277,9 +277,9 @@ img#logo {
 }
 div#search_box {
 	border-bottom: thin solid transparent;
-	font-size: 84%;
+	font-size: 94%;
 	/* we need this to allow for wrapping on smaller screens: */
-	line-height: 2.2;
+	line-height: 2.5;
 	padding: 0 0 1ex 0;
 	text-align: right;
 }
