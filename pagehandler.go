@@ -183,6 +183,14 @@ func (ph *TPageHandler) Address() string {
 func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData {
 	y, m, d := time.Now().Date()
 
+	lang := ph.lang
+	switch aOptions.GuiLang {
+	case qoLangEnglish:
+		lang = "en"
+	case qoLangGerman:
+		lang = "de"
+	}
+
 	theme := ph.theme
 	switch aOptions.Theme {
 	case qoThemeDark:
@@ -192,11 +200,12 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 	}
 	return NewTemplateData().
 		Set("CSS", template.HTML(`<link rel="stylesheet" type="text/css" title="mwat's styles" href="/css/stylesheet.css"><link rel="stylesheet" type="text/css" href="/css/`+theme+`.css"><link rel="stylesheet" type="text/css" href="/css/fonts.css">`)).
+		Set("GUILANG", aOptions.SelectLanguageOptions()).
 		Set("HasLast", false).
 		Set("HasNext", false).
 		Set("HasPrev", false).
 		Set("IsGrid", qoLayoutGrid == aOptions.Layout).
-		Set("Lang", ph.lang).
+		Set("Lang", lang).
 		Set("LibraryName", ph.ln).
 		Set("Robots", "noindex,nofollow").
 		Set("SLO", aOptions.SelectLayoutOptions()).
@@ -414,6 +423,9 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			qo.Scan(qos)
 		}
 		qo.Update(aRequest)
+		// Since the query options hold the LimitStart of the _next_
+		// query we have to go back here one page:
+		qo.DecLimit()
 		ph.handleQuery(qo, aWriter, so)
 
 	default:

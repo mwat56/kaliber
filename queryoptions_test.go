@@ -13,11 +13,12 @@ import (
 
 func TestTQueryOptions_Scan(t *testing.T) {
 	o1 := NewQueryOptions()
-	s1 := `|3524|true|"author"|0|25|0|""|100|1|0|`
+	s1 := `|3524|true|"author"|0|0|25|0|""|100|1|0|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
 		Entity:      "author",
+		GuiLang:     qoLangGerman,
 		Layout:      qoLayoutList,
 		LimitLength: 25,
 		LimitStart:  0,
@@ -27,11 +28,12 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		Theme:       qoThemeLight,
 	}
 	o2 := NewQueryOptions()
-	s2 := `|1|false|"lang"|1|50|0|""|200|2|1|`
+	s2 := `|1|false|"lang"|1|1|50|0|""|200|2|1|`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
+		GuiLang:     qoLangEnglish,
 		Layout:      qoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
@@ -116,6 +118,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		ID:          3524,
 		Descending:  true,
 		Entity:      "author",
+		GuiLang:     qoLangEnglish,
 		Layout:      qoLayoutList,
 		LimitLength: 50,
 		LimitStart:  0,
@@ -124,11 +127,12 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByAuthor,
 		Theme:       qoThemeDark,
 	}
-	w1 := `|3524|true|"author"|0|50|0|""|100|1|1|`
+	w1 := `|3524|true|"author"|1|0|50|0|""|100|1|1|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
+		GuiLang:     qoLangGerman,
 		Layout:      qoLayoutGrid,
 		LimitLength: 25,
 		LimitStart:  0,
@@ -137,7 +141,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByLanguage,
 		Theme:       qoThemeLight,
 	}
-	w2 := `|1|false|"lang"|1|25|0|""|200|2|0|`
+	w2 := `|1|false|"lang"|0|1|25|0|""|200|2|0|`
 	tests := []struct {
 		name   string
 		fields TQueryOptions

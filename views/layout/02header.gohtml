@@ -1,123 +1,136 @@
 {{- define "header" -}}
 <form method="post" action="/qo" accept-charset="UTF-8" enctype="application/x-www-form-urlencoded" id="pageform" name="pageform">
-{{- if .QOS -}}
-<input id="qos" name="qos" type="hidden" value="{{.QOS}}" form="pageform">
-{{- end -}}
+
 {{- if .SIDNAME -}}
 <input id="{{.SIDNAME}}" name="{{.SIDNAME}}" type="hidden" value="{{.SID}}" form="pageform">
 {{- end -}}
+
 <header>
 {{- if .ShowForm -}}
 <div id="search_box">
-	{{- $lang := "de" -}}
-	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
-	{{- if .SLL -}}
-	{{- if eq $lang "de" -}}
+{{- $lang := "de" -}}
+{{- if .Lang}}{{ $lang = .Lang }}{{end -}}
+
+<table><tr><td class="right">
+	{{- if eq $.Lang "de" -}}
 	<label for="limitlength">Zeige:</label>
 	{{- else -}}
 	<label for="limitlength">Show:</label>
 	{{- end -}}
-	<select id="limitlength" name="limitlength" form="pageform">
-		{{ selectOption .SLL "10" }}10</option>
-		{{ selectOption .SLL "25" }}25</option>
-		{{ selectOption .SLL "50" }}50</option>
-		{{ selectOption .SLL "100" }}100</option>
-	</select> &shy;
-	{{- end -}}
-
-	{{- if eq $lang "de" -}}
-	<label for="matching">Bücher enthalten:</label>
-	{{- else -}}
-	<label for="matching">Books matching:</label>
-	{{- end -}}
-	<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform"> &shy;
-
-	{{- if .SSB -}}
-	{{- if eq $lang "de" -}}
-	<label for="sortby">sortiert nach:</label>
-	{{- else -}}
-	<label for="sortby">Sorted by:</label>
-	{{- end -}}
-	<select id="sortby" name="sortby" form="pageform">
-	{{- if eq $lang "de" -}}
-		{{ htmlSafe .SSB.author }}AutorIn</option>
-		{{ htmlSafe .SSB.rating }}Bewertung</option>
-		{{ htmlSafe .SSB.time }}Datum</option>
-		{{ htmlSafe .SSB.size }}Größe</option>
-		{{ htmlSafe .SSB.series }}Serie</option>
-		{{ htmlSafe .SSB.language }}Sprache</option>
-		{{ htmlSafe .SSB.tags }}Stichwörter</option>
-		{{ htmlSafe .SSB.title }}Titel</option>
-		{{ htmlSafe .SSB.publisher }}Verlag</option>
-	{{- else -}}
-		{{ htmlSafe .SSB.author }}author</option>
-		{{ htmlSafe .SSB.time }}date</option>
-		{{ htmlSafe .SSB.language }}language</option>
-		{{ htmlSafe .SSB.publisher }}publisher</option>
-		{{ htmlSafe .SSB.rating }}rating</option>
-		{{ htmlSafe .SSB.series }}series</option>
-		{{ htmlSafe .SSB.size }}size</option>
-		{{ htmlSafe .SSB.tags }}tag</option>
-		{{ htmlSafe .SSB.title }}title</option>
-	{{- end -}}
-	</select> &shy;
-	{{- end -}}
-
-	{{- if .SOO -}}
-	{{- if eq $lang "de" -}}
-	<label for="order">Folge:</label>
-	{{- else -}}
-	<label for="order">Order:</label>
-	{{- end -}}
-	<select id="order" name="order" form="pageform">
-	{{- if eq $lang "de" -}}
-		{{ htmlSafe .SOO.ascending }}aufsteigend</option>
-		{{ htmlSafe .SOO.descending }}absteigend</option>
-	{{- else -}}
-		{{ htmlSafe .SOO.ascending }}ascending</option>
-		{{ htmlSafe .SOO.descending }}descending</option>
-	{{- end -}}
-	</select>
-	{{- end -}}
-	<br>
-	{{- if .SLO -}}
-	<label for="layout">Layout:</label>
-	<select id="layout" name="layout" form="pageform">
-	{{- if eq $lang "de" -}}
-		{{ htmlSafe .SLO.list }}Liste</option>
-		{{ htmlSafe .SLO.grid }}Gitter</option>
-	{{- else -}}
-		{{ htmlSafe .SLO.list }}list</option>
-		{{ htmlSafe .SLO.grid }}grid</option>
-	{{- end -}}
-	</select> &shy;
-	{{- end -}}
-
-	<!-- insert GUI LANG here -->
-
-	{{- if .THEME -}}
-	{{- if eq $lang "de" -}}
-	<label for="theme">Stil:</label>
-	{{- else -}}
-	<label for="theme">Style:</label>
-	{{- end -}}
-	<select id="theme" name="theme" form="pageform">
-	{{- if eq $lang "de" -}}
-		{{ htmlSafe .THEME.light }}hell</option>
-		{{ htmlSafe .THEME.dark }}dunkel</option>
-	{{- else -}}
-		{{ htmlSafe .THEME.light }}light</option>
-		{{ htmlSafe .THEME.dark }}dark</option>
-	{{- end -}}
-	</select> &shy;
-	{{- end -}}
-
-	{{- if eq $lang "de" -}}
-	&nbsp; <input id="search" name="search" type="submit" value="Suche" form="pageform">
-	{{- else -}}
-	<input id="search" name="search" type="submit" value="Search" form="pageform">
-	{{- end -}}
-</div>
+	</td><td>
+		<select id="limitlength" name="limitlength" form="pageform">
+			{{ selectOption .SLL "10" }}10</option>
+			{{ selectOption .SLL "25" }}25</option>
+			{{ selectOption .SLL "50" }}50</option>
+			{{ selectOption .SLL "100" }}100</option>
+		</select>
+	</td><td class="right">
+		{{- if eq $.Lang "de" -}}
+		<label for="matching">Bücher enthalten:</label>
+		{{- else -}}
+		<label for="matching">Books matching:</label>
+		{{- end -}}
+	</td><td>
+		<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform">
+	</td><td class="right">
+		{{- if eq $.Lang "de" -}}
+		<label for="sortby">sortiert nach:</label>
+		{{- else -}}
+		<label for="sortby">Sorted by:</label>
+		{{- end -}}
+	</td><td>
+		<select id="sortby" name="sortby" form="pageform">
+		{{- if eq $.Lang "de" -}}
+			{{ htmlSafe .SSB.author }}AutorIn</option>
+			{{ htmlSafe .SSB.rating }}Bewertung</option>
+			{{ htmlSafe .SSB.time }}Datum</option>
+			{{ htmlSafe .SSB.size }}Größe</option>
+			{{ htmlSafe .SSB.series }}Serie</option>
+			{{ htmlSafe .SSB.language }}Sprache</option>
+			{{ htmlSafe .SSB.tags }}Stichwörter</option>
+			{{ htmlSafe .SSB.title }}Titel</option>
+			{{ htmlSafe .SSB.publisher }}Verlag</option>
+		{{- else -}}
+			{{ htmlSafe .SSB.author }}author</option>
+			{{ htmlSafe .SSB.time }}date</option>
+			{{ htmlSafe .SSB.language }}language</option>
+			{{ htmlSafe .SSB.publisher }}publisher</option>
+			{{ htmlSafe .SSB.rating }}rating</option>
+			{{ htmlSafe .SSB.series }}series</option>
+			{{ htmlSafe .SSB.size }}size</option>
+			{{ htmlSafe .SSB.tags }}tag</option>
+			{{ htmlSafe .SSB.title }}title</option>
+		{{- end -}}
+		</select>
+	</td><td class="right">
+		{{- if eq $.Lang "de" -}}
+		<label for="order">Folge:</label>
+		{{- else -}}
+		<label for="order">Order:</label>
+		{{- end -}}
+	</td><td>
+		<select id="order" name="order" form="pageform">
+		{{- if eq $.Lang "de" -}}
+			{{ htmlSafe .SOO.ascending }}aufsteigend</option>
+			{{ htmlSafe .SOO.descending }}absteigend</option>
+		{{- else -}}
+			{{ htmlSafe .SOO.ascending }}ascending</option>
+			{{ htmlSafe .SOO.descending }}descending</option>
+		{{- end -}}
+		</select>
+	</td></tr><tr><td class="right">
+		{{- if eq $.Lang "de" -}}
+		<label for="guilang">GUI Sprache:</label>
+		{{- else -}}
+		<label for="guilang">GUI language:</label>
+		{{- end -}}
+	</td><td>
+		<select id="guilang" name="guilang" form="pageform">
+		{{- if eq $.Lang "de" -}}
+			{{ htmlSafe .GUILANG.de }}deutsch</option>
+			{{ htmlSafe .GUILANG.en }}englisch</option>
+		{{- else -}}
+			{{ htmlSafe .GUILANG.de }}German</option>
+			{{ htmlSafe .GUILANG.en }}English</option>
+		{{- end -}}
+		</select>
+	</td><td class="right">
+		<label for="layout">Layout:</label>
+	</td><td>
+		<select id="layout" name="layout" form="pageform">
+		{{- if eq $.Lang "de" -}}
+			{{ htmlSafe .SLO.list }}Liste</option>
+			{{ htmlSafe .SLO.grid }}Gitter</option>
+		{{- else -}}
+			{{ htmlSafe .SLO.list }}list</option>
+			{{ htmlSafe .SLO.grid }}grid</option>
+		{{- end -}}
+		</select>
+	</td><td class="right">
+		{{- if eq $.Lang "de" -}}
+		<label for="theme">Stil:</label>
+		{{- else -}}
+		<label for="theme">Style:</label>
+		{{- end -}}
+	</td><td>
+		<select id="theme" name="theme" form="pageform">
+		{{- if eq $.Lang "de" -}}
+			{{ htmlSafe .THEME.light }}hell</option>
+			{{ htmlSafe .THEME.dark }}dunkel</option>
+		{{- else -}}
+			{{ htmlSafe .THEME.light }}light</option>
+			{{ htmlSafe .THEME.dark }}dark</option>
+		{{- end -}}
+		</select>
+	</td><td colspan="2" class="right">
+		{{- if eq $.Lang "de" -}}
+		<input id="search" name="search" type="submit" value="Suche" form="pageform">
+		{{- else -}}
+		<input id="search" name="search" type="submit" value="Search" form="pageform">
+		{{- end -}}
+		&nbsp;
+	</td></tr>
+</table></div>
 
 {{- template "naviline" . -}}
 

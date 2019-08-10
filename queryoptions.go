@@ -28,6 +28,12 @@ const (
 	qoSortByTitle
 )
 
+// Definition of the GUI language to use
+const (
+	qoLangGerman  = uint8(0)
+	qoLangEnglish = uint8(1)
+)
+
 // Definition of the layout type
 const (
 	qoLayoutList = uint8(0)
@@ -49,11 +55,12 @@ type (
 		ID          TID    // an entity ID to lookup
 		Descending  bool   // sort direction
 		Entity      string // limiting query to a certain entity (author, publisher, series, tag)
+		GuiLang     uint8  // GUI language
 		Layout      uint8  // either `qoLayoutList` or `qoLayoutGrid`
 		LimitLength uint   // number of documents per page
 		LimitStart  uint   // starting number
 		Matching    string // text to lookup in all documents
-		QueryCount  uint   // number of DB records matching the query option
+		QueryCount  uint   // number of DB records matching the query options
 		SortBy      uint8  // display order of documents (`qoSortByXXX`)
 		Theme       uint8  // CSS presentation theme
 	}
@@ -61,26 +68,19 @@ type (
 
 // Pattern used by `String()` and `Scan()`:
 const (
-	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%q|%d|%d|%d|`
-	//                   |  |  |  |  |  |  |  |  |  + Theme
-	//                   |  |  |  |  |  |  |  |  + SortBy
-	//                   |  |  |  |  |  |  |  + QueryCount
-	//                   |  |  |  |  |  |  + Matching
-	//                   |  |  |  |  |  + LimitStart
-	//                   |  |  |  |  + LimitLength
-	//                   |  |  |  + Layout
+	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%d|%q|%d|%d|%d|`
+	//                   |  |  |  |  |  |  |  |  |  |  + Theme
+	//                   |  |  |  |  |  |  |  |  |  + SortBy
+	//                   |  |  |  |  |  |  |  |  + QueryCount
+	//                   |  |  |  |  |  |  |  + Matching
+	//                   |  |  |  |  |  |  + LimitStart
+	//                   |  |  |  |  |  + LimitLength
+	//                   |  |  |  |  + Layout
+	//                   |  |  |  + GUI lang
 	//                   |  |  + Entity
 	//                   |  + Descending
 	//                   + ID
 )
-
-/*
-// CGI returns the object's query escaped string representation
-// fit for use as the `qoc` CGI argument.
-func (qo *TQueryOptions) CGI() string {
-	return `?qoc=` + base64.StdEncoding.EncodeToString([]byte(qo.String()))
-} // CGI()
-*/
 
 // DecLimit decrements the LIMIT values.
 func (qo *TQueryOptions) DecLimit() *TQueryOptions {
@@ -105,12 +105,29 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 // Scan returns the options read from `aString`.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	_, _ = fmt.Sscanf(aString, qoStringPattern,
-		&qo.ID, &qo.Descending, &qo.Entity, &qo.Layout,
+		&qo.ID, &qo.Descending, &qo.Entity, &qo.GuiLang, &qo.Layout,
 		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
 		&qo.QueryCount, &qo.SortBy, &qo.Theme)
 
 	return qo
 } // Scan()
+
+// SelectLanguageOptions returns a list of two SELECT/OPTIONs.
+func (qo *TQueryOptions) SelectLanguageOptions() *TStringMap {
+	result := make(TStringMap, 2)
+	switch qo.GuiLang {
+	case qoLangEnglish:
+		result["de"] = `<option value="de">`
+		result["en"] = `<option SELECTED value="en">`
+	case qoLangGerman:
+		fallthrough
+	default:
+		result["de"] = `<option SELECTED value="de">`
+		result["en"] = `<option value="en">`
+	}
+
+	return &result
+} // SelectLanguageOptions()
 
 // SelectLayoutOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectLayoutOptions() *TStringMap {
@@ -186,7 +203,7 @@ func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort uint8, aIndex 
 // String returns the options as a `|` delimited string.
 func (qo *TQueryOptions) String() string {
 	return fmt.Sprintf(qoStringPattern,
-		qo.ID, qo.Descending, qo.Entity, qo.Layout,
+		qo.ID, qo.Descending, qo.Entity, qo.GuiLang, qo.Layout,
 		qo.LimitLength, qo.LimitStart, qo.Matching,
 		qo.QueryCount, qo.SortBy, qo.Theme)
 } // String()
@@ -206,25 +223,19 @@ func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 	return &result
 } // SelectThemeOptions()
 
-/*
-// UnCGI unescapes the given `aCGI`.
-//
-// If there are errors during unescaping the current values remain unchanged.
-func (qo *TQueryOptions) UnCGI(aCGI string) *TQueryOptions {
-	qoc, err := base64.StdEncoding.DecodeString(aCGI)
-	if nil != err {
-		//TODO better error handling
-		log.Printf("TQueryOptions.UnCGI('%s'): %v", aCGI, err) //FIXME REMOVE
-		return qo
-	}
-
-	return qo.Scan(string(qoc))
-} // UnCGI()
-*/
-
-// Update returns a `TQueryOptions` instance with values
+// Update returns a `TQueryOptions` instance with updated values
 // read from the `aRequest` data.
 func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
+	// The form fields are defined in `02header.gohtml`
+	if lang := aRequest.FormValue("guilang"); 0 < len(lang) {
+		var l uint8 // defaults to `0` == `qoLangGerman`
+		if "en" == lang {
+			l = qoLangEnglish
+		}
+		if l != qo.GuiLang {
+			qo.GuiLang = l
+		}
+	}
 	if lt := aRequest.FormValue("layout"); 0 < len(lt) {
 		var l uint8 // default to `0` == `qoLayoutList`
 		if "grid" == lt {
