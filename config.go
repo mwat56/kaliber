@@ -146,18 +146,18 @@ func initArguments() {
 		"<number> the default number of books shown per page ")
 
 	s, _ := AppArguments.Get("datadir")
-	dataStr, _ := filepath.Abs(s)
-	flag.StringVar(&dataStr, "datadir", dataStr,
-		"<dirName> the directory with CACHE, CSS, IMG, and VIEWS sub-directories\n")
+	dataDir, _ := filepath.Abs(s)
+	flag.StringVar(&dataDir, "datadir", dataDir,
+		"<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories\n")
 
 	s, _ = AppArguments.Get("certKey")
-	ckStr := absolute(dataStr, s)
-	flag.StringVar(&ckStr, "certKey", ckStr,
+	certKey := absolute(dataDir, s)
+	flag.StringVar(&certKey, "certKey", certKey,
 		"<fileName> the name of the TLS certificate key\n")
 
 	s, _ = AppArguments.Get("certPem")
-	cpStr := absolute(dataStr, s)
-	flag.StringVar(&cpStr, "certPem", cpStr,
+	certPem := absolute(dataDir, s)
+	flag.StringVar(&certPem, "certPem", certPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
 	/*
@@ -167,20 +167,20 @@ func initArguments() {
 			"<fileName> the path/filename of the localisation file\n")
 	*/
 
-	iniStr, _ := AppArguments.Get("inifile")
-	flag.StringVar(&iniStr, "ini", iniStr,
+	iniFile, _ := AppArguments.Get("inifile")
+	flag.StringVar(&iniFile, "ini", iniFile,
 		"<fileName> the path/filename of the INI file to use\n")
 
 	langStr, _ := AppArguments.Get("lang")
 	flag.StringVar(&langStr, "lang", langStr,
 		"(optional) the default language to use ")
 
-	lnStr, _ := AppArguments.Get("libraryname")
-	flag.StringVar(&lnStr, "libraryname", lnStr,
+	libName, _ := AppArguments.Get("libraryname")
+	flag.StringVar(&libName, "libraryname", libName,
 		"Name of this Library (shown on every page)\n")
 
-	lpStr, _ := AppArguments.Get("librarypath")
-	flag.StringVar(&lpStr, "librarypath", lpStr,
+	libPath, _ := AppArguments.Get("librarypath")
+	flag.StringVar(&libPath, "librarypath", libPath,
 		"Path name of/to the Calibre library\n")
 
 	listenStr, _ := AppArguments.Get("listen")
@@ -188,8 +188,8 @@ func initArguments() {
 		"the host's IP to listen at ")
 
 	s, _ = AppArguments.Get("logfile")
-	logStr := absolute(dataStr, s)
-	flag.StringVar(&logStr, "log", logStr,
+	logFile := absolute(dataDir, s)
+	flag.StringVar(&logFile, "log", logFile,
 		"(optional) name of the logfile to write to\n")
 
 	/*
@@ -202,26 +202,30 @@ func initArguments() {
 	flag.IntVar(&portInt, "port", portInt,
 		"<portNumber> the IP port to listen to ")
 
-	realStr, _ := AppArguments.Get("realm")
-	flag.StringVar(&realStr, "realm", realStr,
+	realmStr, _ := AppArguments.Get("realm")
+	flag.StringVar(&realmStr, "realm", realmStr,
 		"(optional) <hostName> name of host/domain to secure by BasicAuth\n")
 
 	s, _ = AppArguments.Get("sessiondir")
-	sessStr := absolute(dataStr, s)
-	flag.StringVar(&sessStr, "sessiondir", sessStr,
+	sessionDir := absolute(dataDir, s)
+	flag.StringVar(&sessionDir, "sessiondir", sessionDir,
 		"<directory> (optional) the directory to store session files\n")
 
-	sidStr, _ := AppArguments.Get("sidname")
-	flag.StringVar(&sidStr, "sidname", sidStr,
+	sessionTTL, _ := AppArguments.AsInt("sessionttl")
+	flag.IntVar(&sessionTTL, "sessionttl", sessionTTL,
+		"<seconds> Number of seconds an unused session keeps valid ")
+
+	sidName, _ := AppArguments.Get("sidname")
+	flag.StringVar(&sidName, "sidname", sidName,
 		"(optional) <name> the name of the session ID to use\n")
 
 	s, _ = AppArguments.Get("sqltrace")
-	sqlStr := absolute(dataStr, s)
-	flag.StringVar(&sqlStr, "sqltrace", sqlStr,
+	sqlTrace := absolute(dataDir, s)
+	flag.StringVar(&sqlTrace, "sqltrace", sqlTrace,
 		"(optional) name of the SQL logfile to write to\n")
 
-	themStr, _ := AppArguments.Get("theme")
-	flag.StringVar(&themStr, "theme", themStr,
+	themeStr, _ := AppArguments.Get("theme")
+	flag.StringVar(&themeStr, "theme", themeStr,
 		"<name> the display theme to use ('light' or 'dark')\n")
 
 	uaStr := ""
@@ -237,7 +241,7 @@ func initArguments() {
 		"<userName> (optional) user delete: remove a username from the password file")
 
 	s, _ = AppArguments.Get("passfile")
-	ufStr := absolute(dataStr, s)
+	ufStr := absolute(dataDir, s)
 	flag.StringVar(&ufStr, "uf", ufStr,
 		"<fileName> (optional) user passwords file storing user/passwords for BasicAuth\n")
 
@@ -254,31 +258,31 @@ func initArguments() {
 
 	AppArguments.set("booksperpage", fmt.Sprintf("%d", bppInt))
 
-	if 0 < len(dataStr) {
-		dataStr, _ = filepath.Abs(dataStr)
+	if 0 < len(dataDir) {
+		dataDir, _ = filepath.Abs(dataDir)
 	}
-	if f, err := os.Stat(dataStr); nil != err {
-		log.Fatalf("datadir == %s` problem: %v", dataStr, err)
+	if f, err := os.Stat(dataDir); nil != err {
+		log.Fatalf("datadir == %s` problem: %v", dataDir, err)
 	} else if !f.IsDir() {
-		log.Fatalf("Error: Not a directory `%s`", dataStr)
+		log.Fatalf("Error: Not a directory `%s`", dataDir)
 	}
-	AppArguments.set("datadir", dataStr)
+	AppArguments.set("datadir", dataDir)
 
-	if 0 < len(ckStr) {
-		ckStr = absolute(dataStr, ckStr)
-		if fi, err := os.Stat(ckStr); (nil != err) || (0 >= fi.Size()) {
-			ckStr = ""
+	if 0 < len(certKey) {
+		certKey = absolute(dataDir, certKey)
+		if fi, err := os.Stat(certKey); (nil != err) || (0 >= fi.Size()) {
+			certKey = ""
 		}
 	}
-	AppArguments.set("certKey", ckStr)
+	AppArguments.set("certKey", certKey)
 
-	if 0 < len(cpStr) {
-		cpStr = absolute(dataStr, cpStr)
-		if fi, err := os.Stat(cpStr); (nil != err) || (0 >= fi.Size()) {
-			cpStr = ""
+	if 0 < len(certPem) {
+		certPem = absolute(dataDir, certPem)
+		if fi, err := os.Stat(certPem); (nil != err) || (0 >= fi.Size()) {
+			certPem = ""
 		}
 	}
-	AppArguments.set("certPem", cpStr)
+	AppArguments.set("certPem", certPem)
 
 	/*
 		if 0 <len(intlStr) {
@@ -292,23 +296,23 @@ func initArguments() {
 	}
 	AppArguments.set("lang", langStr)
 
-	if 0 == len(lnStr) {
-		lnStr = time.Now().Format("2006:01:02:15:04:05")
+	if 0 == len(libName) {
+		libName = time.Now().Format("2006:01:02:15:04:05")
 	}
-	AppArguments.set("libraryname", lnStr)
+	AppArguments.set("libraryname", libName)
 
-	SetCalibreCachePath(filepath.Join(dataStr, "img"))
-	SetCalibreLibraryPath(lpStr)
+	SetCalibreCachePath(filepath.Join(dataDir, "img"))
+	SetCalibreLibraryPath(libPath)
 
 	if "0" == listenStr {
 		listenStr = ""
 	}
 	AppArguments.set("listen", listenStr)
 
-	if 0 < len(logStr) {
-		logStr = absolute(dataStr, logStr)
+	if 0 < len(logFile) {
+		logFile = absolute(dataDir, logFile)
 	}
-	AppArguments.set("logfile", logStr)
+	AppArguments.set("logfile", logFile)
 
 	/*
 		if ndBool {
@@ -321,26 +325,27 @@ func initArguments() {
 
 	AppArguments.set("port", fmt.Sprintf("%d", portInt))
 
-	AppArguments.set("realm", realStr)
+	AppArguments.set("realm", realmStr)
 
-	if 0 < len(sessStr) {
-		logStr = absolute(dataStr, sessStr)
+	if 0 < len(sessionDir) {
+		sessionDir = absolute(dataDir, sessionDir)
 	}
-	AppArguments.set("sessiondir", sessStr)
-	sessions.SetSIDname(sidStr)
+	AppArguments.set("sessiondir", sessionDir)
+	sessions.SetSIDname(sidName)
+	sessions.SetSessionTTL(sessionTTL)
 
-	if 0 < len(sqlStr) {
-		sqlStr = absolute(dataStr, sqlStr)
+	if 0 < len(sqlTrace) {
+		sqlTrace = absolute(dataDir, sqlTrace)
 	}
-	SetSQLtraceFile(sqlStr)
+	SetSQLtraceFile(sqlTrace)
 
-	AppArguments.set("theme", themStr)
+	AppArguments.set("theme", themeStr)
 	AppArguments.set("ua", uaStr)
 	AppArguments.set("uc", ucStr)
 	AppArguments.set("ud", udStr)
 
 	if 0 < len(ufStr) {
-		ufStr = absolute(dataStr, ufStr)
+		ufStr = absolute(dataDir, ufStr)
 	}
 	AppArguments.set("uf", ufStr)
 

@@ -140,6 +140,8 @@ which should produce an executable binary.
 	-sessiondir string
 		<directory> (optional) the directory to store session files
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions")
+	-sessionttl int
+		<seconds> Number of seconds an unused session keeps valid (default 1200)
 	-sidname string
 		(optional) <name> the name of the session ID to use
 		(default "sid")
@@ -297,6 +299,13 @@ There's an INI file which can take all the options (apart from the user handling
 
 	# Name of host/domain to secure by BasicAuth:
 	realm = "This Host"
+
+	# Name of the directory to store session files.
+	# NOTE: a relative path/name will be combined with `datadir` (above).
+	sessiondir = "./sessions"
+
+	# Number of seconds an unused session keeps valid:
+	sessionTTL = 1200
 
 	# Web/display theme: `dark` or `light':
 	theme = light
