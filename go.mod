@@ -8,10 +8,10 @@ require (
 	github.com/mwat56/errorhandler v1.0.3
 	github.com/mwat56/ini v1.3.3
 	github.com/mwat56/passlist v1.1.1
-	github.com/mwat56/sessions v0.2.11
+	github.com/mwat56/sessions v0.3.1
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
-	golang.org/x/tools v0.0.0-20190809145639-6d4652c779c4 // indirect
+	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect
+	golang.org/x/tools v0.0.0-20190813034749-528a2984e271 // indirect
 )
