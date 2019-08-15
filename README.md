@@ -39,7 +39,7 @@ Over the years several thousand books gathered in my flat; so many that I sort o
 Relunctantly I started to investigate and then use eBooks, first on my main desktop computer, later with a dedicated eBook reader.
 
 Soon – and again – there were so many that I started looking for some convenient way to handle, store, and retrieve them for reading.
-That's when I became aquainted with [Calibre](https://calibre-ebook.com/), a great software for working with eBooks.
+That's when I became acquainted with [Calibre](https://calibre-ebook.com/), a great software for working with eBooks.
 Of course, there were some problems but since the software is actively maintained and extended all the time those problems either went away on their own with the next update or I found some way around them.
 And sure, it took some work to get all the eBooks into that library system, and since there are always coming new titles the work kind of never ends.
 
@@ -235,7 +235,7 @@ First we added (`-ua`) a new user, then we updated the password (`-uu`), and fin
 #### Authentication
 
 But why, you may ask, would you need an username/password file anyway?
-Well, there may be several reasons one of wich could be Copyright problems.
+Well, there may be several reasons one of which could be Copyright problems.
 If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically_ available.
 In that case you're most likely the only actual remote user allowed to access the books in your library.
 
