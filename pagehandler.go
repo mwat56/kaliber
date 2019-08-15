@@ -99,6 +99,9 @@ func NewPageHandler() (*TPageHandler, error) {
 	// update the thumbnails cache:
 	go ThumbnailUpdate()
 
+	// avoid sessions fpr certain requests:
+	sessions.ExcludePaths("/certs", "/css/", "/favicon", "/file/", "/fonts", "/img/", "/robots")
+
 	return result, nil
 } // NewPageHandler()
 
@@ -179,7 +182,7 @@ func (ph *TPageHandler) Address() string {
 	return ph.addr
 } // Address()
 
-// `basicTemplateData()` returns a list of common Head entries.
+// `basicTemplateData()` returns a list of common template values.
 func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData {
 	y, m, d := time.Now().Date()
 
@@ -370,6 +373,9 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "robots.txt":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
+	case "sessions": // files are handled internally
+		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
+
 	case "thumb":
 		var (
 			id    TID
@@ -394,7 +400,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		aRequest.URL.Path = file
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
-	case "views": // this files are handled internally
+	case "views": // files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
 	case "":
