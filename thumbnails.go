@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/mwat56/apachelogger"
 	"github.com/nfnt/resize"
 )
 
@@ -171,7 +172,10 @@ func ThumbnailUpdate() {
 	}
 	for _, doc := range *docList {
 		// here we ignore all errors but hope for the best
-		_, _ = Thumbnail(&doc)
+		if _, err = Thumbnail(&doc); nil != err {
+			msg := fmt.Sprintf("Thumbnail(%d): %v", doc.ID, err)
+			apachelogger.Log("ThumbnailUpdate()", msg)
+		}
 	}
 
 	//TODO implement reverse: delete all thumbnails no longer matching
