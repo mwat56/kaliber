@@ -9,6 +9,7 @@ package kaliber
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/url"
@@ -134,10 +135,17 @@ func (doc *TDocument) Cover() string {
 // `coverAbs()` returns the path-filename of the document's cover image.
 func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	dir := filepath.Join(calibreLibraryPath, doc.path)
+	if 0 <= strings.Index(dir, `[`) {
+		// make sure to escape the meta-character
+		dir = strings.Replace(dir, `[`, `\[`, -1)
+	}
 	filenames, err := filepath.Glob(dir + "/cover.*")
-	if (nil != err) || (1 > len(filenames)) {
+	if nil != err {
 		//TODO better error handling
 		return "", err
+	}
+	if 1 > len(filenames) {
+		return "", errors.New(`TDocument.coverAbs(): no matching filenames found`)
 	}
 	if !aRelative {
 		return filenames[0], nil

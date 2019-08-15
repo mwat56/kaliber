@@ -24,6 +24,11 @@ func TestTDocument_Cover(t *testing.T) {
 		path: "/John Scalzi/Zoe's Tale (6730)",
 	}
 	w2 := "/cover/6730/cover.gif"
+	d3 := TDocument{
+		ID:   4793,
+		path: "/Gail Carriger/Soulless [1] (4793)",
+	}
+	w3 := "/cover/4793/cover.gif"
 	tests := []struct {
 		name   string
 		fields TDocument
@@ -32,6 +37,7 @@ func TestTDocument_Cover(t *testing.T) {
 		// TODO: Add test cases.
 		{" 1", d1, w1},
 		{" 2", d2, w2},
+		{" 2", d3, w3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -58,9 +64,15 @@ func TestTDocument_coverAbs(t *testing.T) {
 	w2 := d2.path + "/cover.jpg"
 	w3 := filepath.Join(calibreLibraryPath, w1)
 	w4 := filepath.Join(calibreLibraryPath, w2)
+	d5 := TDocument{
+		ID:   4793,
+		path: "Gail Carriger/Soulless [1] (4793)",
+	}
+	w5 := d5.path + "/cover.jpg"
 	type args struct {
 		aRelative bool
 	}
+	w6 := filepath.Join(calibreLibraryPath, w5)
 	tests := []struct {
 		name    string
 		fields  TDocument
@@ -73,6 +85,8 @@ func TestTDocument_coverAbs(t *testing.T) {
 		{" 2", d2, args{true}, w2, false},
 		{" 3", d1, args{false}, w3, false},
 		{" 4", d2, args{false}, w4, false},
+		{" 5", d5, args{true}, w5, false},
+		{" 6", d5, args{false}, w6, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
