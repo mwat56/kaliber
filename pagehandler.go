@@ -128,6 +128,22 @@ func newViewList(aDirectory string) (*TViewList, error) {
 } // newViewList()
 
 var (
+	splitTermRE = regexp.MustCompile(`(\d+)/(.+)$`)
+)
+
+// `splitIDterm()` splits `aTail` into an ID and a string term.
+// This function is a helper of `TPageHandler.handleGET()`.
+func splitIDterm(aTail string) (rID TID, rTerm string) {
+	matches := splitTermRE.FindStringSubmatch(aTail)
+	if (nil != matches) && (1 < len(matches)) {
+		rID, _ = strconv.Atoi(matches[1])
+		rTerm = matches[2]
+	}
+
+	return
+} // splitIDterm()
+
+var (
 	// RegEx to find path and possible added path components
 	urlPartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
 )
@@ -236,15 +252,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
 	case "all", "author", "format", "lang", "publisher", "series", "tag":
-		var (
-			id   TID
-			term string
-		)
-		if _, err := fmt.Sscanf(tail, "%d/%s", &id, &term); nil == err {
-			qo.ID = id
-		}
+		id, term := splitIDterm(tail)
 		qo.Entity = path
+		qo.ID = id
 		qo.LimitStart = 0 // it's the first page of a new selection
+		if 0 < id {
+			qo.Matching = path + `:"=` + term + `"`
+		}
 		ph.handleQuery(qo, aWriter, so)
 
 	case "back":
