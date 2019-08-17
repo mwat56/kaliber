@@ -8,9 +8,11 @@ package kaliber
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"os"
+
+	"github.com/mwat56/apachelogger"
 )
 
 type (
@@ -20,18 +22,20 @@ type (
 
 const (
 	// Calibre's metadata/preferences store
-	virtLibFile = "metadata_db_prefs_backup.json"
+	calibrePreferencesFile = "metadata_db_prefs_backup.json"
 
+	// name of the JSON section holding the virtual library definitions
 	virtLibSection = "virtual_libraries"
 )
 
-// `readJSONmetaDataFile()` reads `aFilename`
+// `readJSONmetaDataFile()` reads `aFilename` and returns a map of
+// virtual library definitions.
 func readJSONmetaDataFile(aFilename string) (*tVirtLibMap, error) {
 	srcFile, err := os.OpenFile(aFilename, os.O_RDONLY, 0)
 	if nil != err {
-		log.Println("os.OpenFile():", aFilename, err)
-		// msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
-		// apachelogger.Log("virtlib.readMetaDataFile()", msg)
+		msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
+		apachelogger.Log("virtlib.readMetaDataFile", msg)
+		// log.Println(msg)
 		return nil, err
 	}
 	defer srcFile.Close()
@@ -39,26 +43,29 @@ func readJSONmetaDataFile(aFilename string) (*tVirtLibMap, error) {
 	var jsdata map[string]interface{}
 	dec := json.NewDecoder(srcFile)
 	if err := dec.Decode(&jsdata); err != nil {
-		log.Println("json.NewDecoder.Decode():", err)
-		// msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
-		// apachelogger.Log("virtlib.readMetaDataFile()", msg)
+		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
+		apachelogger.Log("virtlib.readMetaDataFile", msg)
+		// log.Println(msg)
 		return nil, err
 	}
 
 	section, ok := jsdata[virtLibSection]
 	if !ok {
-		err = fmt.Errorf("no such JSON section: %s", virtLibSection)
-		log.Println("virtlib.readMetaDataFile():", err)
-		return nil, err
+		msg := fmt.Sprintf("no such JSON section: %s", virtLibSection)
+		apachelogger.Log("virtlib.readMetaDataFile", msg)
+		// log.Println(msg)
+		return nil, errors.New(msg)
 	}
+
 	m := section.(map[string]interface{})
 	result := make(tVirtLibMap, len(m))
 	for key, value := range m {
-		switch vv := value.(type) {
-		case string:
-			result[key] = vv
-		default:
-			log.Println("virtlib.readMetaDataFile.range: wrong type ", vv)
+		if definition, ok := value.(string); ok {
+			result[key] = definition
+		} else {
+			msg := fmt.Sprintf("json.value.(string): wrong type %v", value)
+			apachelogger.Log("virtlib.readMetaDataFile", msg)
+			// log.Println(msg)
 		}
 	}
 
