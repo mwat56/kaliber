@@ -29,13 +29,12 @@ const (
 )
 
 // `readJSONmetaDataFile()` reads `aFilename` and returns a map of
-// virtual library definitions.
-func readJSONmetaDataFile(aFilename string) (*tVirtLibMap, error) {
+// the JSON data read.
+func readJSONmetaDataFile(aFilename string) (*map[string]interface{}, error) {
 	srcFile, err := os.OpenFile(aFilename, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
 		apachelogger.Log("virtlib.readMetaDataFile", msg)
-		// log.Println(msg)
 		return nil, err
 	}
 	defer srcFile.Close()
@@ -45,15 +44,25 @@ func readJSONmetaDataFile(aFilename string) (*tVirtLibMap, error) {
 	if err := dec.Decode(&jsdata); err != nil {
 		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
 		apachelogger.Log("virtlib.readMetaDataFile", msg)
-		// log.Println(msg)
 		return nil, err
 	}
 
-	section, ok := jsdata[virtLibSection]
+	return &jsdata, nil
+} // readJSONmetaDataFile()
+
+// `readJSONvirtualLibs()` reads `aFilename` and returns a map of
+// virtual library definitions.
+func readJSONvirtualLibs(aFilename string) (*tVirtLibMap, error) {
+	jsdata, err := readJSONmetaDataFile(aFilename)
+	if nil != err {
+		msg := fmt.Sprintf("readJSONmetaDataFile(%s): %v", aFilename, err)
+		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
+		return nil, err
+	}
+	section, ok := (*jsdata)[virtLibSection]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", virtLibSection)
-		apachelogger.Log("virtlib.readMetaDataFile", msg)
-		// log.Println(msg)
+		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
 		return nil, errors.New(msg)
 	}
 
@@ -64,12 +73,11 @@ func readJSONmetaDataFile(aFilename string) (*tVirtLibMap, error) {
 			result[key] = definition
 		} else {
 			msg := fmt.Sprintf("json.value.(string): wrong type %v", value)
-			apachelogger.Log("virtlib.readMetaDataFile", msg)
-			// log.Println(msg)
+			apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
 		}
 	}
 
 	return &result, nil
-} // readJSONmetaDataFile()
+} // readJSONvirtualLibs()
 
 /* _EoF_ */
