@@ -47,6 +47,20 @@ func readJSONmetaDataFile(aFilename string) (*map[string]interface{}, error) {
 		return nil, err
 	}
 
+	// remove unneeded list entries:
+	delete(jsdata, `books view split pane state`)
+	delete(jsdata, `column_icon_rules`)
+	delete(jsdata, `column_color_rules`)
+	delete(jsdata, `cover_grid_icon_rules`)
+	delete(jsdata, `field_metadata`) // ? keep ?
+	delete(jsdata, `gui_view_history`)
+	delete(jsdata, `namespaced:CountPagesPlugin:settings`)
+	delete(jsdata, `namespaced:FindDuplicatesPlugin:settings`)
+	delete(jsdata, `news_to_be_synced`)
+	delete(jsdata, `saved_searches`)
+	delete(jsdata, `update_all_last_mod_dates_on_start`)
+	delete(jsdata, `user_categories`)
+
 	return &jsdata, nil
 } // readJSONmetaDataFile()
 
