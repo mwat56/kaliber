@@ -6,34 +6,30 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"testing"
 )
 
 func Test_virtLibReadJSONmetadata(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	var v1 tVirtLibJSON
-	type args struct {
-		aFilename string
-	}
 	tests := []struct {
 		name    string
-		args    args
 		want    *tVirtLibJSON
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{calibrePreferencesFile}, &v1, false},
+		{" 1", &v1, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := virtlibReadJSONmetadata(tt.args.aFilename)
+			got, err := virtlibReadJSONmetadata()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("virtLibReadJSONmetadata() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("virtLibReadJSONmetadata() = %v, want %v", got, tt.want)
-			// }
 			if 0 == len(*got) {
 				t.Errorf("virtLibReadJSONmetadata() = %v, want %v", len(*got), "> 0")
 			}
@@ -42,28 +38,22 @@ func Test_virtLibReadJSONmetadata(t *testing.T) {
 } // Test_virtLibReadJSONmetadata()
 
 func Test_virtlibGetLibDefs(t *testing.T) {
-	type args struct {
-		aFilename string
-	}
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	tests := []struct {
 		name    string
-		args    args
 		want    *tVirtLibJSON
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{calibrePreferencesFile}, nil, false},
+		{" 1", nil, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := virtlibGetLibDefs(tt.args.aFilename)
+			got, err := virtlibGetLibDefs()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("virtlibGetLibDefs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("virtlibGetLibDefs() = %v, want %v", got, tt.want)
-			// }
 			if 0 == len(*got) {
 				t.Errorf("virtlibGetLibDefs() = %v, want %v", len(*got), "> 0")
 			}
@@ -72,29 +62,23 @@ func Test_virtlibGetLibDefs(t *testing.T) {
 } // Test_virtlibGetLibDefs()
 
 func Test_GetVirtLibList(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	wl1 := &TvirtLibMap{}
-	type args struct {
-		aFilename string
-	}
 	tests := []struct {
 		name    string
-		args    args
 		want    *TvirtLibMap
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{calibrePreferencesFile}, wl1, false},
+		{" 1", wl1, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetVirtLibList(tt.args.aFilename)
+			got, err := GetVirtLibList()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetVirtLibList() error = %v,\nwantErr %v", err, tt.wantErr)
 				return
 			}
-			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("GetVirtLibList() = %v, want %v", got, tt.want)
-			// }
 			if 0 == len(*got) {
 				t.Errorf("GetVirtLibList() = %v, want %v", len(*got), "> 0")
 			}

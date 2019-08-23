@@ -6,11 +6,14 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/mwat56/apachelogger"
 )
@@ -37,14 +40,21 @@ const (
 	virtlibJSONsection = "virtual_libraries"
 )
 
+// CalibrePreferencesPath returns rhe complete path-/filename of the
+// `Calibre` library's preferences file.
+func CalibrePreferencesPath() string {
+	return filepath.Join(calibreLibraryPath, calibrePreferencesFile)
+} // CalibrePreferencesPath()
+
 // `virtlibReadJSONmetadata()` reads `aFilename` and returns a map of
 // the JSON data read.
 //
 //	aFilename The path/filename of Calibre's metadata JSON file.
-func virtlibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) {
-	srcFile, err := os.OpenFile(aFilename, os.O_RDONLY, 0)
+func virtlibReadJSONmetadata() (*map[string]interface{}, error) {
+	fName := CalibrePreferencesPath()
+	srcFile, err := os.OpenFile(fName, os.O_RDONLY, 0)
 	if nil != err {
-		msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
+		msg := fmt.Sprintf("os.OpenFile(%s): %v", fName, err)
 		apachelogger.Log("virtlib.virtlibReadJSONmetadata", msg)
 		return nil, err
 	}
@@ -77,12 +87,10 @@ func virtlibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) 
 
 // `virtlibGetLibDefs()` reads `aFilename` and returns a map of
 // virtual library definitions.
-//
-//	aFilename The path/filename of Calibre's metadata JSON file.
-func virtlibGetLibDefs(aFilename string) (*tVirtLibJSON, error) {
-	jsdata, err := virtlibReadJSONmetadata(aFilename)
+func virtlibGetLibDefs() (*tVirtLibJSON, error) {
+	jsdata, err := virtlibReadJSONmetadata()
 	if nil != err {
-		msg := fmt.Sprintf("virtlibReadJSONmetadata(%s): %v", aFilename, err)
+		msg := fmt.Sprintf("virtlibReadJSONmetadata(): %v", err)
 		apachelogger.Log("virtlib.virtlibGetLibDefs", msg)
 		return nil, err
 	}
@@ -109,12 +117,10 @@ func virtlibGetLibDefs(aFilename string) (*tVirtLibJSON, error) {
 
 // GetVirtLibList reads `aFilename` and returns a list of virtual
 // library definitions and SQL code to access them.
-//
-//	aFilename The path/filename of Calibre's metadata JSON file.
-func GetVirtLibList(aFilename string) (*TvirtLibMap, error) {
-	jsList, err := virtlibGetLibDefs(aFilename)
+func GetVirtLibList() (*TvirtLibMap, error) {
+	jsList, err := virtlibGetLibDefs()
 	if nil != err {
-		msg := fmt.Sprintf("virtlibGetLibDefs(%s): %v", aFilename, err)
+		msg := fmt.Sprintf("virtlibGetLibDefs(): %v", err)
 		apachelogger.Log("virtlib.GetVirtLibList", msg)
 		return nil, err
 	}
