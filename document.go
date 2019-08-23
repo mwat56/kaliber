@@ -356,7 +356,7 @@ func (doc *TDocument) Tags() *TEntityList {
 		ent := TEntity{
 			ID:   tag.ID,
 			Name: tag.Name,
-			URL:  fmt.Sprintf("/tag/%d/%s", tag.ID, url.PathEscape(tag.Name)),
+			URL:  fmt.Sprintf("/tags/%d/%s", tag.ID, url.PathEscape(tag.Name)),
 		}
 		result = append(result, ent)
 	}
