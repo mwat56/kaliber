@@ -10,15 +10,15 @@ import (
 	"testing"
 )
 
-func Test_readJSONmetaDataFile(t *testing.T) {
-	var v1 tVirtLibMap
+func Test_virtLibReadJSONmetadata(t *testing.T) {
+	var v1 tVirtLibJSON
 	type args struct {
 		aFilename string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    *tVirtLibMap
+		want    *tVirtLibJSON
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -26,29 +26,29 @@ func Test_readJSONmetaDataFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := readJSONmetaDataFile(tt.args.aFilename)
+			got, err := virtlibReadJSONmetadata(tt.args.aFilename)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("readJSONmetaDataFile() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("virtLibReadJSONmetadata() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("readJSONmetaDataFile() = %v, want %v", got, tt.want)
+			// 	t.Errorf("virtLibReadJSONmetadata() = %v, want %v", got, tt.want)
 			// }
 			if 0 == len(*got) {
-				t.Errorf("readJSONmetaDataFile() = %v, want %v", len(*got), "> 0")
+				t.Errorf("virtLibReadJSONmetadata() = %v, want %v", len(*got), "> 0")
 			}
 		})
 	}
-} // Test_readJSONmetaDataFile()
+} // Test_virtLibReadJSONmetadata()
 
-func Test_readJSONvirtualLibs(t *testing.T) {
+func Test_virtlibGetLibDefs(t *testing.T) {
 	type args struct {
 		aFilename string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    *tVirtLibMap
+		want    *tVirtLibJSON
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -56,17 +56,17 @@ func Test_readJSONvirtualLibs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := readJSONvirtualLibs(tt.args.aFilename)
+			got, err := virtlibGetLibDefs(tt.args.aFilename)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("readJSONvirtualLibs() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("virtlibGetLibDefs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("readJSONvirtualLibs() = %v, want %v", got, tt.want)
+			// 	t.Errorf("virtlibGetLibDefs() = %v, want %v", got, tt.want)
 			// }
 			if 0 == len(*got) {
-				t.Errorf("readJSONvirtualLibs() = %v, want %v", len(*got), "> 0")
+				t.Errorf("virtlibGetLibDefs() = %v, want %v", len(*got), "> 0")
 			}
 		})
 	}
-} // Test_readJSONvirtualLibs()
+} // Test_virtlibGetLibDefs()

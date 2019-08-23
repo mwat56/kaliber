@@ -16,8 +16,17 @@ import (
 )
 
 type (
-	// structure of the `virtual_libraries` JSON section
-	tVirtLibMap map[string]string
+	// Structure of the `virtual_libraries` JSON section
+	tVirtLibJSON map[string]string
+
+	// Structure to hold a virtual library definition.
+	tVirtLibStruct struct {
+		def string // Calibre's definitions
+		sql string // SQL: WHERE clause
+	}
+
+	// List of virt.lib. definitions
+	tVirtLibMap map[string]tVirtLibStruct
 )
 
 const (
@@ -25,12 +34,12 @@ const (
 	calibrePreferencesFile = "metadata_db_prefs_backup.json"
 
 	// name of the JSON section holding the virtual library definitions
-	virtLibSection = "virtual_libraries"
+	virtlibJSONsection = "virtual_libraries"
 )
 
-// `readJSONmetaDataFile()` reads `aFilename` and returns a map of
+// `virtLibReadJSONmetadata()` reads `aFilename` and returns a map of
 // the JSON data read.
-func readJSONmetaDataFile(aFilename string) (*map[string]interface{}, error) {
+func virtLibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) {
 	srcFile, err := os.OpenFile(aFilename, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
@@ -62,26 +71,26 @@ func readJSONmetaDataFile(aFilename string) (*map[string]interface{}, error) {
 	delete(jsdata, `user_categories`)
 
 	return &jsdata, nil
-} // readJSONmetaDataFile()
+} // virtLibReadJSONmetadata()
 
-// `readJSONvirtualLibs()` reads `aFilename` and returns a map of
+// `virtlibGetLibDefs()` reads `aFilename` and returns a map of
 // virtual library definitions.
-func readJSONvirtualLibs(aFilename string) (*tVirtLibMap, error) {
-	jsdata, err := readJSONmetaDataFile(aFilename)
+func virtlibGetLibDefs(aFilename string) (*tVirtLibJSON, error) {
+	jsdata, err := virtLibReadJSONmetadata(aFilename)
 	if nil != err {
 		msg := fmt.Sprintf("readJSONmetaDataFile(%s): %v", aFilename, err)
 		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
 		return nil, err
 	}
-	section, ok := (*jsdata)[virtLibSection]
+	section, ok := (*jsdata)[virtlibJSONsection]
 	if !ok {
-		msg := fmt.Sprintf("no such JSON section: %s", virtLibSection)
+		msg := fmt.Sprintf("no such JSON section: %s", virtlibJSONsection)
 		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
 		return nil, errors.New(msg)
 	}
 
 	m := section.(map[string]interface{})
-	result := make(tVirtLibMap, len(m))
+	result := make(tVirtLibJSON, len(m))
 	for key, value := range m {
 		if definition, ok := value.(string); ok {
 			result[key] = definition
@@ -92,6 +101,6 @@ func readJSONvirtualLibs(aFilename string) (*tVirtLibMap, error) {
 	}
 
 	return &result, nil
-} // readJSONvirtualLibs()
+} // virtlibGetLibDefs()
 
 /* _EoF_ */
