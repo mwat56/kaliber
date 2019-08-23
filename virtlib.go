@@ -37,9 +37,9 @@ const (
 	virtlibJSONsection = "virtual_libraries"
 )
 
-// `virtLibReadJSONmetadata()` reads `aFilename` and returns a map of
+// `virtlibReadJSONmetadata()` reads `aFilename` and returns a map of
 // the JSON data read.
-func virtLibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) {
+func virtlibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) {
 	srcFile, err := os.OpenFile(aFilename, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
@@ -71,12 +71,12 @@ func virtLibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) 
 	delete(jsdata, `user_categories`)
 
 	return &jsdata, nil
-} // virtLibReadJSONmetadata()
+} // virtlibReadJSONmetadata()
 
 // `virtlibGetLibDefs()` reads `aFilename` and returns a map of
 // virtual library definitions.
 func virtlibGetLibDefs(aFilename string) (*tVirtLibJSON, error) {
-	jsdata, err := virtLibReadJSONmetadata(aFilename)
+	jsdata, err := virtlibReadJSONmetadata(aFilename)
 	if nil != err {
 		msg := fmt.Sprintf("readJSONmetaDataFile(%s): %v", aFilename, err)
 		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
