@@ -221,6 +221,7 @@ func (so *TSearch) Parse() *TSearch {
 	return so
 } // Parse()
 
+/*
 func (so *TSearch) parsePrim(aExpression *tExpression) {
 	switch aExpression.entity {
 	case "author":
@@ -272,6 +273,7 @@ func (so *TSearch) parsePrim(aExpression *tExpression) {
 	}
 	so.next = aExpression.op
 } // parsePrim()
+*/
 
 // String returns a stringfied representation.
 func (so *TSearch) String() string {
