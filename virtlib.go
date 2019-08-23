@@ -21,12 +21,12 @@ type (
 
 	// Structure to hold a virtual library definition.
 	tVirtLibStruct struct {
-		def string // Calibre's definitions
-		sql string // SQL: WHERE clause
+		Def string // Calibre's definitions
+		SQL string // SQL: WHERE clause
 	}
 
-	// List of virt.lib. definitions
-	tVirtLibMap map[string]tVirtLibStruct
+	// TvirtLibMap is a list of virt.lib. definitions
+	TvirtLibMap map[string]tVirtLibStruct
 )
 
 const (
@@ -39,11 +39,13 @@ const (
 
 // `virtlibReadJSONmetadata()` reads `aFilename` and returns a map of
 // the JSON data read.
+//
+//	aFilename The path/filename of Calibre's metadata JSON file.
 func virtlibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) {
 	srcFile, err := os.OpenFile(aFilename, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", aFilename, err)
-		apachelogger.Log("virtlib.readMetaDataFile", msg)
+		apachelogger.Log("virtlib.virtlibReadJSONmetadata", msg)
 		return nil, err
 	}
 	defer srcFile.Close()
@@ -52,7 +54,7 @@ func virtlibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) 
 	dec := json.NewDecoder(srcFile)
 	if err := dec.Decode(&jsdata); err != nil {
 		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
-		apachelogger.Log("virtlib.readMetaDataFile", msg)
+		apachelogger.Log("virtlib.virtlibReadJSONmetadata", msg)
 		return nil, err
 	}
 
@@ -75,17 +77,19 @@ func virtlibReadJSONmetadata(aFilename string) (*map[string]interface{}, error) 
 
 // `virtlibGetLibDefs()` reads `aFilename` and returns a map of
 // virtual library definitions.
+//
+//	aFilename The path/filename of Calibre's metadata JSON file.
 func virtlibGetLibDefs(aFilename string) (*tVirtLibJSON, error) {
 	jsdata, err := virtlibReadJSONmetadata(aFilename)
 	if nil != err {
-		msg := fmt.Sprintf("readJSONmetaDataFile(%s): %v", aFilename, err)
-		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
+		msg := fmt.Sprintf("virtlibReadJSONmetadata(%s): %v", aFilename, err)
+		apachelogger.Log("virtlib.virtlibGetLibDefs", msg)
 		return nil, err
 	}
 	section, ok := (*jsdata)[virtlibJSONsection]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", virtlibJSONsection)
-		apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
+		apachelogger.Log("virtlib.virtlibGetLibDefs", msg)
 		return nil, errors.New(msg)
 	}
 
@@ -96,11 +100,34 @@ func virtlibGetLibDefs(aFilename string) (*tVirtLibJSON, error) {
 			result[key] = definition
 		} else {
 			msg := fmt.Sprintf("json.value.(string): wrong type %v", value)
-			apachelogger.Log("virtlib.readJSONvirtualLibs", msg)
+			apachelogger.Log("virtlib.virtlibGetLibDefs", msg)
 		}
 	}
 
 	return &result, nil
 } // virtlibGetLibDefs()
+
+// GetVirtLibList reads `aFilename` and returns a list of virtual
+// library definitions and SQL code to access them.
+//
+//	aFilename The path/filename of Calibre's metadata JSON file.
+func GetVirtLibList(aFilename string) (*TvirtLibMap, error) {
+	jsList, err := virtlibGetLibDefs(aFilename)
+	if nil != err {
+		msg := fmt.Sprintf("virtlibGetLibDefs(%s): %v", aFilename, err)
+		apachelogger.Log("virtlib.GetVirtLibList", msg)
+		return nil, err
+	}
+	result := make(TvirtLibMap, len(*jsList))
+	for key, value := range *jsList {
+		vl := NewSearch(value).Parse()
+		result[key] = tVirtLibStruct{
+			Def: value,
+			SQL: vl.Where(),
+		}
+	}
+
+	return &result, nil
+} // GetVirtLibList()
 
 /* _EoF_ */
