@@ -35,6 +35,60 @@ type (
 	// tExpressionList []tExpression
 )
 
+// `buildSQL()` returns an SQL clause based on `exp` properties
+// suitable for the Calibre database.
+func (exp *tExpression) buildSQL() (rWhere string) {
+	b := 2 // number of brackets to close
+	switch exp.entity {
+	case "author":
+		rWhere = `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name`
+
+	case "comment":
+		rWhere = `(b.id IN (SELECT c.book FROM comments c WHERE (c.text`
+
+	case "format":
+		rWhere = `(b.id IN (SELECT d.book FROM data d WHERE (d.format`
+
+	case "language":
+		rWhere = `(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code`
+
+	case "publisher":
+		rWhere = `(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name`
+
+	case "series":
+		rWhere = `(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name`
+
+	case "tag", "tags":
+		rWhere = `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name`
+
+	case "title":
+		rWhere = `(b.title`
+		b = 1
+
+	default: // unknown data field
+		return
+	}
+
+	if "=" == exp.matcher {
+		if exp.not {
+			rWhere += ` != "`
+		} else {
+			rWhere += ` = "`
+		}
+		rWhere += exp.term + `")`
+	} else {
+		if exp.not {
+			rWhere += ` NOT`
+		}
+		rWhere += ` LIKE "%` + exp.term + `%")`
+	}
+	if 1 < b {
+		rWhere += `))`
+	}
+
+	return
+} // buildSQL()
+
 /*
 There are several forms to recognise:
 
@@ -98,45 +152,71 @@ func (so *TSearch) getExpression() *tExpression {
 	return nil
 } // getExpression()
 
+var (
+	//
+	searchTermRE = regexp.MustCompile(
+		`(?i)((!?)(\w+):)"([=~])([^"]*)"`)
+	//       12   3       4     5
+	// 	`(?i)((!?)(\w+):)"([=~])([^"]+)"(\s+(AND|OR))?`)
+	// //       12   3       4     5       6   7
+	// 	`(?i)\s*((!?)(\w+):)"([=~])([^"]+)"(\s+(AND|OR)\s*)?`)
+	// //       0  12   3       4     5       6   7
+)
+
+func (so *TSearch) p1() *TSearch {
+	w := so.raw
+	for matches := searchTermRE.FindStringSubmatch(w); 5 < len(matches); matches = searchTermRE.FindStringSubmatch(w) {
+		if 0 == len(matches[5]) {
+			w = strings.Replace(w, matches[0], "", 1)
+			continue
+		}
+		exp := &tExpression{
+			entity:  strings.ToLower(matches[3]),
+			matcher: matches[4],
+			term:    matches[5],
+			not:     ("!" == matches[2]),
+		}
+		w = strings.Replace(w, matches[0], exp.buildSQL(), 1)
+
+		//FIXME TODO handling (leading|trailing) garbage
+	}
+	so.next, so.raw, so.where = "", "", w
+
+	return so
+} // p1()
+
 // Parse returns the parsed search term(s).
 func (so *TSearch) Parse() *TSearch {
 	if 0 == len(so.raw) {
+		so.next, so.where = "", ""
 		return so
 	}
-	so.where, so.next = "", ""
-
-	for exp := so.getExpression(); nil != exp; exp = so.getExpression() {
-		if 0 == len(exp.term) {
-			continue
-		}
-		if 0 < len(exp.entity) {
-			so.parsePrim(exp)
-		} else {
-			// lookup ALL possible entities
-			exp.matcher = "~"
-			exp.op = "OR"
-			exp.entity = "author"
-			so.parsePrim(exp)
-			exp.entity = "comment"
-			so.parsePrim(exp)
-			exp.entity = "format"
-			so.parsePrim(exp)
-			exp.entity = "language"
-			so.parsePrim(exp)
-			exp.entity = "publisher"
-			so.parsePrim(exp)
-			exp.entity = "series"
-			so.parsePrim(exp)
-			exp.entity = "tag"
-			so.parsePrim(exp)
-			exp.entity = "title"
-			exp.op = ""
-			so.parsePrim(exp)
-		}
-		if 0 == len(so.raw) {
-			break
-		}
+	if searchTermRE.MatchString(so.raw) {
+		return so.p1()
 	}
+
+	exp := &tExpression{
+		matcher: "~",
+		term:    so.raw,
+		op:      "OR",
+	}
+	exp.entity = "author"
+	so.where = exp.buildSQL() + ` OR `
+	exp.entity = "comment"
+	so.where += exp.buildSQL() + ` OR `
+	exp.entity = "format"
+	so.where += exp.buildSQL() + ` OR `
+	exp.entity = "language"
+	so.where += exp.buildSQL() + ` OR `
+	exp.entity = "publisher"
+	so.where += exp.buildSQL() + ` OR `
+	exp.entity = "series"
+	so.where += exp.buildSQL() + ` OR `
+	exp.entity = "tags"
+	so.where += exp.buildSQL() + ` OR `
+	exp.entity = "title"
+	so.where += exp.buildSQL()
+	so.raw = ""
 
 	return so
 } // Parse()
@@ -161,7 +241,7 @@ func (so *TSearch) parsePrim(aExpression *tExpression) {
 	case "series":
 		so.where += so.next + ` b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name`
 
-	case "tag":
+	case "tag", "tags":
 		so.where += so.next + ` b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name`
 
 	case "title":
@@ -199,6 +279,11 @@ func (so *TSearch) String() string {
 		`' | where: '` + so.where +
 		`' | next: '` + so.next + `'`
 } // String()
+
+// Where returns the SQL code to use in the WHERE clause.
+func (so *TSearch) Where() string {
+	return so.where
+} // Where()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
