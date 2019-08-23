@@ -114,7 +114,7 @@ var (
 		"lang":      `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
 		"publisher": `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
 		"series":    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
-		"tag":       `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
+		"tags":      `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
 	}
 )
 

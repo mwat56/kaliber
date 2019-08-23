@@ -394,7 +394,7 @@ func TestQueryBy(t *testing.T) {
 	o5 := &TQueryOptions{
 		ID:          60,
 		Descending:  false,
-		Entity:      "tag",
+		Entity:      "tags",
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -478,7 +478,7 @@ func TestQueryLimit(t *testing.T) {
 func TestQuerySearch(t *testing.T) {
 	openDBforTesting()
 	qo1 := NewQueryOptions()
-	qo1.Matching = `"Golang"`
+	qo1.Matching = `Golang`
 	type args struct {
 		aOption *TQueryOptions
 	}
@@ -502,7 +502,7 @@ func TestQuerySearch(t *testing.T) {
 			if gotRCount != tt.wantRCount {
 				t.Errorf("QuerySearch() gotRCount = %v, want %v", gotRCount, tt.wantRCount)
 			}
-			if len(*gotRList) != tt.wantRList {
+			if (nil != gotRList) && (len(*gotRList) != tt.wantRList) {
 				t.Errorf("QuerySearch() gotRList = %d, want %d", len(*gotRList), tt.wantRList)
 			}
 		})
