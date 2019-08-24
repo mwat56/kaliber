@@ -11,76 +11,92 @@ import (
 	"testing"
 )
 
-func TestTSearch_getExpression(t *testing.T) {
+func TestTSearch_Clause(t *testing.T) {
+	o0 := NewSearch(``)
 	o1 := NewSearch(`tag:"="`)
+	w1 := ` WHERE (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "")))`
 	o2 := NewSearch(`AUTHOR:"=Spiegel"`)
-	w2 := &tExpression{
-		entity:  "author",
-		matcher: "=",
-		term:    "Spiegel",
-	}
+	w2 := ` WHERE (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`
 	o3 := NewSearch(`TITLE:"~Spiegel"`)
-	w3 := &tExpression{
-		entity:  "title",
-		matcher: "~",
-		term:    "Spiegel",
-	}
-	o4 := NewSearch(`"Der Spiegel"`)
-	w4 := &tExpression{
-		matcher: "~",
-		term:    "Der Spiegel",
-	}
-	o5 := NewSearch(`title:"~Spiegel" and author:"=Spiegel"`)
-	w5 := &tExpression{
-		entity:  "title",
-		matcher: "~",
-		term:    "Spiegel",
-		op:      "and",
-	}
-	o6 := NewSearch(`!title:"~Spiegel" and author:"=Spiegel"`)
-	w6 := &tExpression{
-		entity:  "title",
-		matcher: "~",
-		not:     true,
-		term:    "Spiegel",
-		op:      "and",
-	}
-	o7 := NewSearch(`Hallo, hallo!`)
-	w7 := &tExpression{
-		entity:  "",
-		matcher: "~",
-		not:     false,
-		term:    "Hallo, hallo!",
-		op:      "",
-	}
+	w3 := ` WHERE (b.title LIKE "%Spiegel%")`
+	o4 := NewSearch(`Der Spiegel`)
+	w4 := ` WHERE (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Der Spiegel%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Der Spiegel%")))OR(b.title LIKE "%Der Spiegel%")`
+	o5 := NewSearch(`title:"~Spiegel" or author:"=Spiegel"`)
+	w5 := ` WHERE (b.title LIKE "%Spiegel%")OR (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`
 	tests := []struct {
-		name     string
-		fields   *TSearch
-		wantRExp *tExpression
+		name   string
+		fields *TSearch
+		want   string
 	}{
 		// TODO: Add test cases.
-		{" 1", o1, nil},
+		{" 0", o0, ""},
+		{" 1", o1, w1},
+		{" 2", o2, w2},
+		{" 3", o3, w3},
+		{" 4", o4, w4},
+		{" 5", o5, w5},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			so := tt.fields
+			if got := so.Clause(); got != tt.want {
+				t.Errorf("TSearch.Clause() = `%s`,\nwant `%s`", got, tt.want)
+			}
+		})
+	}
+} // TestTSearch_Clause()
+
+func TestTSearch_p1(t *testing.T) {
+	o1 := NewSearch(`tags:"=Golang"`)
+	w1 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Golang")))`,
+	}
+	o2 := NewSearch("(title:\"~c't\" OR series:\"~c't\") AND publisher:\"~Heise\"")
+	w2 := &TSearch{
+		where: `((b.title LIKE "%c't%")OR (b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%c't%")))) AND (b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Heise%")))`,
+	}
+	o3 := NewSearch("tags:\"=myths & legends\" OR tags:\"=Myth\" OR tags:\"=Myth History\" OR tags:\"=Mythical\" OR tags:\"=Mythical Civilizations\" OR tags:\"=Mythology\" OR tags:\"=Myths\"")
+	w3 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "myths & legends")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Myth")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Myth History")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Mythical")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Mythical Civilizations")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Mythology")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Myths")))`,
+	}
+	o4 := NewSearch("tags:\"=Philosophy\" or tags:\"=Philosophy : Ethics & Moral Philosophy\" or tags:\"=Philosophy : General\" or tags:\"=Philosophy (General)\" or tags:\"=Philosophy (Specific Aspects)\" or tags:\"=Philosophy & Social Aspects\" or tags:\"=Philosophy Of Architecture\"")
+	w4 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy : Ethics & Moral Philosophy")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy : General")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy (General)")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy (Specific Aspects)")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy & Social Aspects")))OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy Of Architecture")))`,
+	}
+	o5 := NewSearch(`tags:"=Golang" Programming`)
+	w5 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Golang")))OR (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Programming%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Programming%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Programming%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Programming%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Programming%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Programming%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Programming%")))OR(b.title LIKE "%Programming%")`,
+	}
+	o6 := NewSearch(`tags:"=Golang" and Programming`)
+	w6 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Golang")))AND(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Programming%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Programming%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Programming%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Programming%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Programming%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Programming%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Programming%")))OR(b.title LIKE "%Programming%")`,
+	}
+	tests := []struct {
+		name   string
+		fields *TSearch
+		want   *TSearch
+	}{
+		// TODO: Add test cases.
+		{" 1", o1, w1},
 		{" 2", o2, w2},
 		{" 3", o3, w3},
 		{" 4", o4, w4},
 		{" 5", o5, w5},
 		{" 6", o6, w6},
-		{" 7", o7, w7},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			so := tt.fields
-			gotRExp := so.getExpression()
-			if !reflect.DeepEqual(gotRExp, tt.wantRExp) {
-				t.Errorf("TSearch.getExpression() gotRExp = %v, want %v", gotRExp, tt.wantRExp)
+			if got := so.p1(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TSearch.p1() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}
-} // TestTSearch_getExpression()
+} // TestTSearch_p1()
 
 func TestTSearch_Parse(t *testing.T) {
 	o1 := NewSearch(`tag:"="`)
-	w1 := &TSearch{where: ``}
+	w1 := &TSearch{where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "")))`}
 	o2 := NewSearch(`AUTHOR:"=Spiegel"`)
 	w2 := &TSearch{
 		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`,
@@ -91,15 +107,15 @@ func TestTSearch_Parse(t *testing.T) {
 	}
 	o4 := NewSearch(`Der Spiegel`)
 	w4 := &TSearch{
-		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Der Spiegel%"))) OR (b.title LIKE "%Der Spiegel%")`,
+		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Der Spiegel%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Der Spiegel%")))OR(b.title LIKE "%Der Spiegel%")`,
 	}
 	o5 := NewSearch(`title:"~Spiegel" or author:"=Spiegel"`)
 	w5 := &TSearch{
-		where: `(b.title LIKE "%Spiegel%") or (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`,
+		where: `(b.title LIKE "%Spiegel%")OR (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`,
 	}
 	o6 := NewSearch(`What's going on here?`)
 	w6 := &TSearch{
-		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%What's going on here?%"))) OR (b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%What's going on here?%"))) OR (b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%What's going on here?%"))) OR (b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%What's going on here?%"))) OR (b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%What's going on here?%"))) OR (b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%What's going on here?%"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%What's going on here?%"))) OR (b.title LIKE "%What's going on here?%")`,
+		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%What's going on here?%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%What's going on here?%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%What's going on here?%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%What's going on here?%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%What's going on here?%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%What's going on here?%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%What's going on here?%")))OR(b.title LIKE "%What's going on here?%")`,
 	}
 	tests := []struct {
 		name   string
@@ -124,83 +140,34 @@ func TestTSearch_Parse(t *testing.T) {
 	}
 } // TestTSearch_Parse()
 
-func TestTSearch_Clause(t *testing.T) {
-	o0 := NewSearch(``)
-	o1 := NewSearch(`tag:"="`)
-	o2 := NewSearch(`AUTHOR:"=Spiegel"`)
-	w2 := ` WHERE (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`
-	o3 := NewSearch(`TITLE:"~Spiegel"`)
-	w3 := ` WHERE (b.title LIKE "%Spiegel%")`
-	o4 := NewSearch(`Der Spiegel`)
-	w4 := ` WHERE (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Der Spiegel%"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Der Spiegel%"))) OR (b.title LIKE "%Der Spiegel%")`
-	o5 := NewSearch(`title:"~Spiegel" or author:"=Spiegel"`)
-	w5 := ` WHERE (b.title LIKE "%Spiegel%") or (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`
+func TestTSearch_String(t *testing.T) {
+	// type fields struct {
+	// 	raw   string
+	// 	where string
+	// 	next  string
+	// }
+	s1 := NewSearch("")
+	w1 := `raw: '' | where: '' | next: ''`
+	s2 := NewSearch("search term")
+	w2 := `raw: 'search term' | where: '' | next: ''`
+	s3 := NewSearch(`title:"~Spiegel"`).Parse()
+	w3 := `raw: '' | where: '(b.title LIKE "%Spiegel%")' | next: ''`
 	tests := []struct {
 		name   string
 		fields *TSearch
 		want   string
 	}{
 		// TODO: Add test cases.
-		{" 0", o0, ""},
-		{" 1", o1, ""},
-		{" 2", o2, w2},
-		{" 3", o3, w3},
-		{" 4", o4, w4},
-		{" 5", o5, w5},
+		{" 1", s1, w1},
+		{" 2", s2, w2},
+		{" 3", s3, w3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			so := tt.fields
-			if got := so.Clause(); got != tt.want {
-				t.Errorf("TSearch.Clause() = `%s`,\nwant `%s`", got, tt.want)
+			if got := so.String(); got != tt.want {
+				t.Errorf("TSearch.String() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}
-} // TestTSearch_Clause()
-
-func TestTSearch_p1(t *testing.T) {
-	o1 := NewSearch(`tags:"=Golang"`)
-	w1 := &TSearch{
-		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Golang")))`,
-	}
-	o2 := NewSearch("(title:\"~c't\" OR series:\"~c't\") AND publisher:\"~Heise\"")
-	w2 := &TSearch{
-		where: `((b.title LIKE "%c't%") OR (b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%c't%")))) AND (b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Heise%")))`,
-	}
-	o3 := NewSearch("tags:\"=myths & legends\" OR tags:\"=Myth\" OR tags:\"=Myth History\" OR tags:\"=Mythical\" OR tags:\"=Mythical Civilizations\" OR tags:\"=Mythology\" OR tags:\"=Myths\"")
-	w3 := &TSearch{
-		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "myths & legends"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Myth"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Myth History"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Mythical"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Mythical Civilizations"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Mythology"))) OR (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Myths")))`,
-	}
-	o4 := NewSearch("tags:\"=Philosophy\" or tags:\"=Philosophy : Ethics & Moral Philosophy\" or tags:\"=Philosophy : General\" or tags:\"=Philosophy (General)\" or tags:\"=Philosophy (Specific Aspects)\" or tags:\"=Philosophy & Social Aspects\" or tags:\"=Philosophy Of Architecture\"")
-	w4 := &TSearch{
-		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy"))) or (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy : Ethics & Moral Philosophy"))) or (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy : General"))) or (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy (General)"))) or (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy (Specific Aspects)"))) or (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy & Social Aspects"))) or (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Philosophy Of Architecture")))`,
-	}
-	o5 := NewSearch(`tags:"=Golang" Programming`)
-	w5 := &TSearch{
-		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Golang")))`,
-	}
-	tests := []struct {
-		name   string
-		fields *TSearch
-		want   *TSearch
-	}{
-		// TODO: Add test cases.
-		{" 1", o1, w1},
-		{" 2", o2, w2},
-		{" 3", o3, w3},
-		{" 4", o4, w4},
-		{" 5", o5, w5},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			so := &TSearch{
-				raw:   tt.fields.raw,
-				where: tt.fields.where,
-				next:  tt.fields.next,
-			}
-			if got := so.p1(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TSearch.p1() = %v,\nwant %v", got, tt.want)
-			}
-		})
-	}
-} // TestTSearch_p1()
+} // TestTSearch_String()

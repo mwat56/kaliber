@@ -14,7 +14,7 @@ import (
 )
 
 /*
- * This file provides functions and methods for fulltext search.
+ * This file provides helper functions and methods for database searches.
  */
 
 type (
@@ -32,8 +32,32 @@ type (
 		op      string // how to concat with the next expression
 		term    string // what to lookup
 	}
-	// tExpressionList []tExpression
 )
+
+// `allSQL()` returns an SQL clause to match the current term
+// in all suitable tables.
+func (exp *tExpression) allSQL() (rWhere string) {
+	exp.matcher, exp.op = "~", "OR"
+
+	exp.entity = "author"
+	rWhere = exp.buildSQL()
+	exp.entity = "comment"
+	rWhere += exp.buildSQL()
+	exp.entity = "format"
+	rWhere += exp.buildSQL()
+	exp.entity = "language"
+	rWhere += exp.buildSQL()
+	exp.entity = "publisher"
+	rWhere += exp.buildSQL()
+	exp.entity = "series"
+	rWhere += exp.buildSQL()
+	exp.entity = "tags"
+	rWhere += exp.buildSQL()
+	exp.entity, exp.op = "title", ""
+	rWhere += exp.buildSQL()
+
+	return
+} // allSQL()
 
 // `buildSQL()` returns an SQL clause based on `exp` properties
 // suitable for the Calibre database.
@@ -85,9 +109,26 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 	if 1 < b {
 		rWhere += `))`
 	}
+	if 0 < len(exp.op) {
+		rWhere += exp.op
+	}
 
 	return
 } // buildSQL()
+
+// ----------------------------------------------------------------------------
+
+// Clause returns the produced WHERE clause.
+func (so *TSearch) Clause() string {
+	if 0 < len(so.raw) {
+		so.Parse()
+	}
+	if 0 < len(so.where) {
+		return ` WHERE ` + so.where // #nosec G202
+	}
+
+	return ""
+} // Clause()
 
 /*
 There are several forms to recognise:
@@ -100,85 +141,40 @@ All three expressions can be combined by AND and OR.
 All three expressions can be negated by a leading `!`.
 */
 
-// Clause returns the produced FROM/WHERE clause.
-func (so *TSearch) Clause() string {
-	if 0 < len(so.raw) {
-		so.Parse()
-	}
-	if 0 < len(so.where) {
-		return ` WHERE ` + so.where // #nosec G202
-	}
-
-	return ""
-} // Clause()
-
 var (
-	complexExpressionRE = regexp.MustCompile(
-		`(?i)^\s*((!?)(\w+):)?"([=~])([^"]*)"(\s+(AND|OR)\s*)?`)
-	//           12   3        4     5      6    7
+	// RegEx to find a search expression
+	searchExpressionRE = regexp.MustCompile(
+		`(?i)((!?)(\w+):)"([=~])([^"]*)"(\s*(AND|OR))?`)
+	//       12   3       4     5       6   7
 
-	simpleExpressionRE = regexp.MustCompile(`(?i)^"?([^"]+)"?$`)
-	//                                              1------
-)
-
-func (so *TSearch) getExpression() *tExpression {
-	var exp *tExpression
-	matches := complexExpressionRE.FindStringSubmatch(so.raw)
-	if (nil == matches) || (0 == len(matches) || (0 == len(matches[0]))) {
-		// complex RegEx didn't match
-		match2 := simpleExpressionRE.FindStringSubmatch(so.raw)
-		if (nil == match2) || (0 == len(match2)) {
-			return nil
-		}
-		exp = &tExpression{
-			matcher: `~`,
-			term:    match2[1],
-		}
-		so.raw = so.raw[len(match2[0]):]
-	} else {
-		exp = &tExpression{
-			entity:  strings.ToLower(matches[3]),
-			matcher: matches[4],
-			term:    matches[5],
-			op:      matches[7],
-			not:     ("!" == matches[2]),
-		}
-		so.raw = so.raw[len(matches[0]):]
-	}
-	if 0 < len(exp.term) {
-		return exp
-	}
-
-	return nil
-} // getExpression()
-
-var (
-	//
-	searchTermRE = regexp.MustCompile(
-		`(?i)((!?)(\w+):)"([=~])([^"]*)"`)
-	//       12   3       4     5
-	// 	`(?i)((!?)(\w+):)"([=~])([^"]+)"(\s+(AND|OR))?`)
-	// //       12   3       4     5       6   7
-	// 	`(?i)\s*((!?)(\w+):)"([=~])([^"]+)"(\s+(AND|OR)\s*)?`)
-	// //       0  12   3       4     5       6   7
+	searchRemainderRE = regexp.MustCompile(`\s*([\w ]+)`)
 )
 
 func (so *TSearch) p1() *TSearch {
-	w := so.raw
-	for matches := searchTermRE.FindStringSubmatch(w); 5 < len(matches); matches = searchTermRE.FindStringSubmatch(w) {
-		if 0 == len(matches[5]) {
-			w = strings.Replace(w, matches[0], "", 1)
-			continue
-		}
+	op, p, s, w := "", 0, "", so.raw
+	for matches := searchExpressionRE.FindStringSubmatch(w); 7 < len(matches); matches = searchExpressionRE.FindStringSubmatch(w) {
 		exp := &tExpression{
 			entity:  strings.ToLower(matches[3]),
-			matcher: matches[4],
-			term:    matches[5],
 			not:     ("!" == matches[2]),
+			matcher: matches[4],
+			op:      strings.ToUpper(matches[7]),
+			term:    matches[5],
 		}
-		w = strings.Replace(w, matches[0], exp.buildSQL(), 1)
-
-		//FIXME TODO handling (leading|trailing) garbage
+		s = exp.buildSQL()
+		w = strings.Replace(w, matches[0], s, 1)
+		p = strings.Index(w, s) + len(s)
+		op = exp.op // save the latest operant for below
+	}
+	if p < len(w) { // check whether there's something behind the last expression
+		matches := searchRemainderRE.FindStringSubmatch(w[p:])
+		if 0 < len(matches) {
+			exp := &tExpression{term: matches[1]}
+			s = exp.allSQL()
+			if 0 == len(op) {
+				s = `OR ` + s
+			}
+			w = strings.Replace(w, matches[0], s, 1)
+		}
 	}
 	so.next, so.raw, so.where = "", "", w
 
@@ -191,91 +187,17 @@ func (so *TSearch) Parse() *TSearch {
 		so.next, so.where = "", ""
 		return so
 	}
-	if searchTermRE.MatchString(so.raw) {
+	if searchExpressionRE.MatchString(so.raw) {
 		return so.p1()
 	}
 
-	exp := &tExpression{
-		matcher: "~",
-		term:    so.raw,
-		op:      "OR",
-	}
-	exp.entity = "author"
-	so.where = exp.buildSQL() + ` OR `
-	exp.entity = "comment"
-	so.where += exp.buildSQL() + ` OR `
-	exp.entity = "format"
-	so.where += exp.buildSQL() + ` OR `
-	exp.entity = "language"
-	so.where += exp.buildSQL() + ` OR `
-	exp.entity = "publisher"
-	so.where += exp.buildSQL() + ` OR `
-	exp.entity = "series"
-	so.where += exp.buildSQL() + ` OR `
-	exp.entity = "tags"
-	so.where += exp.buildSQL() + ` OR `
-	exp.entity = "title"
-	so.where += exp.buildSQL()
-	so.raw = ""
+	exp := &tExpression{term: so.raw}
+	so.where, so.raw = exp.allSQL(), ""
 
 	return so
 } // Parse()
 
-/*
-func (so *TSearch) parsePrim(aExpression *tExpression) {
-	switch aExpression.entity {
-	case "author":
-		so.where += so.next + ` b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name`
-
-	case "comment":
-		so.where += so.next + ` b.id IN (SELECT c.book FROM comments c WHERE (c.text`
-
-	case "format":
-		so.where += so.next + ` b.id IN (SELECT d.book FROM data d WHERE (d.format`
-
-	case "language":
-		so.where += so.next + ` b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code`
-
-	case "publisher":
-		so.where += so.next + ` b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name`
-
-	case "series":
-		so.where += so.next + ` b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name`
-
-	case "tag", "tags":
-		so.where += so.next + ` b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name`
-
-	case "title":
-		so.where += so.next + ` (b.title`
-		if "=" == aExpression.matcher {
-			if aExpression.not {
-				so.where += ` != `
-			} else {
-				so.where += ` = `
-			}
-			so.where += aExpression.term + `") `
-		} else {
-			if aExpression.not {
-				so.where += ` NOT`
-			}
-			so.where += ` LIKE "%` + aExpression.term + `%") `
-		}
-		so.next = aExpression.op
-		return
-
-	default:
-		return
-	}
-	if "=" == aExpression.matcher {
-		so.where += ` = "` + aExpression.term + `")) `
-	} else {
-		so.where += ` LIKE "%` + aExpression.term + `%")) `
-	}
-	so.next = aExpression.op
-} // parsePrim()
-*/
-
-// String returns a stringfied representation.
+// String returns a string field representation.
 func (so *TSearch) String() string {
 	return `raw: '` + so.raw +
 		`' | where: '` + so.where +
