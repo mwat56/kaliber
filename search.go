@@ -86,8 +86,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		rWhere = `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name`
 
 	case "title":
-		rWhere = `(b.title`
-		b = 1
+		b, rWhere = 1, `(b.title`
 
 	default: // unknown data field
 		return
@@ -116,7 +115,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 	return
 } // buildSQL()
 
-// ----------------------------------------------------------------------------
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // Clause returns the produced WHERE clause.
 func (so *TSearch) Clause() string {
@@ -147,7 +146,9 @@ var (
 		`(?i)((!?)(\w+):)"([=~])([^"]*)"(\s*(AND|OR))?`)
 	//       12   3       4     5       6   7
 
-	searchRemainderRE = regexp.MustCompile(`\s*([\w ]+)`)
+	searchRemainderRE = regexp.MustCompile(
+		`\s*(!?)\s*([\w ]+)`)
+	//      1      2
 )
 
 func (so *TSearch) p1() *TSearch {
@@ -167,11 +168,15 @@ func (so *TSearch) p1() *TSearch {
 	}
 	if p < len(w) { // check whether there's something behind the last expression
 		matches := searchRemainderRE.FindStringSubmatch(w[p:])
-		if 0 < len(matches) {
-			exp := &tExpression{term: matches[1]}
-			s = exp.allSQL()
+		if 2 < len(matches) {
+			exp := &tExpression{
+				not:  ("!" == matches[1]),
+				term: matches[2],
+			}
 			if 0 == len(op) {
-				s = `OR ` + s
+				s = `OR ` + exp.allSQL()
+			} else {
+				s = exp.allSQL()
 			}
 			w = strings.Replace(w, matches[0], s, 1)
 		}
