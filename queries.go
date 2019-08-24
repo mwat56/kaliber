@@ -28,6 +28,7 @@ import (
 
 const (
 	// `calibreBaseQuery` is the default query to get document data.
+	// By appending `WHERE` and `LIMIT` clauses the resultset gets stinted.
 	calibreBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
@@ -123,6 +124,9 @@ var (
 const (
 	// Name of the `Calibre` database
 	calibreDatabaseName = "metadata.db"
+
+	// Calibre's metadata/preferences store
+	calibrePreferencesFile = "metadata_db_prefs_backup.json"
 )
 
 type (
@@ -142,7 +146,6 @@ var (
 	calibreLibraryPath = ""
 
 	// The active `tDatabase` instance initialised by `DBopen()`.
-	// sqliteDatabase *sql.DB
 	sqliteDatabase tDataBase
 
 	// Optional file to log all SQL queries.
@@ -163,6 +166,12 @@ func CalibreDatabaseName() string {
 func CalibreLibraryPath() string {
 	return calibreLibraryPath
 } // CalibreLibraryPath()
+
+// CalibrePreferencesPath returns rhe complete path-/filename of the
+// `Calibre` library's preferences file.
+func CalibrePreferencesPath() string {
+	return filepath.Join(calibreLibraryPath, calibrePreferencesFile)
+} // CalibrePreferencesPath()
 
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
 func SetCalibreCachePath(aPath string) string {
@@ -239,8 +248,8 @@ func (db *tDataBase) dbReopen() error {
 		if !more {
 			return err // channel closed
 		}
-		// "cache=shared" is essential to avoid running out of
-		// file handles since each query holds its own file handle.
+		// "cache=shared" is essential to avoid running out of file
+		// handles since each query seems to hold its own file handle.
 		// "mode=ro" is self-explanatory since we don't change the
 		// DB in any way.
 		dsn := `file:` + db.dbFileName + `?cache=shared&mode=ro`
@@ -386,6 +395,16 @@ func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
 	}
 } // goCheckFile()
 
+const (
+	// Half a second to sleep in `goWrite()`.
+	halfSecond = 500 * time.Millisecond
+)
+
+var (
+	// The channel to send SQL to and read messages from
+	sqlTraceQueue = make(chan string, 64)
+)
+
 // `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
 func goSQLtrace(aQuery string, aTime time.Time) {
 	if 0 == len(sqlTraceFile) {
@@ -397,16 +416,6 @@ func goSQLtrace(aQuery string, aTime time.Time) {
 	sqlTraceQueue <- aTime.Format("2006-01-02 15:04:05 ") +
 		strings.ReplaceAll(aQuery, "  ", " ")
 } // goSQLtrace()
-
-const (
-	// Half a second to sleep in `goWrite()`.
-	halfSecond = 500 * time.Millisecond
-)
-
-var (
-	// The channel to send SQL to and read messages from
-	sqlTraceQueue = make(chan string, 64)
-)
 
 // `goWrite()` performs the actual file write.
 //
@@ -764,6 +773,7 @@ func QueryDocument(aID TID) *TDocument {
 
 // QueryIDs returns a list of documents with only the `ID` and
 // `path` fields set.
+// This function is used `thumbnails`.
 func QueryIDs() (*TDocList, error) {
 	rows, err := sqliteDatabase.Query(calibreIDQuery)
 	if nil != err {
@@ -780,10 +790,12 @@ func QueryIDs() (*TDocList, error) {
 	return result, nil
 } // QueryIDs()
 
+/*
 // QueryLimit returns a list of `TDocument` objects.
 func QueryLimit(aStart, aLength uint) (*TDocList, error) {
 	return doQueryAll(calibreBaseQuery + limit(aStart, aLength))
 } // QueryLimit()
+*/
 
 // QuerySearch returns a list of documents
 func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {

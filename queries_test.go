@@ -435,6 +435,7 @@ func TestQueryBy(t *testing.T) {
 	}
 } // TestQueryBy()
 
+/*
 func TestQueryLimit(t *testing.T) {
 	openDBforTesting()
 	type args struct {
@@ -474,6 +475,7 @@ func TestQueryLimit(t *testing.T) {
 		})
 	}
 } // TestQueryLimit()
+*/
 
 func TestQuerySearch(t *testing.T) {
 	openDBforTesting()

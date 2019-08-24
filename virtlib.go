@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/mwat56/apachelogger"
 )
@@ -33,18 +32,9 @@ type (
 )
 
 const (
-	// Calibre's metadata/preferences store
-	calibrePreferencesFile = "metadata_db_prefs_backup.json"
-
 	// name of the JSON section holding the virtual library definitions
 	virtlibJSONsection = "virtual_libraries"
 )
-
-// CalibrePreferencesPath returns rhe complete path-/filename of the
-// `Calibre` library's preferences file.
-func CalibrePreferencesPath() string {
-	return filepath.Join(calibreLibraryPath, calibrePreferencesFile)
-} // CalibrePreferencesPath()
 
 // `virtlibReadJSONmetadata()` reads `aFilename` and returns a map of
 // the JSON data read.
