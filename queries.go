@@ -529,7 +529,8 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	case qoSortByTags:
 		result += "tags" + desc + ", b.author_sort" + desc + " "
 	case qoSortByTime:
-		result += "b.timestamp" + desc + ", b.author_sort" + desc + " "
+
+		result += "b.pubdate" + desc + ", b.timestamp" + desc + ", b.author_sort" + desc + " "
 	case qoSortByTitle:
 		result += "b.sort" + desc + ", b.author_sort" + desc + " "
 	default:
