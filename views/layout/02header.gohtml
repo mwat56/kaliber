@@ -24,14 +24,14 @@
 			{{ selectOption .SLL "50" }}50</option>
 			{{ selectOption .SLL "100" }}100</option>
 		</select>
-	</td><td class="right">
+	</td><td class="right" colspan="2">
 		{{- if eq $.Lang "de" -}}
 		<label for="matching">Bücher enthalten:</label>
 		{{- else -}}
 		<label for="matching">Books matching:</label>
 		{{- end -}}
-	</td><td>
-		<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform">
+	</td><td colspan="3">
+		<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform" class="w22">
 	</td><td class="right">
 		{{- if eq $.Lang "de" -}}
 		<label for="sortby">sortiert nach:</label>
@@ -122,9 +122,21 @@
 			{{ htmlSafe .THEME.dark }}dark</option>
 		{{- end -}}
 		</select>
-	</td><td colspan="2" class="right">
+	</td><td class="right" colspan="2">
 		{{- if eq $.Lang "de" -}}
-		<input id="search" name="search" type="submit" value="Suche" form="pageform">
+		<label for="virtlib">virt. Bibliothek:</label>
+		{{- else -}}
+		<label for="virtlib">virt. library:</label>
+		{{- end -}}
+	</td><td colspan="2">
+		<select id="virtlib" name="virtlib" form="pageform" class="w22">
+		{{- if .VirtLib -}}
+			{{ htmlSafe .VirtLib }}
+		{{- end -}}
+		</select>
+	</td><td class="centered">
+		{{- if eq $.Lang "de" -}}
+		<input id="search" name="search" type="submit" value="Suchen" form="pageform">
 		{{- else -}}
 		<input id="search" name="search" type="submit" value="Search" form="pageform">
 		{{- end -}}

@@ -232,7 +232,8 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 		Set("SOO", aOptions.SelectOrderOptions()).
 		Set("SSB", aOptions.SelectSortByOptions()).
 		Set("THEME", aOptions.SelectThemeOptions()).
-		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d)) // #nosec G203
+		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d)).
+		Set("VirtLib", aOptions.SelectVirtLibOptions()) // #nosec G203
 } // basicTemplateData()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

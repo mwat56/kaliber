@@ -335,7 +335,6 @@ There are some `Calibre` features which are not available (yet) with `Kaliber` a
 
 * _custom columns_ defined by the respective `Calibre` user;
 * _different/multiple libraries_ of the user to switch between;
-* _virtual libraries_ created by the `Calibre` user;
 * _book uploads_ are not planned to be included.
 
 Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided I find actually time to do it).

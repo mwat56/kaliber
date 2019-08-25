@@ -54,7 +54,7 @@ type (
 	TQueryOptions struct {
 		ID          TID    // an entity ID to lookup
 		Descending  bool   // sort direction
-		Entity      string // limiting query to a certain entity (author, publisher, series, tag)
+		Entity      string // limiting query to a certain entity (author, publisher, series, tags)
 		GuiLang     uint8  // GUI language
 		Layout      uint8  // either `qoLayoutList` or `qoLayoutGrid`
 		LimitLength uint   // number of documents per page
@@ -63,12 +63,14 @@ type (
 		QueryCount  uint   // number of DB records matching the query options
 		SortBy      uint8  // display order of documents (`qoSortByXXX`)
 		Theme       uint8  // CSS presentation theme
+		VirtLib     string // virtual libraries
 	}
 )
 
 // Pattern used by `String()` and `Scan()`:
 const (
-	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%d|%q|%d|%d|%d|`
+	qoStringPattern = `|%d|%t|%q|%d|%d|%d|%d|%q|%d|%d|%d|%q|`
+	//                   |  |  |  |  |  |  |  |  |  |  |  + Theme
 	//                   |  |  |  |  |  |  |  |  |  |  + Theme
 	//                   |  |  |  |  |  |  |  |  |  + SortBy
 	//                   |  |  |  |  |  |  |  |  + QueryCount
@@ -107,7 +109,7 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	_, _ = fmt.Sscanf(aString, qoStringPattern,
 		&qo.ID, &qo.Descending, &qo.Entity, &qo.GuiLang, &qo.Layout,
 		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
-		&qo.QueryCount, &qo.SortBy, &qo.Theme)
+		&qo.QueryCount, &qo.SortBy, &qo.Theme, &qo.VirtLib)
 
 	return qo
 } // Scan()
@@ -205,7 +207,7 @@ func (qo *TQueryOptions) String() string {
 	return fmt.Sprintf(qoStringPattern,
 		qo.ID, qo.Descending, qo.Entity, qo.GuiLang, qo.Layout,
 		qo.LimitLength, qo.LimitStart, qo.Matching,
-		qo.QueryCount, qo.SortBy, qo.Theme)
+		qo.QueryCount, qo.SortBy, qo.Theme, qo.VirtLib)
 } // String()
 
 // SelectThemeOptions returns a list of two SELECT/OPTIONs.
@@ -223,10 +225,15 @@ func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 	return &result
 } // SelectThemeOptions()
 
+// SelectVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
+func (qo *TQueryOptions) SelectVirtLibOptions() string {
+	return GetVirtLibOptions(qo.VirtLib)
+} // SelectVirtLibOptions()
+
 // Update returns a `TQueryOptions` instance with updated values
 // read from the `aRequest` data.
 func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
-	// The form fields are defined in `02header.gohtml`
+	// The form fields are defined/used in `02header.gohtml`
 	if lang := aRequest.FormValue("guilang"); 0 < len(lang) {
 		var l uint8 // defaults to `0` == `qoLangGerman`
 		if "en" == lang {
@@ -236,6 +243,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			qo.GuiLang = l
 		}
 	}
+
 	if lt := aRequest.FormValue("layout"); 0 < len(lt) {
 		var l uint8 // default to `0` == `qoLayoutList`
 		if "grid" == lt {
@@ -245,6 +253,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			qo.Layout = l
 		}
 	}
+
 	if fll := aRequest.FormValue("limitlength"); 0 < len(fll) {
 		if ll, err := strconv.Atoi(fll); nil == err {
 			limlen := uint(ll)
@@ -254,11 +263,15 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			}
 		}
 	}
-	matching := aRequest.FormValue("matching")
-	if matching != qo.Matching {
-		qo.Matching = matching
-		qo.LimitStart = 0
+
+	if matching := aRequest.FormValue("matching"); 0 < len(matching) {
+		if matching != qo.Matching {
+			qo.Matching = matching
+			qo.LimitStart = 0
+			qo.VirtLib = ""
+		}
 	}
+
 	if fob := aRequest.FormValue("order"); 0 < len(fob) {
 		desc := ("descending" == fob)
 		if desc != qo.Descending {
@@ -266,6 +279,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			qo.LimitStart = 0
 		}
 	}
+
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
 		var sb uint8
 		switch fsb {
@@ -295,6 +309,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			qo.LimitStart = 0
 		}
 	}
+
 	if theme := aRequest.FormValue("theme"); 0 < len(theme) {
 		var t uint8 // defaults to `0` == `qoThemeLight`
 		if "dark" == theme {
@@ -302,6 +317,20 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		}
 		if t != qo.Theme {
 			qo.Theme = t
+		}
+	}
+
+	if vl := aRequest.FormValue("virtlib"); 0 < len(vl) {
+		if vl != qo.VirtLib {
+			qo.VirtLib = vl
+			if "-" != vl {
+				if vlList, err := GetVirtLibList(); nil == err {
+					if vld, ok := (*vlList)[vl]; ok {
+						qo.Matching = vld.Def
+					}
+				}
+			}
+			qo.LimitStart = 0
 		}
 	}
 

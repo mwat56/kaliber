@@ -127,7 +127,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByAuthor,
 		Theme:       qoThemeDark,
 	}
-	w1 := `|3524|true|"author"|1|0|50|0|""|100|1|1|`
+	w1 := `|3524|true|"author"|1|0|50|0|""|100|1|1|""|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -141,7 +141,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByLanguage,
 		Theme:       qoThemeLight,
 	}
-	w2 := `|1|false|"lang"|0|1|25|0|""|200|2|0|`
+	w2 := `|1|false|"lang"|0|1|25|0|""|200|2|0|""|`
 	tests := []struct {
 		name   string
 		fields TQueryOptions

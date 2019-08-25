@@ -153,7 +153,7 @@ input[type="submit"],
 input[type="text"],
 select,
 select option {
-	border-radius: 1ex;
+	border-radius: 0.66ex;
 	border: thin outset transparent;
 	font-size: inherit;
 	hyphens: none;
@@ -294,7 +294,8 @@ div#search_box {
 div#search_box table {
 	border: 0;
 }
-div#search_box table tr td {
+div#search_box table td {
+	/*border: thin dotted #666;	/* */
 	padding: 0.2ex;
 	vertical-align: middle;
 }
@@ -500,6 +501,9 @@ table.prevnext tr td a:hover {
 	color: inherit;
 	font-size: 89%;
 	font-weight: inherit;
+}
+.w22, select.w22 {
+	min-width: 22ex;
 }
 
 /* _EoF_ */

@@ -13,33 +13,37 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/mwat56/apachelogger"
 )
 
+const (
+	// Name of the JSON section holding the virtual library definitions.
+	virtlibJSONsection = "virtual_libraries"
+)
+
 type (
-	// Structure of the `virtual_libraries` JSON section
+	// Structure of the `virtual_libraries` JSON section.
 	tVirtLibJSON map[string]string
 
-	// Structure to hold a virtual library definition.
-	tVirtLibStruct struct {
+	// TVirtLibStruct is a structure to hold a virtual library definition.
+	TVirtLibStruct struct {
 		Def string // Calibre's definitions
 		SQL string // SQL: WHERE clause
 	}
 
 	// TvirtLibMap is a list of virt.lib. definitions
-	TvirtLibMap map[string]tVirtLibStruct
+	TvirtLibMap map[string]TVirtLibStruct
 )
 
-const (
-	// name of the JSON section holding the virtual library definitions
-	virtlibJSONsection = "virtual_libraries"
+var (
+	// cache of virtual libraries list
+	virtLibList TvirtLibMap
 )
 
-// `virtlibReadJSONmetadata()` reads `aFilename` and returns a map of
-// the JSON data read.
-//
-//	aFilename The path/filename of Calibre's metadata JSON file.
+// `virtlibReadJSONmetadata()` returns a map of the JSON data read.
 func virtlibReadJSONmetadata() (*map[string]interface{}, error) {
 	fName := CalibrePreferencesPath()
 	srcFile, err := os.OpenFile(fName, os.O_RDONLY, 0)
@@ -75,8 +79,7 @@ func virtlibReadJSONmetadata() (*map[string]interface{}, error) {
 	return &jsdata, nil
 } // virtlibReadJSONmetadata()
 
-// `virtlibGetLibDefs()` reads `aFilename` and returns a map of
-// virtual library definitions.
+// `virtlibGetLibDefs()` returns a map of virtual library definitions.
 func virtlibGetLibDefs() (*tVirtLibJSON, error) {
 	jsdata, err := virtlibReadJSONmetadata()
 	if nil != err {
@@ -105,25 +108,58 @@ func virtlibGetLibDefs() (*tVirtLibJSON, error) {
 	return &result, nil
 } // virtlibGetLibDefs()
 
-// GetVirtLibList reads `aFilename` and returns a list of virtual
-// library definitions and SQL code to access them.
+// GetVirtLibList returns a list of virtual library definitions
+// and SQL code to access them.
 func GetVirtLibList() (*TvirtLibMap, error) {
+	if nil != virtLibList {
+		return &virtLibList, nil
+	}
 	jsList, err := virtlibGetLibDefs()
 	if nil != err {
 		msg := fmt.Sprintf("virtlibGetLibDefs(): %v", err)
 		apachelogger.Log("virtlib.GetVirtLibList", msg)
 		return nil, err
 	}
-	result := make(TvirtLibMap, len(*jsList))
+	virtLibList = make(TvirtLibMap, len(*jsList))
 	for key, value := range *jsList {
 		vl := NewSearch(value).Parse()
-		result[key] = tVirtLibStruct{
+		virtLibList[key] = TVirtLibStruct{
 			Def: value,
 			SQL: vl.Where(),
 		}
 	}
 
-	return &result, nil
+	return &virtLibList, nil
 } // GetVirtLibList()
+
+// GetVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
+func GetVirtLibOptions(aSelected string) string {
+	vlList, err := GetVirtLibList()
+	if nil != err {
+		msg := fmt.Sprintf("GetVirtLibList(): %v", err)
+		apachelogger.Log("virtlib.GetVirtLibOptions", msg)
+		return ""
+	}
+
+	list := make([]string, 0, len(*vlList))
+	if 0 < len(aSelected) {
+		list = append(list, `<option value="-"> – </option>`)
+	} else {
+		list = append(list, `<option value="-" SELECTED> – </option>`)
+	}
+	for key := range *vlList {
+		option := `<option value="` + key + `"`
+		if key == aSelected {
+			option += ` SELECTED`
+		}
+		option += `>` + key + `</option>`
+		list = append(list, option)
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return strings.ToLower(list[i]) < strings.ToLower(list[j])
+	})
+
+	return strings.Join(list, "\n")
+} // GetVirtLibOptions
 
 /* _EoF_ */

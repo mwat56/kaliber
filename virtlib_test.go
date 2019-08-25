@@ -85,3 +85,25 @@ func Test_GetVirtLibList(t *testing.T) {
 		})
 	}
 } // Test_GetVirtLibList()
+
+func TestGetVirtLibOptions(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
+	type args struct {
+		aSelected string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{" 1", args{""}},
+		{" 2", args{"Warentest"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetVirtLibOptions(tt.args.aSelected); 0 == len(got) {
+				t.Errorf("GetVirtLibOptions() = %v,\nwant %v", got, "> 0")
+			}
+		})
+	}
+} // TestGetVirtLibOptions()
