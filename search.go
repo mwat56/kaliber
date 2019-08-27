@@ -92,18 +92,19 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		return
 	}
 
+	term := escapeQuery(exp.term)
 	if "=" == exp.matcher {
 		if exp.not {
 			rWhere += ` != "`
 		} else {
 			rWhere += ` = "`
 		}
-		rWhere += exp.term + `")`
+		rWhere += term + `")`
 	} else {
 		if exp.not {
 			rWhere += ` NOT`
 		}
-		rWhere += ` LIKE "%` + exp.term + `%")`
+		rWhere += ` LIKE "%` + term + `%")`
 	}
 	if 1 < b {
 		rWhere += `))`
@@ -143,8 +144,8 @@ All three expressions can be negated by a leading `!`.
 var (
 	// RegEx to find a search expression
 	searchExpressionRE = regexp.MustCompile(
-		`(?i)((!?)(\w+):)"([=~])([^"]*)"(\s*(AND|OR))?`)
-	//       12   3       4     5       6   7
+		`(?i)((!?)(\w+):)"([=~]?)([^"]*)"(\s*(AND|OR))?`)
+	//       12   3       4      5       6   7
 
 	searchRemainderRE = regexp.MustCompile(
 		`\s*(!?)\s*([\w ]+)`)
@@ -154,6 +155,9 @@ var (
 func (so *TSearch) p1() *TSearch {
 	op, p, s, w := "", 0, "", so.raw
 	for matches := searchExpressionRE.FindStringSubmatch(w); 7 < len(matches); matches = searchExpressionRE.FindStringSubmatch(w) {
+		if 0 == len(matches[4]) {
+			matches[4] = `=` // default to exact match
+		}
 		exp := &tExpression{
 			entity:  strings.ToLower(matches[3]),
 			not:     ("!" == matches[2]),
