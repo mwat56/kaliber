@@ -89,7 +89,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		b, rWhere = 1, `(b.title`
 
 	default: // unknown data field
-		return
+		return //TODO check for user-defined fields like `#genre`
 	}
 
 	term := escapeQuery(exp.term)
@@ -144,12 +144,18 @@ All three expressions can be negated by a leading `!`.
 var (
 	// RegEx to find a search expression
 	searchExpressionRE = regexp.MustCompile(
-		`(?i)((!?)(\w+):)"([=~]?)([^"]*)"(\s*(AND|OR))?`)
+		`(?i)((!?)(#?\w+):)"([=~]?)([^"]*)"(\s*(AND|OR))?`)
 	//       12   3       4      5       6   7
 
 	searchRemainderRE = regexp.MustCompile(
 		`\s*(!?)\s*([\w ]+)`)
 	//      1      2
+
+	replacementLookup = map[string]string{
+		`AND`: `(1=1)`,
+		`OR`:  `(1=0)`,
+		``:    ``,
+	}
 )
 
 func (so *TSearch) p1() *TSearch {
@@ -166,6 +172,9 @@ func (so *TSearch) p1() *TSearch {
 			term:    matches[5],
 		}
 		s = exp.buildSQL()
+		if 0 == len(s) {
+			s = replacementLookup[op]
+		}
 		w = strings.Replace(w, matches[0], s, 1)
 		p = strings.Index(w, s) + len(s)
 		op = exp.op // save the latest operant for below

@@ -71,12 +71,17 @@ func TestTSearch_p1(t *testing.T) {
 	w6 := &TSearch{
 		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name != "Golang")))AND(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Programming%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Programming%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Programming%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Programming%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Programming%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Programming%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Programming%")))OR(b.title LIKE "%Programming%")`,
 	}
+	o7 := NewSearch("tags:\"~Magic.\" or #genre:\"~Magic.\"")
+	w7 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Magic.%")))OR (1=0)`,
+	}
 	tests := []struct {
 		name   string
 		fields *TSearch
 		want   *TSearch
 	}{
 		// TODO: Add test cases.
+		{" 7", o7, w7},
 		{" 1", o1, w1},
 		{" 2", o2, w2},
 		{" 3", o3, w3},
