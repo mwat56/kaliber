@@ -16,7 +16,8 @@ import (
 
 // Constants defining the ORDER_BY clause
 const (
-	qoSortUnsorted = uint8(iota)
+	qoSortUnsorted      = uint8(iota)
+	qoSortByAcquisition // acquisition date
 	qoSortByAuthor
 	qoSortByLanguage
 	qoSortByPublisher
@@ -181,6 +182,7 @@ func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 // SelectSortByOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectSortByOptions() *TStringMap {
 	result := make(TStringMap, 9)
+	qo.selectSortByPrim(&result, qoSortByAcquisition, "acquisition")
 	qo.selectSortByPrim(&result, qoSortByAuthor, "author")
 	qo.selectSortByPrim(&result, qoSortByLanguage, "language")
 	qo.selectSortByPrim(&result, qoSortByPublisher, "publisher")
@@ -283,6 +285,8 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
 		var sb uint8
 		switch fsb {
+		case "acquisition":
+			sb = qoSortByAcquisition
 		case "author":
 			sb = qoSortByAuthor
 		case "language":
@@ -344,7 +348,7 @@ func NewQueryOptions() *TQueryOptions {
 	result := TQueryOptions{
 		Descending:  true,
 		LimitLength: 25,
-		SortBy:      qoSortByTime,
+		SortBy:      qoSortByAcquisition,
 	}
 	if s, _ := AppArguments.Get("booksperpage"); 0 < len(s) {
 		if _, err := fmt.Sscanf(s, "%d", &result.LimitLength); nil != err {

@@ -31,7 +31,7 @@
 		<label for="matching">Books matching:</label>
 		{{- end -}}
 	</td><td colspan="3">
-		<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform" class="w22">
+		<input id="matching" name="matching" type="search" value="{{if .Matching}}{{.Matching}}{{end}}" form="pageform" size="24">
 	</td><td class="right">
 		{{- if eq $.Lang "de" -}}
 		<label for="sortby">sortiert nach:</label>
@@ -41,6 +41,7 @@
 	</td><td>
 		<select id="sortby" name="sortby" form="pageform">
 		{{- if eq $.Lang "de" -}}
+			{{ htmlSafe .SSB.acquisition }}Anschaffung</option>
 			{{ htmlSafe .SSB.author }}AutorIn</option>
 			{{ htmlSafe .SSB.rating }}Bewertung</option>
 			{{ htmlSafe .SSB.time }}Datum</option>
@@ -51,6 +52,7 @@
 			{{ htmlSafe .SSB.title }}Titel</option>
 			{{ htmlSafe .SSB.publisher }}Verlag</option>
 		{{- else -}}
+			{{ htmlSafe .SSB.acquisition }}Acquisition</option>
 			{{ htmlSafe .SSB.author }}author</option>
 			{{ htmlSafe .SSB.time }}date</option>
 			{{ htmlSafe .SSB.language }}language</option>
@@ -129,7 +131,7 @@
 		<label for="virtlib">virt. library:</label>
 		{{- end -}}
 	</td><td colspan="2">
-		<select id="virtlib" name="virtlib" form="pageform" class="w22">
+		<select id="virtlib" name="virtlib" form="pageform">
 		{{- if .VirtLib -}}
 			{{ htmlSafe .VirtLib }}
 		{{- end -}}

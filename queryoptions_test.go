@@ -13,7 +13,7 @@ import (
 
 func TestTQueryOptions_Scan(t *testing.T) {
 	o1 := NewQueryOptions()
-	s1 := `|3524|true|"author"|0|0|25|0|""|100|1|0|`
+	s1 := `|3524|true|"author"|0|0|25|0|""|100|2|0|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
@@ -28,7 +28,7 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		Theme:       qoThemeLight,
 	}
 	o2 := NewQueryOptions()
-	s2 := `|1|false|"lang"|1|1|50|0|""|200|2|1|`
+	s2 := `|1|false|"lang"|1|1|50|0|""|200|3|1|`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -70,29 +70,31 @@ func TestTQueryOptions_SortSelectOptions(t *testing.T) {
 		SortBy: qoSortByAuthor,
 	}
 	w1 := &TStringMap{
-		`author`:    `<option SELECTED value="author">`,
-		`language`:  `<option value="language">`,
-		`publisher`: `<option value="publisher">`,
-		`rating`:    `<option value="rating">`,
-		`series`:    `<option value="series">`,
-		`size`:      `<option value="size">`,
-		`tags`:      `<option value="tags">`,
-		`time`:      `<option value="time">`,
-		`title`:     `<option value="title">`,
+		`acquisition`: `<option value="acquisition">`,
+		`author`:      `<option SELECTED value="author">`,
+		`language`:    `<option value="language">`,
+		`publisher`:   `<option value="publisher">`,
+		`rating`:      `<option value="rating">`,
+		`series`:      `<option value="series">`,
+		`size`:        `<option value="size">`,
+		`tags`:        `<option value="tags">`,
+		`time`:        `<option value="time">`,
+		`title`:       `<option value="title">`,
 	}
 	o2 := TQueryOptions{
 		SortBy: qoSortByTime,
 	}
 	w2 := &TStringMap{
-		`author`:    `<option value="author">`,
-		`language`:  `<option value="language">`,
-		`publisher`: `<option value="publisher">`,
-		`rating`:    `<option value="rating">`,
-		`series`:    `<option value="series">`,
-		`size`:      `<option value="size">`,
-		`tags`:      `<option value="tags">`,
-		`time`:      `<option SELECTED value="time">`,
-		`title`:     `<option value="title">`,
+		`acquisition`: `<option value="acquisition">`,
+		`author`:      `<option value="author">`,
+		`language`:    `<option value="language">`,
+		`publisher`:   `<option value="publisher">`,
+		`rating`:      `<option value="rating">`,
+		`series`:      `<option value="series">`,
+		`size`:        `<option value="size">`,
+		`tags`:        `<option value="tags">`,
+		`time`:        `<option SELECTED value="time">`,
+		`title`:       `<option value="title">`,
 	}
 	tests := []struct {
 		name   string
@@ -127,7 +129,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByAuthor,
 		Theme:       qoThemeDark,
 	}
-	w1 := `|3524|true|"author"|1|0|50|0|""|100|1|1|""|`
+	w1 := `|3524|true|"author"|1|0|50|0|""|100|2|1|""|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -141,7 +143,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByLanguage,
 		Theme:       qoThemeLight,
 	}
-	w2 := `|1|false|"lang"|0|1|25|0|""|200|2|0|""|`
+	w2 := `|1|false|"lang"|0|1|25|0|""|200|3|0|""|`
 	tests := []struct {
 		name   string
 		fields TQueryOptions
