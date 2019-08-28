@@ -73,7 +73,11 @@ func TestTSearch_p1(t *testing.T) {
 	}
 	o7 := NewSearch("tags:\"~Magic.\" or #genre:\"~Magic.\"")
 	w7 := &TSearch{
-		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Magic.%")))OR (1=0)`,
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Magic.%")))OR (b.id IN (SELECT lt.book FROM books_custom_column_1_link lt JOIN custom_column_1 t ON(lt.value = t.id) WHERE (t.value LIKE "%Magic.%")))`,
+	}
+	o8 := NewSearch(" tags:\"~Magic.\" ")
+	w8 := &TSearch{
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Magic.%")))`,
 	}
 	tests := []struct {
 		name   string
@@ -81,13 +85,14 @@ func TestTSearch_p1(t *testing.T) {
 		want   *TSearch
 	}{
 		// TODO: Add test cases.
+		{" 8", o8, w8},
 		{" 7", o7, w7},
-		{" 1", o1, w1},
-		{" 2", o2, w2},
-		{" 3", o3, w3},
-		{" 4", o4, w4},
-		{" 5", o5, w5},
 		{" 6", o6, w6},
+		{" 5", o5, w5},
+		{" 4", o4, w4},
+		{" 3", o3, w3},
+		{" 2", o2, w2},
+		{" 1", o1, w1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

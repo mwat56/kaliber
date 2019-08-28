@@ -9,6 +9,7 @@ package kaliber
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -88,8 +89,27 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 	case "title":
 		b, rWhere = 1, `(b.title`
 
-	default: // unknown data field
-		return //TODO check for user-defined fields like `#genre`
+	default:
+		if '#' != exp.entity[0] {
+			return // unknown data field
+		}
+		// possibly an user-defined field
+		if isCustom, err := GetMetaFieldValue(exp.entity, "is_custom"); (nil != err) || (true != isCustom) {
+			return
+		}
+		if isCategory, err := GetMetaFieldValue(exp.entity, "is_category"); (nil != err) || (true != isCategory) {
+			return
+		}
+		itable, err := GetMetaFieldValue(exp.entity, "table")
+		if nil != err {
+			return
+		}
+		table, ok := itable.(string)
+		if !ok {
+			return
+		}
+
+		rWhere = fmt.Sprintf(`(b.id IN (SELECT lt.book FROM books_%s_link lt JOIN %s t ON(lt.value = t.id) WHERE (t.value`, table, table) // #nosec G201
 	}
 
 	term := escapeQuery(exp.term)
@@ -159,7 +179,7 @@ var (
 )
 
 func (so *TSearch) p1() *TSearch {
-	op, p, s, w := "", 0, "", so.raw
+	op, p, s, w := "", 0, "", strings.TrimSpace(so.raw)
 	for matches := searchExpressionRE.FindStringSubmatch(w); 7 < len(matches); matches = searchExpressionRE.FindStringSubmatch(w) {
 		if 0 == len(matches[4]) {
 			matches[4] = `=` // default to exact match
