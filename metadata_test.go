@@ -64,10 +64,10 @@ func Test_mdGetLibDefs(t *testing.T) {
 
 func Test_GetVirtLibList(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
-	wl1 := &TvirtLibMap{}
+	wl1 := &map[string]TmdVirtLibStruct{}
 	tests := []struct {
 		name    string
-		want    *TvirtLibMap
+		want    *map[string]TmdVirtLibStruct
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -87,7 +87,7 @@ func Test_GetVirtLibList(t *testing.T) {
 	}
 } // Test_GetVirtLibList()
 
-func TestGetVirtLibOptions(t *testing.T) {
+func Test_GetVirtLibOptions(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
 	type args struct {
 		aSelected string
@@ -107,7 +107,7 @@ func TestGetVirtLibOptions(t *testing.T) {
 			}
 		})
 	}
-} // TestGetVirtLibOptions()
+} // Test_GetVirtLibOptions()
 
 func Test_mdReadFieldMetadata(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
@@ -184,7 +184,7 @@ func Test_mdReadVirtLibs(t *testing.T) {
 	}
 } // Test_mdReadVirtLibs()
 
-func Test_mdGetFieldValue(t *testing.T) {
+func Test_GetMetaFieldValue(t *testing.T) {
 	type args struct {
 		aField string
 		aKey   string
@@ -204,14 +204,14 @@ func Test_mdGetFieldValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := mdGetFieldValue(tt.args.aField, tt.args.aKey)
+			got, err := GetMetaFieldValue(tt.args.aField, tt.args.aKey)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("mdGetFieldValue() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetMetaFieldValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("mdGetFieldValue() = %v, want %v", got, tt.want)
+				t.Errorf("GetMetaFieldValue() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // Test_mdGetFieldValue()
+} // Test_GetMetaFieldValue()

@@ -37,9 +37,6 @@ type (
 		Def string // Calibre's definitions
 		SQL string // SQL: WHERE clause
 	}
-
-	// TvirtLibMap is a list of virt.lib. definitions
-	TvirtLibMap map[string]TmdVirtLibStruct
 )
 
 var (
@@ -53,7 +50,7 @@ var (
 	mdVirtLibsRaw *map[string]interface{}
 
 	// virtual libraries list
-	mdVirtLibList TvirtLibMap
+	mdVirtLibList *map[string]TmdVirtLibStruct
 )
 
 // `mdReadMetadataFile()` returns a map of the JSON data read.
@@ -141,41 +138,15 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 	return result, nil
 } // mdGetFieldData()
 
-// `mdGetFieldValue()`
-func mdGetFieldValue(aField, aKey string) (interface{}, error) {
-	var result interface{}
-	if (0 == len(aField)) || (0 == len(aKey)) {
-		return result, nil
-	}
-
-	fmd, err := mdGetFieldData(aField)
-	if nil != err {
-		msg := fmt.Sprintf("mdGetFieldData(): %v", err)
-		apachelogger.Log("md.mdGetFieldValue", msg)
-		return nil, errors.New(msg)
-	}
-
-	result, ok := fmd[aKey]
-	if !ok {
-		msg := fmt.Sprintf("no such JSON section: %s", aField)
-		apachelogger.Log("md.mdGetFieldValue", msg)
-		return nil, errors.New(msg)
-	}
-
-	return result, nil
-} // mdGetFieldValue()
-
 // `mdReadVirtLibs()` reads the raw virt.library definitions.
 func mdReadVirtLibs() error {
 	if nil != mdVirtLibsRaw {
 		return nil
 	}
-	if nil == mdMetadataDbPrefs {
-		if err := mdReadMetadataFile(); nil != err {
-			msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-			apachelogger.Log("md.mdReadVirtLibs", msg)
-			return errors.New(msg)
-		}
+	if err := mdReadMetadataFile(); nil != err {
+		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
+		apachelogger.Log("md.mdReadVirtLibs", msg)
+		return errors.New(msg)
 	}
 
 	section, ok := (*mdMetadataDbPrefs)[mdVirtualLibraries]
@@ -192,12 +163,10 @@ func mdReadVirtLibs() error {
 
 // `mdGetLibDefs()` returns a map of virtual library definitions.
 func mdGetLibDefs() (*tMdLibList, error) {
-	if nil == mdVirtLibsRaw {
-		if err := mdReadVirtLibs(); nil != err {
-			msg := fmt.Sprintf("mdReadVirtLibs(): %v", err)
-			apachelogger.Log("md.mdGetLibDefs", msg)
-			return nil, errors.New(msg)
-		}
+	if err := mdReadVirtLibs(); nil != err {
+		msg := fmt.Sprintf("mdReadVirtLibs(): %v", err)
+		apachelogger.Log("md.mdGetLibDefs", msg)
+		return nil, errors.New(msg)
 	}
 
 	m := *mdVirtLibsRaw
@@ -216,6 +185,33 @@ func mdGetLibDefs() (*tMdLibList, error) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+// GetMetaFieldValue returns the value of `aField` of `aSection`.
+//
+//	aSection Name of the field metadata section.
+//	aField Name of the data field within `aSection`.
+func GetMetaFieldValue(aSection, aField string) (interface{}, error) {
+	if (0 == len(aSection)) || (0 == len(aField)) {
+		msg := fmt.Sprintf(`GetMetaFieldValue(): empty arguments ("%s". "%s")`, aSection, aField)
+		return nil, errors.New(msg)
+	}
+
+	fmd, err := mdGetFieldData(aSection)
+	if nil != err {
+		msg := fmt.Sprintf("mdGetFieldData(): %v", err)
+		apachelogger.Log("md.GetMetaFieldValue", msg)
+		return nil, errors.New(msg)
+	}
+
+	result, ok := fmd[aField]
+	if !ok {
+		msg := fmt.Sprintf("no such JSON section: %s[%s]", aSection, aField)
+		apachelogger.Log("md.GetMetaFieldValue", msg)
+		return nil, errors.New(msg)
+	}
+
+	return result, nil
+} // GetMetaFieldValue()
+
 var (
 	// RegEx to find `.*` in a virt.lib. definition
 	dotStarRE = regexp.MustCompile(`(\.?\*)`)
@@ -223,9 +219,9 @@ var (
 
 // GetVirtLibList returns a list of virtual library definitions
 // and SQL code to access them.
-func GetVirtLibList() (*TvirtLibMap, error) {
+func GetVirtLibList() (*map[string]TmdVirtLibStruct, error) {
 	if nil != mdVirtLibList {
-		return &mdVirtLibList, nil
+		return mdVirtLibList, nil
 	}
 	jsList, err := mdGetLibDefs()
 	if nil != err {
@@ -233,16 +229,18 @@ func GetVirtLibList() (*TvirtLibMap, error) {
 		apachelogger.Log("md.GetVirtLibList", msg)
 		return nil, err
 	}
-	mdVirtLibList = make(TvirtLibMap, len(*jsList))
+
+	list := make(map[string]TmdVirtLibStruct, len(*jsList))
 	for key, value := range *jsList {
 		vl := NewSearch(value).Parse()
-		mdVirtLibList[key] = TmdVirtLibStruct{
+		list[key] = TmdVirtLibStruct{
 			Def: dotStarRE.ReplaceAllLiteralString(value, "%"),
 			SQL: vl.Where(),
 		}
 	}
+	mdVirtLibList = &list
 
-	return &mdVirtLibList, nil
+	return mdVirtLibList, nil
 } // GetVirtLibList()
 
 // GetVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
@@ -277,6 +275,6 @@ func GetVirtLibOptions(aSelected string) string {
 	})
 
 	return strings.Join(list, "\n")
-} // GetVirtLibOptions
+} // GetVirtLibOptions()
 
 /* _EoF_ */
