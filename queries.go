@@ -549,36 +549,37 @@ func limit(aStart, aLength uint) string {
 //
 // `aDescending` if `true` the query result is sorted in DESCending order.
 func orderBy(aOrder uint8, aDescending bool) string {
-	desc := ""
+	desc := "" // " ASC " is default
 	if aDescending {
 		desc = " DESC"
 	}
-	result := "ORDER BY "
+	result := ""
 	switch aOrder { // constants defined in `queryoptions.go`
+	case qoSortByAcquisition:
+		result = "b.timestamp" + desc + ", b.author_sort"
 	case qoSortByAuthor:
-		result += "b.author_sort" + desc + ", b.pubdate" + desc + " "
+		result = "b.author_sort" + desc + ", b.pubdate"
 	case qoSortByLanguage:
-		result += "language" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
+		result = "language" + desc + ", b.author_sort" + desc + ", b.sort"
 	case qoSortByPublisher:
-		result += "publisher" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
+		result = "publisher" + desc + ", b.author_sort" + desc + ", b.sort"
 	case qoSortByRating:
-		result += "rating" + desc + ", b.author_sort" + desc + ", b.sort" + desc + " "
+		result = "rating" + desc + ", b.author_sort" + desc + ", b.sort"
 	case qoSortBySeries:
-		result += "series" + desc + ", b.series_index" + desc + ", b.sort" + desc + " "
+		result = "series" + desc + ", b.series_index" + desc + ", b.sort"
 	case qoSortBySize:
-		result += "size" + desc + ", b.author_sort" + desc + " "
+		result = "size" + desc + ", b.author_sort"
 	case qoSortByTags:
-		result += "tags" + desc + ", b.author_sort" + desc + " "
+		result = "tags" + desc + ", b.author_sort"
 	case qoSortByTime:
-
-		result += "b.pubdate" + desc + ", b.timestamp" + desc + ", b.author_sort" + desc + " "
+		result = "b.pubdate" + desc + ", b.author_sort"
 	case qoSortByTitle:
-		result += "b.sort" + desc + ", b.author_sort" + desc + " "
+		result = "b.sort" + desc + ", b.author_sort"
 	default:
 		return ""
 	}
 
-	return result // " ASC " is default
+	return " ORDER BY " + result + desc + " "
 } // orderBy()
 
 func prepAuthors(aAuthor tCSVstring) *tAuthorList {
