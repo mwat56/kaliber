@@ -19,7 +19,7 @@ table { border-collapse:collapse;border-spacing:0.1ex; }
 /* individual site styles */
 html, body {
 	font-family: serif, sans-serif, monospace;
-	font-size: 11pt;
+	font-size: 12pt;
 	padding: 0 0.3ex;
 }
 a:link, a[href] {
@@ -167,6 +167,11 @@ input[type="text"],
 select {
 	height: 3ex;
 }
+input[type="search"],
+input[type="text"],
+select {
+	font-size: 89%;
+}
 input[type="reset"]:focus,
 input[type="search"]:focus,
 input[type="submit"]:focus,
@@ -266,10 +271,10 @@ li p {
 	margin-top: 0;
 }
 
-#body {
+body, #body {
 	margin: 0 auto;
 	padding: 0;
-	max-width: 104ex;
+	max-width: 100ex;
 }
 #bodypage {
 	min-height: 3em;
@@ -285,7 +290,7 @@ img#logo {
 }
 div#search_box {
 	border-bottom: thin solid transparent;
-	font-size: 94%;
+	font-size: 90%;
 	/* we need this to allow for wrapping on smaller screens: */
 	line-height: 2.5;
 	padding: 0 0 1ex 0;
@@ -501,9 +506,6 @@ table.prevnext tr td a:hover {
 	color: inherit;
 	font-size: 89%;
 	font-weight: inherit;
-}
-.w22, select.w22 {
-	min-width: 22ex;
 }
 
 /* _EoF_ */
