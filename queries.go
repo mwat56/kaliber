@@ -123,7 +123,7 @@ var (
 
 const (
 	// Name of the `Calibre` database
-	calibreDatabaseName = "metadata.db"
+	calibreDatabaseFilename = "metadata.db"
 
 	// Calibre's metadata/preferences store
 	calibrePreferencesFile = "metadata_db_prefs_backup.json"
@@ -157,21 +157,16 @@ func CalibreCachePath() string {
 	return calibreCachePath
 } // CalibreCachePath()
 
-// CalibreDatabaseName returns the name of the `Calibre` database.
-func CalibreDatabaseName() string {
-	return calibreDatabaseName
-} // CalibreDatabaseName()
-
 // CalibreLibraryPath returns the base directory of the `Calibre` library.
 func CalibreLibraryPath() string {
 	return calibreLibraryPath
 } // CalibreLibraryPath()
 
-// CalibrePreferencesPath returns rhe complete path-/filename of the
+// CalibrePreferencesFile returns the complete path-/filename of the
 // `Calibre` library's preferences file.
-func CalibrePreferencesPath() string {
+func CalibrePreferencesFile() string {
 	return filepath.Join(calibreLibraryPath, calibrePreferencesFile)
-} // CalibrePreferencesPath()
+} // CalibrePreferencesFile()
 
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
 func SetCalibreCachePath(aPath string) string {
@@ -201,10 +196,10 @@ func SetCalibreLibraryPath(aPath string) string {
 	return calibreLibraryPath
 } // CalibreLibraryPath()
 
-// CalibreDatabasePath returns rhe complete path-/filename of the `Calibre` library.
-func CalibreDatabasePath() string {
-	return filepath.Join(calibreLibraryPath, calibreDatabaseName)
-} // CalibreDatabasePath()
+// CalibreDatabaseFile returns the complete path-/filename of the `Calibre` library.
+func CalibreDatabaseFile() string {
+	return filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
+} // CalibreDatabaseFile()
 
 // SQLtraceFile returns the optional file used for logging all SQL queries.
 func SQLtraceFile() string {
@@ -325,8 +320,8 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 //
 // `aFilename` is the path-/filename of the SQLite database to use.
 func DBopen(aFilename string) error {
-	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
-	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
+	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
+	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 	sqliteDatabase.dbFileName = dName
 	sqliteDatabase.doCheck = make(chan bool, 64)
 	sqliteDatabase.wasCopied = make(chan bool, 1)
@@ -418,8 +413,8 @@ func escapeQuery(aSource string) string {
 // file has changed. If so, that file is copied into the cache directory
 // from where it is read and used by the `sqliteDatabase` instance.
 func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
-	sName := filepath.Join(calibreLibraryPath, calibreDatabaseName)
-	dName := filepath.Join(calibreCachePath, calibreDatabaseName)
+	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
+	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 
 	for { // wait for a signal to arrive
 		select {

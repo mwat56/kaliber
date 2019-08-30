@@ -58,7 +58,7 @@ func mdReadMetadataFile() error {
 	if nil != mdMetadataDbPrefs {
 		return nil // metadata already read
 	}
-	fName := CalibrePreferencesPath()
+	fName := CalibrePreferencesFile()
 	srcFile, err := os.OpenFile(fName, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", fName, err)

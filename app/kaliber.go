@@ -78,7 +78,7 @@ func main() {
 		ck, cp, s string
 	)
 	Me, _ := filepath.Abs(os.Args[0])
-	if err = kaliber.DBopen(kaliber.CalibreDatabasePath()); nil != err {
+	if err = kaliber.DBopen(kaliber.CalibreDatabaseFile()); nil != err {
 		kaliber.ShowHelp()
 		s = fmt.Sprintf("%s: %v", Me, err)
 		apachelogger.Log("Kaliber/main", s)
