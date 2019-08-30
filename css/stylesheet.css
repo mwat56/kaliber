@@ -84,7 +84,7 @@ footer, header {
 	border: thin solid transparent;
 	border-radius: 1ex;
 	clear: both;
-	padding: 1ex 0.5ex 0.5ex 0;
+	padding: 0.3ex;
 }
 footer {
 	margin: 1ex 0 1ex 0;
@@ -274,7 +274,7 @@ li p {
 body, #body {
 	margin: 0 auto;
 	padding: 0;
-	max-width: 100ex;
+	max-width: 93ex;
 }
 #bodypage {
 	min-height: 3em;
@@ -292,17 +292,14 @@ div#search_box {
 	border-bottom: thin solid transparent;
 	font-size: 90%;
 	/* we need this to allow for wrapping on smaller screens: */
-	line-height: 2.5;
+	line-height: 2.0;
 	padding: 0 0 1ex 0;
-	text-align: right;
+	text-align: center;
 }
-div#search_box table {
-	border: 0;
-}
-div#search_box table td {
-	/*border: thin dotted #666;	/* */
-	padding: 0.2ex;
-	vertical-align: middle;
+div#search_box div.gi {	/* grid item */
+	display: inline-block;
+	margin: 0.1ex 0.3ex;
+	padding: 0.1ex 0.3ex;
 }
 div.back p.back {
 	margin: 0 0 1ex 0;
@@ -476,7 +473,8 @@ div.naviline {
 	min-height: 1em;
 }
 p.naviline {
-	letter-spacing: 0.3ex;
+	font-size: 94%;
+	letter-spacing: 0.2ex;
 	padding: 0 0 0.5ex 0;
 	text-align: center;
 }
