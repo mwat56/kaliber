@@ -308,6 +308,7 @@ div.back p.back {
 }
 a.button {
 	border: thin outset transparent;
+	border-radius: 0.3ex;
 	cursor: pointer;
 	font-size: 98%;
 	hyphens: none;
