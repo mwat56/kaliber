@@ -9,7 +9,7 @@ package kaliber
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
 	"flag"
 	"fmt"
 	"log"
@@ -304,7 +304,7 @@ func initArguments() {
 
 	// To allow for use of multiple libraries we add the MD5
 	// of the libraryPath to our cache path.
-	s = fmt.Sprintf("%x", md5.Sum([]byte(libPath)))
+	s = fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
 	SetCalibreCachePath(filepath.Join(dataDir, "img", s))
 	SetCalibreLibraryPath(libPath)
 
