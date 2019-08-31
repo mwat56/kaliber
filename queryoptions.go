@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Constants defining the ORDER_BY clause
@@ -107,10 +108,17 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 
 // Scan returns the options read from `aString`.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
+	var m, v string
 	_, _ = fmt.Sscanf(aString, qoStringPattern,
 		&qo.ID, &qo.Descending, &qo.Entity, &qo.GuiLang, &qo.Layout,
-		&qo.LimitLength, &qo.LimitStart, &qo.Matching,
-		&qo.QueryCount, &qo.SortBy, &qo.Theme, &qo.VirtLib)
+		&qo.LimitLength, &qo.LimitStart, &m, &qo.QueryCount,
+		&qo.SortBy, &qo.Theme, &v)
+	qo.Matching = strings.TrimSpace(m)
+	if "-" == v {
+		qo.VirtLib = ""
+	} else {
+		qo.VirtLib = strings.TrimSpace(v)
+	}
 
 	return qo
 } // Scan()
@@ -181,7 +189,7 @@ func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 
 // SelectSortByOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectSortByOptions() *TStringMap {
-	result := make(TStringMap, 9)
+	result := make(TStringMap, 10)
 	qo.selectSortByPrim(&result, qoSortByAcquisition, "acquisition")
 	qo.selectSortByPrim(&result, qoSortByAuthor, "author")
 	qo.selectSortByPrim(&result, qoSortByLanguage, "language")
@@ -241,9 +249,9 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		if "en" == lang {
 			l = qoLangEnglish
 		}
-		if l != qo.GuiLang {
-			qo.GuiLang = l
-		}
+		qo.GuiLang = l
+	} else {
+		qo.GuiLang = qoLangGerman
 	}
 
 	if lt := aRequest.FormValue("layout"); 0 < len(lt) {
@@ -251,9 +259,9 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		if "grid" == lt {
 			l = qoLayoutGrid
 		}
-		if l != qo.Layout {
-			qo.Layout = l
-		}
+		qo.Layout = l
+	} else {
+		qo.Layout = qoLayoutList
 	}
 
 	if fll := aRequest.FormValue("limitlength"); 0 < len(fll) {
@@ -268,18 +276,19 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 
 	if matching := aRequest.FormValue("matching"); 0 < len(matching) {
 		if matching != qo.Matching {
-			qo.Matching = matching
-			qo.LimitStart = 0
-			qo.VirtLib = ""
+			qo.ID, qo.Matching, qo.LimitStart, qo.VirtLib = 0, matching, 0, ""
 		}
+	} else {
+		qo.Entity, qo.ID, qo.Matching = "", 0, ""
 	}
 
 	if fob := aRequest.FormValue("order"); 0 < len(fob) {
 		desc := ("descending" == fob)
 		if desc != qo.Descending {
-			qo.Descending = desc
-			qo.LimitStart = 0
+			qo.Descending, qo.LimitStart = desc, 0
 		}
+	} else {
+		qo.Descending = false
 	}
 
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
@@ -309,9 +318,10 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			sb = qoSortUnsorted // just to actually use this const
 		}
 		if sb != qo.SortBy {
-			qo.SortBy = sb
-			qo.LimitStart = 0
+			qo.LimitStart, qo.SortBy = 0, sb
 		}
+	} else {
+		qo.SortBy = qoSortByAcquisition
 	}
 
 	if theme := aRequest.FormValue("theme"); 0 < len(theme) {
@@ -319,23 +329,29 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		if "dark" == theme {
 			t = qoThemeDark
 		}
-		if t != qo.Theme {
-			qo.Theme = t
-		}
+		qo.Theme = t
+	} else {
+		qo.Theme = qoThemeLight
 	}
 
 	if vl := aRequest.FormValue("virtlib"); 0 < len(vl) {
 		if vl != qo.VirtLib {
-			qo.VirtLib = vl
-			if "-" != vl {
+			if "-" == vl {
+				qo.VirtLib = ""
+			} else {
+				qo.VirtLib = vl
+			}
+			if "" != vl {
 				if vlList, err := GetVirtLibList(); nil == err {
 					if vld, ok := (*vlList)[vl]; ok {
 						qo.Matching = vld.Def
 					}
 				}
 			}
-			qo.LimitStart = 0
+			qo.Entity, qo.ID, qo.LimitStart = "", 0, 0
 		}
+	} else {
+		qo.VirtLib = ""
 	}
 
 	return qo

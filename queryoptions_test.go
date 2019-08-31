@@ -42,6 +42,22 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		SortBy:      qoSortByLanguage,
 		Theme:       qoThemeDark,
 	}
+	o3 := NewQueryOptions()
+	s3 := `|7607|true|"tags"|0|0|25|25|" "|6|1|0|"-"|`
+	w3 := &TQueryOptions{
+		ID:          7607,
+		Descending:  true,
+		Entity:      "tags",
+		GuiLang:     qoLangGerman,
+		Layout:      qoLayoutList,
+		LimitLength: 25,
+		LimitStart:  25,
+		Matching:    "",
+		QueryCount:  6,
+		SortBy:      qoSortByAcquisition,
+		Theme:       qoThemeLight,
+		VirtLib:     "",
+	}
 	type args struct {
 		aString string
 	}
@@ -52,8 +68,9 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		want   *TQueryOptions
 	}{
 		// TODO: Add test cases.
-		{" 1", *o1, args{s1}, w1},
+		{" 3", *o3, args{s3}, w3},
 		{" 2", *o2, args{s2}, w2},
+		{" 1", *o1, args{s1}, w1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
