@@ -554,7 +554,7 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	result := ""
 	switch aOrder { // constants defined in `queryoptions.go`
 	case qoSortByAcquisition:
-		result = "b.timestamp" + desc + ", b.author_sort"
+		result = "b.timestamp" + desc + ", b.pubdate" + desc + ", b.author_sort"
 	case qoSortByAuthor:
 		result = "b.author_sort" + desc + ", b.pubdate"
 	case qoSortByLanguage:
@@ -570,7 +570,7 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	case qoSortByTags:
 		result = "tags" + desc + ", b.author_sort"
 	case qoSortByTime:
-		result = "b.pubdate" + desc + ", b.author_sort"
+		result = "b.pubdate" + desc + ", b.timestamp" + desc + ", b.author_sort"
 	case qoSortByTitle:
 		result = "b.sort" + desc + ", b.author_sort"
 	default:
