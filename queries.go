@@ -136,6 +136,9 @@ type (
 		doCheck    chan bool
 		wasCopied  chan bool
 	}
+
+	// A comma separated value string
+	tPSVstring = string
 )
 
 var (
@@ -350,7 +353,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 	result := newDocList()
 	for rows.Next() {
 		var authors, formats, identifiers, language,
-			publisher, series, tags tCSVstring
+			publisher, series, tags tPSVstring
 
 		doc := newDocument()
 		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &language, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
@@ -577,7 +580,7 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	return " ORDER BY " + result + desc + " "
 } // orderBy()
 
-func prepAuthors(aAuthor tCSVstring) *tAuthorList {
+func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 	alist := strings.Split(aAuthor, ", ")
 	result := make(tAuthorList, 0, len(alist))
 	for _, val := range alist {
@@ -601,7 +604,7 @@ func prepAuthors(aAuthor tCSVstring) *tAuthorList {
 	return &result
 } // prepAuthors()
 
-func prepFormats(aFormat tCSVstring) *tFormatList {
+func prepFormats(aFormat tPSVstring) *tFormatList {
 	list := strings.Split(aFormat, ", ")
 	result := make(tFormatList, 0, len(list))
 	for _, val := range list {
@@ -625,7 +628,7 @@ func prepFormats(aFormat tCSVstring) *tFormatList {
 	return &result
 } // prepFormats()
 
-func prepIdentifiers(aIdentifier tCSVstring) *tIdentifierList {
+func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 	list := strings.Split(aIdentifier, ", ")
 	result := make(tIdentifierList, 0, len(list))
 	for _, val := range list {
@@ -650,7 +653,7 @@ func prepIdentifiers(aIdentifier tCSVstring) *tIdentifierList {
 	return &result
 } // prepIdentifiers
 
-func prepLanguage(aLanguage tCSVstring) *tLanguage {
+func prepLanguage(aLanguage tPSVstring) *tLanguage {
 	list := strings.Split(aLanguage, ", ")
 	for _, val := range list {
 		if 0 == len(val) {
@@ -694,7 +697,7 @@ func prepPages(aPath string) int {
 	return num
 } // prepPages()
 
-func prepPublisher(aPublisher tCSVstring) *tPublisher {
+func prepPublisher(aPublisher tPSVstring) *tPublisher {
 	list := strings.Split(aPublisher, ", ")
 	for _, val := range list {
 		if 0 == len(val) {
@@ -712,7 +715,7 @@ func prepPublisher(aPublisher tCSVstring) *tPublisher {
 	return nil
 } // prepPublisher()
 
-func prepSeries(aSeries tCSVstring) *tSeries {
+func prepSeries(aSeries tPSVstring) *tSeries {
 	list := strings.Split(aSeries, ", ")
 	for _, val := range list {
 		if 0 == len(val) {
@@ -730,7 +733,7 @@ func prepSeries(aSeries tCSVstring) *tSeries {
 	return nil
 } // prepSeries()
 
-func prepTags(aTag tCSVstring) *tTagList {
+func prepTags(aTag tPSVstring) *tTagList {
 	list := strings.Split(aTag, ", ")
 	result := make(tTagList, 0, len(list))
 	for _, val := range list {
@@ -785,7 +788,7 @@ func QueryDocMini(aID TID) *TDocument {
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var formats tCSVstring
+		var formats tPSVstring
 		doc := newDocument()
 		doc.ID = aID
 		_ = rows.Scan(&doc.ID, &formats, &doc.path, &doc.Title)

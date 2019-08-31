@@ -25,9 +25,6 @@ This file provides functions and methods to handle a single document.
 */
 
 type (
-	// A comma separated value list
-	tCSVstring = string
-
 	// TID is the database index type.
 	TID = int
 

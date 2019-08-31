@@ -43,7 +43,7 @@ func Test_prepAuthors(t *testing.T) {
 		},
 	}
 	type args struct {
-		aAuthor tCSVstring
+		aAuthor tPSVstring
 	}
 	tests := []struct {
 		name string
@@ -89,7 +89,7 @@ func Test_prepFormats(t *testing.T) {
 		},
 	}
 	type args struct {
-		aFormat tCSVstring
+		aFormat tPSVstring
 	}
 	tests := []struct {
 		name string
@@ -135,7 +135,7 @@ func Test_prepIdentifiers(t *testing.T) {
 		},
 	}
 	type args struct {
-		aIdentifier tCSVstring
+		aIdentifier tPSVstring
 	}
 	tests := []struct {
 		name string
@@ -195,7 +195,7 @@ func Test_prepPublisher(t *testing.T) {
 	w3 := &tPublisher{
 		ID: 1228}
 	type args struct {
-		aPublisher tCSVstring
+		aPublisher tPSVstring
 	}
 	tests := []struct {
 		name string
@@ -230,7 +230,7 @@ func Test_prepSeries(t *testing.T) {
 		Name: "The Dresden Files",
 	}
 	type args struct {
-		aSeries tCSVstring
+		aSeries tPSVstring
 	}
 	tests := []struct {
 		name string
@@ -276,7 +276,7 @@ func Test_prepTags(t *testing.T) {
 		},
 	}
 	type args struct {
-		aTag tCSVstring
+		aTag tPSVstring
 	}
 	tests := []struct {
 		name string
