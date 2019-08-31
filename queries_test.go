@@ -492,7 +492,7 @@ func TestQuerySearch(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{qo1}, 31, 25, false},
+		{" 1", args{qo1}, 31, 24, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

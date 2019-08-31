@@ -18,10 +18,7 @@
 	<label for="limitlength">Show:</label>
 	{{- end -}}
 	&nbsp;<select id="limitlength" name="limitlength" form="pageform">
-		{{ selectOption .SLL "10" }}10</option>
-		{{ selectOption .SLL "25" }}25</option>
-		{{ selectOption .SLL "50" }}50</option>
-		{{ selectOption .SLL "100" }}100</option>
+		{{ htmlSafe .SLL }}
 	</select>
 </div><div class="gi">
 	{{- if eq $.Lang "de" -}}

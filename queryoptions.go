@@ -154,24 +154,23 @@ func (qo *TQueryOptions) SelectLayoutOptions() *TStringMap {
 	return &result
 } // SelectLayoutOptions()
 
-// SelectLimitOptions returns a list of SELECT/OPTIONs.
-func (qo *TQueryOptions) SelectLimitOptions() *TStringMap {
-	result := make(TStringMap, 4)
-	qo.selectLimitPrim(&result, 10, "10")
-	qo.selectLimitPrim(&result, 25, "25")
-	qo.selectLimitPrim(&result, 50, "50")
-	qo.selectLimitPrim(&result, 100, "100")
-
-	return &result
-} // SelectLimitOptions()
-
-func (qo *TQueryOptions) selectLimitPrim(aMap *TStringMap, aLimit uint, aIndex string) {
-	if aLimit == qo.LimitLength {
-		(*aMap)[aIndex] = `<option SELECTED value="` + aIndex + `">`
-	} else {
-		(*aMap)[aIndex] = `<option value="` + aIndex + `">`
+var (
+	optionSelectedLookup = map[bool]string{
+		true:  ` SELECTED`,
+		false: ``,
 	}
-} // selectLimitPrim()
+)
+
+// SelectLimitOptions returns a list of SELECT/OPTIONs.
+func (qo *TQueryOptions) SelectLimitOptions() string {
+	iList := [6]uint{9, 24, 48, 99, 249, 498}
+	sList := make([]string, 6, 6)
+	for idx, limit := range iList {
+		sList[idx] = fmt.Sprintf(`<option%s value="%d">%d</option>`, optionSelectedLookup[limit == qo.LimitLength], limit, limit)
+	}
+
+	return strings.Join(sList, `\n`)
+} // SelectLimitOptions()
 
 // SelectOrderOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
@@ -363,12 +362,12 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 func NewQueryOptions() *TQueryOptions {
 	result := TQueryOptions{
 		Descending:  true,
-		LimitLength: 25,
+		LimitLength: 24,
 		SortBy:      qoSortByAcquisition,
 	}
 	if s, _ := AppArguments.Get("booksperpage"); 0 < len(s) {
 		if _, err := fmt.Sscanf(s, "%d", &result.LimitLength); nil != err {
-			result.LimitLength = 25
+			result.LimitLength = 24
 		}
 	}
 

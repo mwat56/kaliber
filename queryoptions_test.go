@@ -178,4 +178,25 @@ func TestTQueryOptions_String(t *testing.T) {
 			}
 		})
 	}
-} // TestTQueryOptions_String
+} // TestTQueryOptions_String()
+
+func TestTQueryOptions_SelectLimitOptions(t *testing.T) {
+	qo1 := NewQueryOptions()
+	w1 := `<option value="9">9</option>\n<option SELECTED value="24">24</option>\n<option value="48">48</option>\n<option value="99">99</option>\n<option value="249">249</option>\n<option value="498">498</option>`
+	tests := []struct {
+		name   string
+		fields *TQueryOptions
+		want   string
+	}{
+		// TODO: Add test cases.
+		{" 1", qo1, w1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qo := tt.fields
+			if got := qo.SelectLimitOptions(); got != tt.want {
+				t.Errorf("TQueryOptions.SelectLimitOptions() = %v,\nwant %v", got, tt.want)
+			}
+		})
+	}
+} // TestTQueryOptions_SelectLimitOptions()
