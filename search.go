@@ -221,6 +221,7 @@ func (so *TSearch) p1() *TSearch {
 
 // Parse returns the parsed search term(s).
 func (so *TSearch) Parse() *TSearch {
+	so.raw = strings.TrimSpace(so.raw)
 	if 0 == len(so.raw) {
 		so.next, so.where = "", ""
 		return so

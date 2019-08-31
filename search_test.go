@@ -127,18 +127,23 @@ func TestTSearch_Parse(t *testing.T) {
 	w6 := &TSearch{
 		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%What's going on here?%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%What's going on here?%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%What's going on here?%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%What's going on here?%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%What's going on here?%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%What's going on here?%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%What's going on here?%")))OR(b.title LIKE "%What's going on here?%")`,
 	}
+	o7 := NewSearch(` `)
+	w7 := &TSearch{
+		where: ``,
+	}
 	tests := []struct {
 		name   string
 		fields *TSearch
 		want   *TSearch
 	}{
 		// TODO: Add test cases.
-		{" 1", o1, w1},
-		{" 2", o2, w2},
-		{" 3", o3, w3},
-		{" 4", o4, w4},
-		{" 5", o5, w5},
+		{" 7", o7, w7},
 		{" 6", o6, w6},
+		{" 5", o5, w5},
+		{" 4", o4, w4},
+		{" 3", o3, w3},
+		{" 2", o2, w2},
+		{" 1", o1, w1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
