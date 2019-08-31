@@ -411,11 +411,11 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 5474, 1000, false},
+		{" 0", args{o0}, 5480, 1000, false},
 		{" 1", args{o1}, 14, 14, false},
 		{" 2", args{o2}, 4589, 50, false},
 		{" 3", args{o3}, 42, 42, false},
-		{" 4", args{o4}, 361, 50, false},
+		{" 4", args{o4}, 362, 50, false},
 		{" 5", args{o5}, 452, 50, false},
 	}
 	for _, tt := range tests {
