@@ -131,7 +131,7 @@ func (doc *TDocument) Cover() string {
 
 // `coverAbs()` returns the path-filename of the document's cover image.
 func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
-	dir := filepath.Join(calibreLibraryPath, doc.path)
+	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	if 0 <= strings.Index(dir, `[`) {
 		// make sure to escape the meta-character
 		dir = strings.Replace(dir, `[`, `\[`, -1)
@@ -147,7 +147,7 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	if !aRelative {
 		return filenames[0], nil
 	}
-	dir, err = filepath.Rel(calibreLibraryPath, filenames[0])
+	dir, err = filepath.Rel(CalibreLibraryPath(), filenames[0])
 	if nil != err {
 		//TODO better error handling
 		return "", err
@@ -155,6 +155,11 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 
 	return dir, nil
 } // coverAbs()
+
+// CoverFile returns the complete path/filename of the document's cover file.
+func (doc *TDocument) CoverFile() (string, error) {
+	return doc.coverAbs(false)
+} // CoverFile()
 
 // DocLink returns a link to this document's page.
 func (doc *TDocument) DocLink() string {
@@ -165,7 +170,7 @@ func (doc *TDocument) DocLink() string {
 func (doc *TDocument) Filename(aFormat string) string {
 	list := *doc.Filenames()
 	if pName, ok := list[strings.ToUpper(aFormat)]; ok {
-		if fName, err := filepath.Rel(calibreLibraryPath, pName); nil == err {
+		if fName, err := filepath.Rel(CalibreLibraryPath(), pName); nil == err {
 			return fName
 		}
 	}
@@ -176,7 +181,7 @@ func (doc *TDocument) Filename(aFormat string) string {
 // Filenames returns a list of path-/filename for this document
 func (doc *TDocument) Filenames() *TPathList {
 	result := make(TPathList, len(*doc.formats))
-	dir := filepath.Join(calibreLibraryPath, doc.path)
+	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
 			continue // we ignore these documents
