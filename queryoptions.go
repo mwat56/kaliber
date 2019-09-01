@@ -164,7 +164,7 @@ var (
 // SelectLimitOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectLimitOptions() string {
 	iList := [6]uint{9, 24, 48, 99, 249, 498}
-	sList := make([]string, 6, 6)
+	sList := make([]string, len(iList))
 	for idx, limit := range iList {
 		sList[idx] = fmt.Sprintf(`<option%s value="%d">%d</option>`, optionSelectedLookup[limit == qo.LimitLength], limit, limit)
 	}
