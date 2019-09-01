@@ -36,7 +36,7 @@
 	&nbsp;<select id="sortby" name="sortby" form="pageform">
 	{{- if eq $.Lang "de" -}}
 		{{ htmlSafe .SSB.acquisition }}Anschaffung</option>
-		{{ htmlSafe .SSB.author }}AutorIn</option>
+		{{ htmlSafe .SSB.authors }}Autoren</option>
 		{{ htmlSafe .SSB.rating }}Bewertung</option>
 		{{ htmlSafe .SSB.size }}Größe</option>
 		{{ htmlSafe .SSB.time }}Publizierung</option>
@@ -47,7 +47,7 @@
 		{{ htmlSafe .SSB.publisher }}Verlag</option>
 	{{- else -}}
 		{{ htmlSafe .SSB.acquisition }}Acquisition</option>
-		{{ htmlSafe .SSB.author }}Author</option>
+		{{ htmlSafe .SSB.authors }}Authors</option>
 		{{ htmlSafe .SSB.language }}Language</option>
 		{{ htmlSafe .SSB.time }}published</option>
 		{{ htmlSafe .SSB.publisher }}Publisher</option>

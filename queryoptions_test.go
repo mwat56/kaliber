@@ -13,11 +13,11 @@ import (
 
 func TestTQueryOptions_Scan(t *testing.T) {
 	o1 := NewQueryOptions()
-	s1 := `|3524|true|"author"|0|0|25|0|""|100|2|0|`
+	s1 := `|3524|true|"authors"|0|0|25|0|""|100|2|0|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
-		Entity:      "author",
+		Entity:      "authors",
 		GuiLang:     qoLangGerman,
 		Layout:      qoLayoutList,
 		LimitLength: 25,
@@ -88,7 +88,7 @@ func TestTQueryOptions_SortSelectOptions(t *testing.T) {
 	}
 	w1 := &TStringMap{
 		`acquisition`: `<option value="acquisition">`,
-		`author`:      `<option SELECTED value="author">`,
+		`authors`:     `<option SELECTED value="authors">`,
 		`language`:    `<option value="language">`,
 		`publisher`:   `<option value="publisher">`,
 		`rating`:      `<option value="rating">`,
@@ -103,7 +103,7 @@ func TestTQueryOptions_SortSelectOptions(t *testing.T) {
 	}
 	w2 := &TStringMap{
 		`acquisition`: `<option value="acquisition">`,
-		`author`:      `<option value="author">`,
+		`authors`:     `<option value="authors">`,
 		`language`:    `<option value="language">`,
 		`publisher`:   `<option value="publisher">`,
 		`rating`:      `<option value="rating">`,
@@ -136,7 +136,7 @@ func TestTQueryOptions_String(t *testing.T) {
 	o1 := TQueryOptions{
 		ID:          3524,
 		Descending:  true,
-		Entity:      "author",
+		Entity:      "authors",
 		GuiLang:     qoLangEnglish,
 		Layout:      qoLayoutList,
 		LimitLength: 50,
@@ -146,7 +146,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByAuthor,
 		Theme:       qoThemeDark,
 	}
-	w1 := `|3524|true|"author"|1|0|50|0|""|100|2|1|""|`
+	w1 := `|3524|true|"authors"|1|0|50|0|""|100|2|1|""|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,

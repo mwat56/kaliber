@@ -110,7 +110,7 @@ FROM books b`
 var (
 	having = map[string]string{
 		"all":       ``,
-		"author":    `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
+		"authors":    `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
 		"format":    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
 		"lang":      `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
 		"publisher": `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,

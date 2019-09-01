@@ -252,7 +252,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	}
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
-	case "all", "author", "format", "lang", "publisher", "series", "tag", "tags":
+	case "all", "authors", "format", "lang", "publisher", "series", "tags":
 		id, term := splitIDterm(tail)
 		qo.Entity = path
 		qo.ID = id
@@ -340,6 +340,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "fonts":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
+
+	case "help", "hilfe":
+		so.Set("QOS", qo.String())
+		if err := ph.viewList.Render("help", aWriter, ph.basicTemplateData(qo)); nil != err {
+			msg := fmt.Sprintf("viewList.Render: %v", err)
+			apachelogger.Log("TPageHandler.handleGET()", msg)
+		}
 
 	case "img":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)

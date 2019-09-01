@@ -111,7 +111,7 @@ func (doc *TDocument) Authors() *TEntityList {
 		ent := TEntity{
 			ID:   author.ID,
 			Name: author.Name,
-			URL:  fmt.Sprintf("/author/%d/%s", author.ID, url.PathEscape(author.Name)),
+			URL:  fmt.Sprintf("/authors/%d/%s", author.ID, url.PathEscape(author.Name)),
 		}
 		result = append(result, ent)
 	}

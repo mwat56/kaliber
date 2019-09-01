@@ -13,15 +13,15 @@ import (
 
 func TestTSearch_Clause(t *testing.T) {
 	o0 := NewSearch(``)
-	o1 := NewSearch(`tag:"="`)
+	o1 := NewSearch(`tags:"="`)
 	w1 := ` WHERE (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "")))`
-	o2 := NewSearch(`AUTHOR:"=Spiegel"`)
+	o2 := NewSearch(`AUTHORS:"=Spiegel"`)
 	w2 := ` WHERE (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`
 	o3 := NewSearch(`TITLE:"~Spiegel"`)
 	w3 := ` WHERE (b.title LIKE "%Spiegel%")`
 	o4 := NewSearch(`Der Spiegel`)
 	w4 := ` WHERE (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Der Spiegel%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Der Spiegel%")))OR(b.title LIKE "%Der Spiegel%")`
-	o5 := NewSearch(`title:"~Spiegel" or author:"=Spiegel"`)
+	o5 := NewSearch(`title:"~Spiegel" or authors:"=Spiegel"`)
 	w5 := ` WHERE (b.title LIKE "%Spiegel%")OR (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`
 	tests := []struct {
 		name   string
@@ -105,9 +105,9 @@ func TestTSearch_p1(t *testing.T) {
 } // TestTSearch_p1()
 
 func TestTSearch_Parse(t *testing.T) {
-	o1 := NewSearch(`tag:"="`)
+	o1 := NewSearch(`tags:"="`)
 	w1 := &TSearch{where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "")))`}
-	o2 := NewSearch(`AUTHOR:"=Spiegel"`)
+	o2 := NewSearch(`AUTHORS:"=Spiegel"`)
 	w2 := &TSearch{
 		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`,
 	}
@@ -119,7 +119,7 @@ func TestTSearch_Parse(t *testing.T) {
 	w4 := &TSearch{
 		where: `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT c.book FROM comments c WHERE (c.text LIKE "%Der Spiegel%")))OR(b.id IN (SELECT d.book FROM data d WHERE (d.format LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bp.book FROM books_publishers_link bp JOIN publishers p ON(bp.publisher = p.id) WHERE (p.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name LIKE "%Der Spiegel%")))OR(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Der Spiegel%")))OR(b.title LIKE "%Der Spiegel%")`,
 	}
-	o5 := NewSearch(`title:"~Spiegel" or author:"=Spiegel"`)
+	o5 := NewSearch(`title:"~Spiegel" or authors:"=Spiegel"`)
 	w5 := &TSearch{
 		where: `(b.title LIKE "%Spiegel%")OR (b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name = "Spiegel")))`,
 	}

@@ -353,7 +353,7 @@ func TestQueryBy(t *testing.T) {
 	o1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  false,
-		Entity:      "author",
+		Entity:      "authors",
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",

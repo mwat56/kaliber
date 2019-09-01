@@ -56,7 +56,7 @@ type (
 	TQueryOptions struct {
 		ID          TID    // an entity ID to lookup
 		Descending  bool   // sort direction
-		Entity      string // limiting query to a certain entity (author, publisher, series, tags)
+		Entity      string // limiting query to a certain entity (authors, publisher, series, tags)
 		GuiLang     uint8  // GUI language
 		Layout      uint8  // either `qoLayoutList` or `qoLayoutGrid`
 		LimitLength uint   // number of documents per page
@@ -190,7 +190,7 @@ func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 func (qo *TQueryOptions) SelectSortByOptions() *TStringMap {
 	result := make(TStringMap, 10)
 	qo.selectSortByPrim(&result, qoSortByAcquisition, "acquisition")
-	qo.selectSortByPrim(&result, qoSortByAuthor, "author")
+	qo.selectSortByPrim(&result, qoSortByAuthor, "authors")
 	qo.selectSortByPrim(&result, qoSortByLanguage, "language")
 	qo.selectSortByPrim(&result, qoSortByPublisher, "publisher")
 	qo.selectSortByPrim(&result, qoSortByRating, "rating")
@@ -295,7 +295,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		switch fsb {
 		case "acquisition":
 			sb = qoSortByAcquisition
-		case "author":
+		case "authors":
 			sb = qoSortByAuthor
 		case "language":
 			sb = qoSortByLanguage

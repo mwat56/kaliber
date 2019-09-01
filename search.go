@@ -40,7 +40,7 @@ type (
 func (exp *tExpression) allSQL() (rWhere string) {
 	exp.matcher, exp.op = "~", "OR"
 
-	exp.entity = "author"
+	exp.entity = "authors"
 	rWhere = exp.buildSQL()
 	exp.entity = "comment"
 	rWhere += exp.buildSQL()
@@ -65,7 +65,7 @@ func (exp *tExpression) allSQL() (rWhere string) {
 func (exp *tExpression) buildSQL() (rWhere string) {
 	b := 2 // number of brackets to close
 	switch exp.entity {
-	case "author":
+	case "authors":
 		rWhere = `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name`
 
 	case "comment":
@@ -83,7 +83,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 	case "series":
 		rWhere = `(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name`
 
-	case "tag", "tags":
+	case "tags":
 		rWhere = `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name`
 
 	case "title":
