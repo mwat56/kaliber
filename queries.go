@@ -320,9 +320,7 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 } // copyDatabaseFile()
 
 // DBopen establishes a new database connection.
-//
-// `aFilename` is the path-/filename of the SQLite database to use.
-func DBopen(aFilename string) error {
+func DBopen() error {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 	sqliteDatabase.dbFileName = dName
@@ -419,7 +417,8 @@ func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 
-	for { // wait for a signal to arrive
+	//lint:ignore S1000 – we need the separate `more` field
+	for {
 		select {
 		case _, more := <-aCheck:
 			if !more {
@@ -428,8 +427,6 @@ func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
 			if copied, err := copyDatabaseFile(sName, dName); copied && (nil == err) {
 				wasCopied <- true
 			}
-		default:
-			time.Sleep(time.Second)
 		}
 	}
 } // goCheckFile()

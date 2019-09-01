@@ -16,7 +16,7 @@ import (
 
 func openDBforTesting() {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
-	if err := DBopen(CalibreDatabaseFile()); nil != err {
+	if err := DBopen(); nil != err {
 		log.Fatalf("DBopen: %v", err)
 	}
 	SetSQLtraceFile("./SQLtrace.sql")
@@ -299,21 +299,16 @@ func Test_prepTags(t *testing.T) {
 
 func TestDBopen(t *testing.T) {
 	SetCalibreLibraryPath(`/var/opt/Calibre`)
-	dbfn := CalibreDatabaseFile()
-	type args struct {
-		aFilename string
-	}
 	tests := []struct {
 		name    string
-		args    args
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{dbfn}, false},
+		{" 1", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DBopen(tt.args.aFilename); (err != nil) != tt.wantErr {
+			if err := DBopen(); (err != nil) != tt.wantErr {
 				t.Errorf("DBopen() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
