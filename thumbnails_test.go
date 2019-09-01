@@ -10,6 +10,11 @@ import (
 	"testing"
 )
 
+func setup4Testing() {
+	SetCalibreCachePath("./img")
+	SetCalibreLibraryPath("/var/opt/Calibre/")
+} // setup4Testing
+
 func Test_makeThumbDir(t *testing.T) {
 	d1 := &TDocument{
 		ID:   7628,
@@ -37,8 +42,7 @@ func Test_makeThumbDir(t *testing.T) {
 } // Test_makeThumbDir()
 
 func TestThumbnail(t *testing.T) {
-	SetCalibreCachePath("./img")
-	SetCalibreLibraryPath("/var/opt/Calibre/")
+	setup4Testing()
 	d1 := &TDocument{
 		ID:   7628,
 		path: "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
@@ -72,8 +76,7 @@ func TestThumbnail(t *testing.T) {
 } // TestThumbnail()
 
 func TestThumbnailName(t *testing.T) {
-	SetCalibreCachePath("./img")
-	SetCalibreLibraryPath("/var/opt/Calibre/")
+	setup4Testing()
 	d1 := &TDocument{
 		ID:   7628,
 		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
@@ -101,8 +104,7 @@ func TestThumbnailName(t *testing.T) {
 } // TestThumbnailName()
 
 func TestThumbnailRemove(t *testing.T) {
-	SetCalibreCachePath("./img")
-	SetCalibreLibraryPath("/var/opt/Calibre/")
+	setup4Testing()
 	d1 := &TDocument{
 		ID:   7628,
 		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
@@ -126,3 +128,36 @@ func TestThumbnailRemove(t *testing.T) {
 		})
 	}
 } // TestThumbnailRemove
+
+func Test_goThumbCleanup(t *testing.T) {
+	setup4Testing()
+	openDBforTesting()
+	tests := []struct {
+		name string
+	}{
+		// TODO: Add test cases.
+		{" 1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			goThumbCleanup()
+		})
+	}
+} // Test_goThumbCleanup()
+
+func Test_checkThumbFile(t *testing.T) {
+	type args struct {
+		aFilename string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checkThumbFile(tt.args.aFilename)
+		})
+	}
+}

@@ -6,12 +6,16 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"fmt"
 	"image"
 	"image/jpeg"
 	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 	"syscall"
 
 	"github.com/mwat56/apachelogger"
@@ -26,6 +30,99 @@ var (
 	// The image's width of the generated thumbnail.
 	thumbwidth uint = 320
 )
+
+// `goThumbCleaup()` removes orphaned thumbnails.
+func goThumbCleanup() {
+	bd := CalibreCachePath()
+	dirNames, err := filepath.Glob(bd + "/*")
+	if nil != err {
+		msg := fmt.Sprintf("filepath.Glob(%s): %v", bd, err)
+		apachelogger.Log("goThumbCleaup()", msg)
+		return
+	}
+	for _, numDir := range dirNames {
+		checkThumbBase(numDir)
+	}
+} // goThumbCleanup()
+
+// `checkThumbBase()`
+func checkThumbBase(aDirectory string) {
+	subDirs, err := filepath.Glob(aDirectory + "/*")
+	if nil != err {
+		msg := fmt.Sprintf("filepath.Glob(%s): %v", aDirectory+"/*", err)
+		apachelogger.Log("checkThumbBase()", msg)
+		return
+	}
+	for _, subDir := range subDirs {
+		checkThumbDir(subDir)
+	}
+} // checkThumbBase()
+
+// `checkThumbDir()`
+func checkThumbDir(aDirectory string) {
+	fileDirs, err := filepath.Glob(aDirectory + "/*.jpg")
+	if nil != err {
+		msg := fmt.Sprintf("filepath.Glob(%s): %v", aDirectory+"/*.jpg", err)
+		apachelogger.Log("checkThumbDir()", msg)
+		return
+	}
+	for _, fName := range fileDirs {
+		checkThumbFile(fName)
+	}
+} // checkThumbDir()
+
+// `checkThumbFile()` deletes orphaned thumbnail files.
+func checkThumbFile(aFilename string) {
+	// log.Println(aFilename) //FIXME REMOVE
+	baseName := path.Base(aFilename)
+	docID, err := strconv.Atoi(baseName[:len(baseName)-4])
+	if nil != err {
+		msg := fmt.Sprintf("strconv.Atoi(%s): %v", baseName[:len(baseName)-4], err)
+		apachelogger.Log("checkThumbFile()", msg)
+		return
+	}
+	// log.Println(docID) //FIXME REMOVE
+	doc := QueryDocument(docID)
+	if nil == doc {
+		// remove thumbnail for non-existing document
+		if err = os.Remove(aFilename); nil != err {
+			msg := fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
+			apachelogger.Log("checkThumbFile()", msg)
+		}
+		return
+	}
+	cFile, err := doc.CoverFile()
+	if nil != err {
+		msg := fmt.Sprintf("doc.CoverFile(%d): %v", docID, err)
+		apachelogger.Log("checkThumbFile()", msg)
+		return
+	}
+	// log.Println(cFile) //FIXME REMOVE
+
+	tFI, err := os.Stat(aFilename)
+	if nil != err {
+		msg := fmt.Sprintf("os.Stat(%s): %v", aFilename, err)
+		apachelogger.Log("checkThumbFile()", msg)
+		return
+	}
+	cFI, err := os.Stat(cFile)
+	if nil != err {
+		msg := fmt.Sprintf("os.Stat(%s): %v", cFile, err)
+		apachelogger.Log("checkThumbFile()", msg)
+		return
+	}
+	if tFI.ModTime().Before(cFI.ModTime()) {
+		// remove outdated thumbnail
+		if err = os.Remove(aFilename); nil != err {
+			msg := fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
+			apachelogger.Log("checkThumbFile()", msg)
+		}
+		if err = makeThumbnail(cFile, aFilename); nil != err {
+			msg := fmt.Sprintf("makeThumbnail(%s): %v", aFilename, err)
+			apachelogger.Log("checkThumbFile()", msg)
+		}
+	}
+} // checkThumbFile()
 
 // `makeThumbDir()` creates the directory for the document's thumbnail.
 //
@@ -178,9 +275,8 @@ func ThumbnailUpdate() {
 		}
 	}
 
-	//TODO implement reverse: delete all thumbnails no longer matching
-	// an existing document
-
+	// delete/update all orphaned/outdated thumbnails:
+	go goThumbCleanup()
 } // ThumbnailUpdate()
 
 // ThumbWidth returns the configured width of generated thumbnails.
