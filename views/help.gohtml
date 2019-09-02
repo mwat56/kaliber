@@ -1,0 +1,105 @@
+{{- define "help" -}}
+{{template "htmlpage" .}}
+{{- end -}}
+
+{{- define "bodypage" -}}
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	<blockquote id="helppage">
+	{{- if eq $lang "de" -}}
+		<h3 class="centered">Hilfe</h3>
+		<p>Die Liste der angezeigten Dokumente kann auf mehrere Arten beeinflusst werden. – Die Möglichkeiten im Einzelnen:</p>
+		<dl>
+			<dt>Zeige:</dt>
+			<dd>Hier können Sie auswählen, wie viele Dokumente Sie pro Bilschirm-Seite angezeigt bekommen möchten.
+			Sofern eine Suche mehr als die hier ausgewählte Anzahl von Dokumenten ergibt, können Sie mithilfe der <a href="#navhilfe">Navigations-Knöpfe</a> zwischen den Seiten wechseln.</dd>
+			<dt>Bücher enthalten:</dt>
+			<dd>In diesem Feld können Sie Such-Begriffe oder -Ausdrücke eingeben.<br>
+			„Such-Begriffe“ sind einfach Wörter, die in den Angaben zu den einzelnen Dokumenten gesucht werden sollen.<br>
+			„Such-Ausdrücke“ können die Suche auf einzelne Felder eingrenzen.<br>
+			Geben Sie beispielsweise <code>Pinker</code> ein, werden Ihnen alle Dokumente angezeigt, die den Begriff in irgendeinem Feld enthalten.
+			Geben Sie hingegen ein <code>authors:"~Pinker"</code>, so werden Ihnen nur jene Dokumente angezeigt, bei denen ein solcher Autorenname eingetragen ist.<br>
+			Das Tilde-Zeichen <code>~</code> in einem solchen Such-Ausdruck bedeutet „enthält“; im obigen Beispiel würden also sowohl <em>Steven Pinker</em> als auch <em>Susan Pinker</em> gefunden (unterstellt Sie haben Bücher von beiden).
+			Das Gleichheits-Zeichen <code>=</code> im Such-Ausdruck bedeutet „ist gleich“; würden Sie eingeben <code>authors:"=Pinker"</code>, so würden höchstwahrscheinlich keine Dokumente gefunden, aber mit dem Ausdruck <code>authors:"=Susan Pinker"</code> würden Ihnen die Bücher der angegebenen Autorin angezeigt.<br>
+			Sie können solche Ausdrücke auch logisch verknüpfen: <code>authors:"~Pinker" AND authors:"~Susan"</code> resultiert in einer Liste von Dokumenten, deren Autoren-Angabe sowohl <code>Pinker</code> als auch <code>Susan</code> <em>enthält</em>.<br>
+			Mit einem führenden Ausrufezeichen <code>!</code> können Sie einen Such-Ausdruck <em>negieren</em>: <code>authors:"~Pinker" AND !authors:"~Steven"</code> würde Ihnen alle Dokumente anzeigen, in deren Autorenangabe <code>Pinker</code> enthalten ist, aber <em>nicht</em> <code>Steven</code>; der Ausdruck <code>!authors:"~Pinker" AND authors:"~Steven"</code> ergibt alle Dokumente. die <em>nicht</em> <code>Pinker</code> in der Autorenangabe haben, aber <code>Steven</code>.<br>
+			Sie können auch verschiedene Felder verknüpfen: <code>authors:"~Pinker" AND title:"~Style"</code> würde z.B. Steven Pinkers Buch „The Sense of Style“ finden (sofern es in Ihrer <kbd>Calibre</kbd> Bibliothek enthalten ist).
+			</dd>
+			<dt>sortiert nach:</dt>
+			<dd>Die gefundenen Dokumente werden sortiert ausgegeben; das Sortierungs-Kriterium können Sie hier einstellen.</dd>
+			<dt>Folge:</dt>
+			<dd>Hier können Sie einstellen, ob die gefundenen Dokumente in aufsteigender oder abfallender Reihenfolge angezeigt werden.</dd>
+			<dt>GUI Sprache:</dt>
+			<dd>Sie können die Sprache der Benutzer-Oberfläche wählen, z.Zt. zwischen „deutsch“ und „englisch“.<br>
+			Bitte <em>beachten</em> Sie, dass diese Einstellung keinen Einfluss hat auf die Sprache der jeweiligen Dokument-Beschreibungen.</dd>
+			<dt>Layout:</dt>
+			<dd>Hier können Sie wählen, ob Sie die gefundenen Treffer als <em>Liste</em> von Dokumenten sehen möchten oder als ein <em>Gitter</em> gebildet aus den Titelseiten der Dokumente.</dd>
+			<dt>Stil:</dt>
+			<dd>Der von Ihnen gewählte visuelle Stil kann entweder <em>hell</em> oder <em>dunkel</em> sein.</dd>
+			<dt>virt. Bibliothek:</dt>
+			<dd>Sofern Sie in Ihrer <kbd>Calibre</kbd> Installation <em>virtuelle Bibliotheken</em> eingerichtet haben, werden diese hier in einer Options-Liste angezeigt.
+			Die Auswahl einer solchen<em>virtuellen Bibliothek</em> begrenzt die Liste der angezeigten Dokumente antsprechend.</dd>
+			<dt>Suchen</dt>
+			<dd>Wenn Sie eine (oder mehrere) der o.a. Optionen geändert haben, aktivieren Sie durch Anklicken dieses Knopfes die dazu passende Datenbank-Suche.
+			Abhängig von den jeweils gewählten Optionen wird die Darstellung der Dokumenten-Liste sodann aktualisiert.</dd>
+		</dl>
+		<p id="navhilfe">Unter diesen Auswahl-Feldern finden Sie zunächst die Information, wieviele Dokumente aus der Gesamt-Menge der insgesamt gefundenen Dokumente angezeigt werden und dann eine Navigations-Leiste, mit der Sie durch die gefundenen Dokumente blättern können:</p>
+		<dl>
+			<dt><img alt="Erste" src="/img/first.gif"></dt>
+			<dd>Wenn es mehrere Seiten mit Dokumenten gibt, können Sie durch Anklicken dieses Feldes zur <em>ersten</em> Seite der Trefferliste springen.</dd>
+			<dt><img alt="Vorige" src="/img/prev.gif"></dt>
+			<dd>Wenn es mehrere Seiten mit Dokumenten gibt, können Sie durch Anklicken dieses Feldes zur <em>vorherigen</em> Seite der Trefferliste springen.</dd>
+			<dt><img alt="Nächste" src="/img/next.gif"></dt>
+			<dd>Wenn es mehrere Seiten mit Dokumenten gibt, können Sie durch Anklicken dieses Feldes zur <em>nächsten</em> Seite der Trefferliste springen.</dd>
+			<dt><img alt="Letzte" src="/img/last.gif"></dt>
+			<dd>Wenn es mehrere Seiten mit Dokumenten gibt, können Sie durch Anklicken dieses Feldes zur <em>letzten</em> Seite der Trefferliste springen.</dd>
+		</dl>
+		<p>Diese Navigations-Leiste wird auch unter der Liste gefundener Dokumente angezeigt, so dass Sie nicht an den Seiten-Anfang zurückrollen müssen, um sie zu erreichen.</p>
+	{{- else -}}
+		<h3 class="centered">Help</h3>
+		<p>The list of displayed documents can be influenced in several ways. - The possibilities in detail:</p>
+		<dl>
+			<dt>Show:</dt>
+			<dd>Here you can select how many documents you want to display per page. If a search results in more than the number of documents selected here, you can use the <a href="#navhelp">navigation buttons</a> to switch between pages.</dd>
+			<dt>Books matching:</dt>
+			<dd>In this field you can enter search terms or expressions.<br>
+			"Search terms" are simply words that are to be searched for in the details for the individual documents.<br>
+			"Search expressions" can restrict the search to individual fields.<br>
+			For example, if you type <code>Pinker</code>, you will see all documents that contain the term in any field.
+			However, if you enter <code>authors:"~Pinker"</code>, only those documents will be displayed for which such an author name is entered.<br>
+			The tilde character <code>~</code> in such a search expression means "contains"; in the above example both <em>Steven Pinker</em> and <em>Susan Pinker</em> would be found (assuming you have books of both).
+			The equals character <code>=</code> in the search expression means "is equal"; if you type <code>authors:"=Pinker"</code>, most likely no documents would be found, but with the expression <code>authors:"=Susan Pinker"</code> you would see the books of the given author.<br>
+			You can also logically link such expressions: <code>authors:"~Pinker" AND authors:"~Susan"</code> results in a list of documents whose author specification contains both <code>Pinker</code> and <code>Susan</code> <em></em>.<br>
+			With a leading exclamation mark <code>!</code> you can <em>negate </em> a search expression: <code>authors:"~Pinker" AND !authors:"~Steven"</code> would show you all documents that contain <code>Pinker</code> in their author specification, but <em>not</em> <code>Steven</code>; the expression <code>!authors:"~Pinker" AND authors:"~Steven"</code> results in all documents that have <em>not</em> <code>Pinker</code> in the author name, but <code>Steven</code>.<br>
+			You can also link different fields: <code>authors:"~Pinker" AND title:"~Style"</code> would find e.g. Steven Pinker's book "The Sense of Style" (assuming it is included in your <kbd>Calibre</kbd> library).</dd>
+			<dt>sorted by:</dt>
+			<dd>The documents found are sorted before output; you can set the sorting criterion here.</dd>
+			<dt>Order:</dt>
+			<dd>Here you can set whether the documents found are displayed in ascending or descending order.</dd>
+			<dt>GUI language:</dt>
+			<dd>You can select the language of the user interface, currently between "German" and "English".<br>Please <em>note</em> that this setting has no effect on the language of the respective document descriptions.</dd>
+			<dt>Layout:</dt>
+			<dd>Here you can choose whether you want to see the found hits as <em>list</em> of documents or as a <em>grid</em> formed from the title pages of the documents.</dd>
+			<dt>Style:</dt>
+			<dd>The visual style you choose can be either <em>light</em> or <em>dark</em>.</dd>
+			<dt>virt. library:</dt>
+			<dd>If you have set up <em>virtual libraries</em> in your <kbd>Calibre</kbd> installation, these will be displayed here in an option list.
+			Selecting such a <em>virtual library</em> will limit the list of displayed documents accordingly.</dd>
+			<dt>Search</dt>
+			<dd>If you have changed one (or more) of the above options, activate the corresponding database search by clicking this button. Depending on the selected options, the display of the document list will then be updated.</dd>
+		</dl>
+		<p id="navhelp">Under these selection fields you will first find information on how many documents from the total set of documents found are displayed and then a navigation bar with which you can scroll through the documents found:</p>
+		<dl>
+			<dt><img alt="First" src="/img/first.gif"></dt>
+			<dd>If there are several pages with documents, you can jump to the <em>first</em> page of the hit list by clicking on this field.</dd>
+			<dt><img alt="Previous" src="/img/prev.gif"></dt>
+			<dd>If there are several pages with documents, you can jump to the <em>previous</em> page of the hit list by clicking on this field.</dd>
+			<dt><img alt="Next" src="/img/next.gif"></dt>
+			<dd>If there are several pages with documents, you can jump to the <em>next</em> page of the hit list by clicking on this field.</dd>
+			<dt><img alt="Last" src="/img/last.gif"></dt>
+			<dd>If there are several pages with documents, you can jump to the <em>last</em> page of the hit list by clicking on this field.</dd>
+		</dl>
+		<p>This navigation bar is also displayed below the list of found documents, so you don't have to scroll back to the top of the page to reach it.</p>
+	{{- end -}}
+	</blockquote>
+{{- end -}}
