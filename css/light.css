@@ -50,6 +50,10 @@ div.meta table.meta tr {
 div#search_box {
 	border-bottom-color: #333;
 }
+dl dd {
+	background: #dedee6;
+	border-left-color: #999;
+}
 footer, header {
 	border-color: #333;
 	border-right: 0;

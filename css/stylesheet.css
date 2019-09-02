@@ -66,9 +66,15 @@ dl, ol, ul {
 	page-break-before: avoid;
 }
 dl, dd {
+	background: transparent;
 	margin-left: 2.6ex;
 	line-height: 1.4;
 	text-align: justify;
+}
+dl dd {
+	border-left: thick solid transparent;
+	display: block;
+	padding: 0 0.6ex;
 }
 dt {
 	font-weight: 600;
@@ -123,6 +129,10 @@ h1 {
 	font-size: 1.9em;
 	letter-spacing: 0.3ex;
 	page-break-before: always;
+}
+h1 + p, h2 + p, h3 + p, h4 + p, h5 + p, h6 + p {
+	margin-top: 2ex;
+	text-indent: 0;
 }
 
 header {
@@ -279,6 +289,14 @@ body, #body {
 #bodypage {
 	min-height: 3em;
 	width: 100%;
+}
+#helppage dl dd {
+	line-height: 1.5;
+	margin: 0 2ex 0 4ex;
+	padding: 0.3ex 1ex;
+}
+#helppage dl dt {
+	text-decoration: underline;
 }
 #imprint, #imprint p {
 	hyphens: none;
