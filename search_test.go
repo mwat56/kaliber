@@ -131,12 +131,17 @@ func TestTSearch_Parse(t *testing.T) {
 	w7 := &TSearch{
 		where: ``,
 	}
+	o8 := NewSearch(`lang:"=eng"`)
+	w8 := &TSearch{
+		where: ``,
+	}
 	tests := []struct {
 		name   string
 		fields *TSearch
 		want   *TSearch
 	}{
 		// TODO: Add test cases.
+		{" 8", o8, w8},
 		{" 7", o7, w7},
 		{" 6", o6, w6},
 		{" 5", o5, w5},

@@ -101,9 +101,9 @@
 	{{- if $doc.Language -}}
 	<tr>
 		<td class="label">{{if eq $lang "de"}}Sprache{{else}}Language{{end}}:</td><td>
-		{{- $lang := $doc.Language -}}
-		{{- $name := $lang.Name -}}
-		{{- $url := $lang.URL -}}
+		{{- $language := $doc.Language -}}
+		{{- $name := $language.Name -}}
+		{{- $url := $language.URL -}}
 		<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 		</td>
 	</tr>

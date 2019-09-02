@@ -293,7 +293,7 @@ func (doc *TDocument) Language() *TEntity {
 	result := TEntity{
 		ID:   doc.language.ID,
 		Name: doc.language.Name,
-		URL:  fmt.Sprintf("/lang/%d/%s", doc.language.ID, doc.language.Name),
+		URL:  fmt.Sprintf("/language/%d/%s", doc.language.ID, doc.language.Name),
 	}
 
 	return &result

@@ -66,6 +66,14 @@
 					</p>
 				{{- end -}}
 
+				{{- if $doc.Language -}}
+					<p>{{if eq $lang "de"}}Sprache{{else}}language{{end}} &shy;
+					{{- $language := $doc.Language -}}
+					{{- $name := $language.Name -}}
+					{{- $url := $language.URL -}}
+					<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;
+				{{- end -}}
+
 				{{- if $doc.Comment -}}
 					<blockquote class="comment">{{$doc.Comment}}</blockquote>
 				{{- end -}}

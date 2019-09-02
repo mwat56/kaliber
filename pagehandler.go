@@ -252,7 +252,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	}
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
-	case "all", "authors", "format", "lang", "publisher", "series", "tags":
+	case "all", "authors", "format", "language", "publisher", "series", "tags":
 		id, term := splitIDterm(tail)
 		qo.Entity = path
 		qo.ID = id
