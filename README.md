@@ -16,9 +16,9 @@
 	- [Installation](#installation)
 	- [Usage](#usage)
 		- [Commandline options](#commandline-options)
-		- [User/password file & handling](#userpassword-file--handling)
-			- [Authentication](#authentication)
 		- [INI file](#ini-file)
+		- [Authentication](#authentication)
+			- [User/password file & handling](#userpassword-file--handling)
 	- [Directory structure](#directory-structure)
 	- [Caveats](#caveats)
 	- [Logging](#logging)
@@ -96,6 +96,7 @@ You can use `Go` to install this package for you:
 
 After downloading this package you go to its directory and compile
 
+    cd $GOPATH/src/github.com/mwat56/kaliber
     go build app/kaliber.go
 
 which should produce an executable binary.
@@ -103,10 +104,11 @@ which should produce an executable binary.
 ### Commandline options
 
 	$ ./kaliber -h
+
 	Usage: ./kaliber [OPTIONS]
 
 	-booksperpage int
-		<number> the default number of books shown per page  (default 25)
+		<number> the default number of books shown per page  (default 24)
 	-certKey string
 		<fileName> the name of the TLS certificate key
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.key")
@@ -114,7 +116,7 @@ which should produce an executable binary.
 		<fileName> the name of the TLS certificate PEM
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.pem")
 	-datadir string
-		<dirName> the directory with CACHE, CSS, IMG, and VIEWS sub-directories
+		<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
 	-ini string
 		<fileName> the path/filename of the INI file to use
@@ -123,12 +125,12 @@ which should produce an executable binary.
 		(optional) the default language to use  (default "de")
 	-libraryname string
 		Name of this Library (shown on every page)
-		(default "MyBooks")
+		(default "MeiBucks")
 	-librarypath string
 		Path name of/to the Calibre library
 		(default "/var/opt/Calibre")
 	-listen string
-		the host's IP to listen at (default "127.0.0.1")
+		the host's IP to listen at  (default "127.0.0.1")
 	-log string
 		(optional) name of the logfile to write to
 		(default "/dev/stdout")
@@ -141,10 +143,12 @@ which should produce an executable binary.
 		<directory> (optional) the directory to store session files
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions")
 	-sessionttl int
-		<seconds> Number of seconds an unused session keeps valid (default 1200)
+		<seconds> Number of seconds an unused session keeps valid  (default 1200)
 	-sidname string
 		(optional) <name> the name of the session ID to use
 		(default "sid")
+	-sqltrace string
+		(optional) name of the SQL logfile to write to
 	-theme string
 		<name> the display theme to use ('light' or 'dark')
 		(default "light")
@@ -165,11 +169,103 @@ which should produce an executable binary.
 	Most options can be set in an INI file to keep the command-line short ;-)
 	$ _
 
-As you can see there are quite a few options available, but almost all of them are optional since they come with reasonable default values.
+As you can see there are quite a few options available, but almost all of them are optional since they come with reasonable default values most of which can be set in the accompanying INI-file.
+
+### INI file
+
+You don't have to give all those commandline options listed above every time you want to start `Kaliber`.
+There's an INI file which can take all the options (apart from the user handling options) all in one place:
+
+	$ cat kaliber.ini
+	# Default configuration file for the Kaliber server
+
+	[Default]
+
+	# Number of books to show per page
+	booksperpage = 24
+
+	# Path-/filename of TLS certificate's private key to enable TLS/HTTPS
+	# (if empty standard HTTP is used)
+	# NOTE: a relative path/name will be combined with `datadir` (below).
+	certKey = ./certs/server.key
+
+	# Path-/filename of TLS (server) certificate to enable TLS/HTTPS
+	# (if empty standard HTTP is used)
+	# NOTE: a relative path/name will be combined with `datadir` (below).
+	certPem = ./certs/server.pem
+
+	# The directory root for CSS, FONTS, IMG, and VIEWS sub-directories.
+	# NOTE: this should be an _absolute_ path name.
+	datadir = ./
+
+	# The default language to use:
+	lang = de
+
+	# Name of this library (shown on every page)
+	libraryname = "MeiBucks"
+
+	# Path of Calibre library.
+	# NOTE: this must be the absolute pathname of the Calibre library.
+	librarypath = "/var/opt/Calibre"
+
+	# The host's IP to listen at:
+	listen = 127.0.0.1
+
+	# The IP port to listen to:
+	port = 8383
+
+	# Name of the optional logfile to write to.
+	# NOTE: a relative path/name will be combined with `datadir` (above).
+	logfile = /dev/stdout
+
+	# Password file for HTTP Basic Authentication.
+	# NOTE: a relative path/name will be combined with `datadir` (above).
+	passfile = ./pwaccess.db
+
+	# Name of host/domain to secure by BasicAuth:
+	realm = "This Host"
+
+	# Name of the directory to store session files.
+	# NOTE: a relative path/name will be combined with `datadir` (above).
+	sessiondir = "./sessions"
+
+	# Number of seconds an unused session keeps valid:
+	sessionttl = 1200
+
+	# Name of the session ID field:
+	sidname = "sid"
+
+	# Default web/display theme to use: `dark` or `light':
+	theme = light
+
+	# _EoF_
+	$ _
+
+An INI-file as shown above is looked for at three different places
+
+1. in the your (i.e. the current user) directory (`./kaliber.ini`),
+2. in the computer's main config directory (`/etc/kaliber.ini"`),
+3. in the current user's home directory (`$HOME/.kaliber.ini`).
+
+All these files (if they exist) are read in the given order at startup before finally parsing the commandline options shown earlier.
+So each step overwrites the previous one, the commandline options having the highest priority.
 
 	//TODO
 
-### User/password file & handling
+### Authentication
+
+But why, you may ask, would you need an username/password file anyway?
+Well, there may be several reasons one of which could be Copyright problems.
+If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically_ available.
+In that case you're most likely the only actual remote user allowed to access the books in your library.
+
+Whenever there's no password file given (either in the INI file or the command-line) all functionality requiring authentication will be _disabled_ which in turn means that everybody can access your library.
+Depending on your country's legislation you may or may not include your family members.
+If in doubt please consult a Copyright expert.
+
+_Note_ that the password file generated and used by this system resembles the `htpasswd` used by the _Apache_ web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
+
+#### User/password file & handling
 
 Only usable from the commandline are the `-uXX` options, most of which need an username and the name of the password file to use.
 _Note_ that whenever you're prompted to input a password this will _not_ be echoed to the console.
@@ -232,93 +328,9 @@ That only leaves `-uu` to update (change) a user's password.
 
 First we added (`-ua`) a new user, then we updated the password (`-uu`), and finally we asked for the list of users (`-ul`).
 
-#### Authentication
-
-But why, you may ask, would you need an username/password file anyway?
-Well, there may be several reasons one of which could be Copyright problems.
-If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically_ available.
-In that case you're most likely the only actual remote user allowed to access the books in your library.
-
-Whenever there's no password file given (either in the INI file or the command-line) all functionality requiring authentication will be _disabled_ which in turn means that everybody can access your library.
-Depending on your country's legislation you may or may not include your family members.
-If in doubt please consult a Copyright expert.
-
-_Note_ that the password file generated and used by this system resembles the `htpasswd` used by the _Apache_ web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
-
-### INI file
-
-But relax!
-You don't have to give all those commandline options listed above every time you want to start `Kaliber`.
-There's an INI file which can take all the options (apart from the user handling options) all in one place:
-
-	$ cat kaliber.ini
-	# Default configuration file for the Kaliber server
-
-	[Default]
-
-	# Number of books to show per page
-	booksperpage = 25
-
-	# path-/filename of TLS certificate's private key to enable TLS/HTTPS
-	# (if empty standard HTTP is used)
-	# NOTE: a relative path/name will be combined with `datadir` (below).
-	certKey = ./certs/server.key
-
-	# path-/filename of TLS (server) certificate to enable TLS/HTTPS
-	# (if empty standard HTTP is used)
-	# NOTE: a relative path/name will be combined with `dadadir` (below).
-	certPem = ./certs/server.pem
-
-	# The directory root for CSS, FONTS, IMG, and VIEWS sub-directories.
-	# NOTE: this should be an absolute path name.
-	datadir = ./
-
-	# The default language to use:
-	lang = de
-
-	# Name of this library (shown on every page)
-	libraryname = "MyBooks"
-
-	# Path of Calibre library
-	# NOTE: this must be the absolute pathname of the Calibre library.
-	librarypath = "/var/opt/Calibre"
-
-	# The host's IP to listen at:
-	listen = 127.0.0.1
-
-	# The IP port to listen to:
-	port = 8383
-
-	# Name of the optional logfile to write to.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	logfile = /dev/stdout
-
-	# Password file for HTTP Basic Authentication.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	passfile = ./pwaccess.db
-
-	# Name of host/domain to secure by BasicAuth:
-	realm = "This Host"
-
-	# Name of the directory to store session files.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	sessiondir = "./sessions"
-
-	# Number of seconds an unused session keeps valid:
-	sessionTTL = 1200
-
-	# Web/display theme: `dark` or `light':
-	theme = light
-
-	# _EoF_
-	$ _
-
-
-	//TODO
-
 ## Directory structure
 
-Under the directory given with the `datadir =` entry in the INI file or the `-datadir` commandline option there are several sub-directories expected:
+Under the directory given with the `datadir =` entry in the INI file (or the `-datadir` commandline option) there are several sub-directories expected:
 
 * `css`: containing the CSS files used,
 * `fonts`: containing the fonts used,
@@ -327,14 +339,14 @@ Under the directory given with the `datadir =` entry in the INI file or the `-da
 
 All of this directories and files are part of the `Kaliber` package.
 You can use them as is or customise them as you see fit to suit your needs.
-However, please note: _I will not support any customisations_, you're on your own with that.
+However, please note: _I will not support any customisations_, you're on your own with that – and you should know what you're doing.
 
 ## Caveats
 
 There are some `Calibre` features which are not available (yet) with `Kaliber` and not currently supported:
 
 * _custom columns_ defined by the respective `Calibre` user;
-* _different/multiple libraries_ of the user to switch between;
+* _different/multiple libraries_ for the user to switch between;
 * _book uploads_ are not planned to be included.
 
 Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided I find actually time to do it).
@@ -342,8 +354,10 @@ Once I figure out how they are realised by `Calibre` I expect they find their wa
 ## Logging
 
 Like almost every other web-server `Kaliber` writes all access data to a logfile (`logfile =` in the INI file and `-log` at the commandline).
+
 As _**privacy**_ becomes a serious concern for a growing number of people (including law makers) – the IP address is definitely to be considered as _personal data_ – the [logging facility](https://github.com/mwat56/apachelogger) _anonymises_ the requesting users by setting the host-part of the respective remote address to zero (`0`).
 This option takes care of e.g. European servers who may _not without explicit consent_ of the users store personal data; this includes IP addresses in logfiles and elsewhere (eg. statistical data gathered from logfiles).
+
 Since the generated logfile resembles that of the popular `Apache` server you can use all tools written for `Apache` logfiles to anylyse the access data.
 
 ## Libraries

@@ -12,6 +12,14 @@ require (
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
-	golang.org/x/sys v0.0.0-20190830142957-1e83adbbebd0 // indirect
-	golang.org/x/tools v0.0.0-20190830223141-573d9926052a // indirect
+	golang.org/x/sys v0.0.0-20190902133755-9109b7679e13 // indirect
+	golang.org/x/tools v0.0.0-20190903025054-afe7f8212f0d // indirect
+)
+
+replace (
+	github.com/mwat56/apachelogger => ../apachelogger
+	github.com/mwat56/errorhandler => ../errorhandler
+	github.com/mwat56/ini => ../ini
+	github.com/mwat56/passlist => ../passlist
+	github.com/mwat56/sessions => ../sessions
 )
