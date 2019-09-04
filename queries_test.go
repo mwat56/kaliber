@@ -406,9 +406,9 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 5482, 1000, false},
+		{" 0", args{o0}, 5481, 1000, false},
 		{" 1", args{o1}, 14, 14, false},
-		{" 2", args{o2}, 4589, 50, false},
+		{" 2", args{o2}, 4588, 50, false},
 		{" 3", args{o3}, 42, 42, false},
 		{" 4", args{o4}, 363, 50, false},
 		{" 5", args{o5}, 452, 50, false},
@@ -430,48 +430,6 @@ func TestQueryBy(t *testing.T) {
 	}
 } // TestQueryBy()
 
-/*
-func TestQueryLimit(t *testing.T) {
-	openDBforTesting()
-	type args struct {
-		aStart  uint
-		aLength uint
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    int
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{0, 500}, 500, false},
-		{" 2", args{500, 500}, 500, false},
-		{" 3", args{1000, 500}, 500, false},
-		{" 4", args{1500, 500}, 500, false},
-		{" 5", args{2000, 500}, 500, false},
-		{" 6", args{2500, 500}, 500, false},
-		{" 7", args{3000, 500}, 500, false},
-		{" 7", args{3500, 500}, 500, false},
-		{" 8", args{4000, 500}, 500, false},
-		{" 9", args{4500, 500}, 500, false},
-		{"10", args{5000, 500}, 475, false},
-		{"11", args{5500, 500}, 0, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := QueryLimit(tt.args.aStart, tt.args.aLength)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryLimit() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(*got) != tt.want {
-				t.Errorf("QueryLimit() = %d, want %d", len(*got), tt.want)
-			}
-		})
-	}
-} // TestQueryLimit()
-*/
-
 func TestQuerySearch(t *testing.T) {
 	openDBforTesting()
 	qo1 := NewQueryOptions()
@@ -492,7 +450,7 @@ func TestQuerySearch(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{" 1", args{qo1}, 31, 24, false},
-		{" 2", args{qo2}, 4589, 24, false},
+		{" 2", args{qo2}, 4588, 24, false},
 		{" 3", args{qo3}, 864, 24, false},
 	}
 	for _, tt := range tests {

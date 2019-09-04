@@ -133,8 +133,8 @@ type (
 	tDataBase struct {
 		*sql.DB           // the embedded database connection
 		dbFileName string // the SQLite database file
-		doCheck    chan bool
-		wasCopied  chan bool
+		doCheck    chan struct{}
+		wasCopied  chan struct{}
 	}
 
 	// A comma separated value string
@@ -236,7 +236,6 @@ func SetSQLtraceFile(aFilename string) {
 // the last access. If so, the current database connection is closed and
 // a new one is established.
 func (db *tDataBase) dbReopen() error {
-	// check whether the DB file changed:
 	select {
 	case _, more := <-db.wasCopied:
 		if nil != db.DB {
@@ -271,7 +270,7 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 	go goSQLtrace(aQuery, time.Now())
 
 	rows, err := db.DB.Query(aQuery, args...)
-	db.doCheck <- true
+	db.doCheck <- struct{}{}
 
 	return rows, err
 } // Query()
@@ -324,15 +323,15 @@ func DBopen() error {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 	sqliteDatabase.dbFileName = dName
-	sqliteDatabase.doCheck = make(chan bool, 64)
-	sqliteDatabase.wasCopied = make(chan bool, 1)
+	sqliteDatabase.doCheck = make(chan struct{}, 64)
+	sqliteDatabase.wasCopied = make(chan struct{}, 1)
 
 	// prepare the local database copy:
 	if _, err := copyDatabaseFile(sName, dName); nil != err {
 		return err
 	}
 	// signal for `dbReopen()`:
-	sqliteDatabase.wasCopied <- true
+	sqliteDatabase.wasCopied <- struct{}{}
 
 	// start monitoring the original database file:
 	go goCheckFile(sqliteDatabase.doCheck, sqliteDatabase.wasCopied)
@@ -413,7 +412,7 @@ func escapeQuery(aSource string) string {
 // `goCheckFile()` checks in the background whether the original database
 // file has changed. If so, that file is copied into the cache directory
 // from where it is read and used by the `sqliteDatabase` instance.
-func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
+func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 
@@ -425,7 +424,7 @@ func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
 				return // channel closed
 			}
 			if copied, err := copyDatabaseFile(sName, dName); copied && (nil == err) {
-				wasCopied <- true
+				aCopied <- struct{}{}
 			}
 		}
 	}
