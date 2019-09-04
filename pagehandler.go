@@ -305,11 +305,10 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		pageData := ph.basicTemplateData(qo).
 			Set("Document", doc)
-		so.Set("QOS", qo.String())
-		if err := ph.viewList.Render("document", aWriter, pageData); nil != err {
-			msg := fmt.Sprintf("viewList.Render: %v", err)
-			apachelogger.Log("TPageHandler.handleGET()", msg)
-		}
+		ph.handleReply("document", aWriter, so, qo, pageData)
+
+	case "faq":
+		ph.handleReply("faq", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "favicon.ico":
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
@@ -342,21 +341,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "help", "hilfe":
-		so.Set("QOS", qo.String())
-		if err := ph.viewList.Render("help", aWriter, ph.basicTemplateData(qo)); nil != err {
-			msg := fmt.Sprintf("viewList.Render: %v", err)
-			apachelogger.Log("TPageHandler.handleGET()", msg)
-		}
+		ph.handleReply("help", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "img":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
 	case "imprint", "impressum":
-		so.Set("QOS", qo.String())
-		if err := ph.viewList.Render("imprint", aWriter, ph.basicTemplateData(qo)); nil != err {
-			msg := fmt.Sprintf("viewList.Render: %v", err)
-			apachelogger.Log("TPageHandler.handleGET()", msg)
-		}
+		ph.handleReply("imprint", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "last":
 		if qo.QueryCount <= qo.LimitLength {
@@ -367,11 +358,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	case "licence", "license", "lizenz":
-		so.Set("QOS", qo.String())
-		if err := ph.viewList.Render("licence", aWriter, ph.basicTemplateData(qo)); nil != err {
-			msg := fmt.Sprintf("viewList.Render: %v", err)
-			apachelogger.Log("TPageHandler.handleGET()", msg)
-		}
+		ph.handleReply("licence", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "next":
 		ph.handleQuery(qo, aWriter, so)
@@ -381,16 +368,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "prev":
 		// Since the current LimitStart points to the _next_ query
-		// start we have to decrement the value twice to get _before_.
+		// start we have to decrement the value twice to go _before_.
 		qo.DecLimit().DecLimit()
 		ph.handleQuery(qo, aWriter, so)
 
 	case "privacy", "datenschutz":
-		so.Set("QOS", qo.String())
-		if err := ph.viewList.Render("privacy", aWriter, ph.basicTemplateData(qo)); nil != err {
-			msg := fmt.Sprintf("viewList.Render: %v", err)
-			apachelogger.Log("TPageHandler.handleGET()", msg)
-		}
+		ph.handleReply("privacy", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "robots.txt":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
@@ -508,17 +491,22 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		Set("SID", aSession.ID()).
 		Set("SIDNAME", sessions.SIDname()).
 		Set("ShowForm", true)
-	aSession.Set("QOS", aOption.String())
-	if err = ph.viewList.Render("index", aWriter, pageData); nil != err {
-		msg := fmt.Sprintf("viewList.Render: %v", err)
-		apachelogger.Log("TPageHandler.handleQuery()", msg)
-	}
+	ph.handleReply("index", aWriter, aSession, aOption, pageData)
 } // handleQuery()
+
+// `handleReply()` sends the resulting page back to the remote user.
+func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, aSession *sessions.TSession, aOption *TQueryOptions, pageData *TemplateData) {
+	aSession.Set("QOS", aOption.String())
+	if err := ph.viewList.Render(aPage, aWriter, pageData); nil != err {
+		msg := fmt.Sprintf("viewList.Render(%s): %v", aPage, err)
+		apachelogger.Log("TPageHandler.handleReply()", msg)
+	}
+} // handleReply
 
 // NeedAuthentication returns `true` if authentication is needed,
 // or `false` otherwise.
 //
-// `aRequest` is the request to check.
+//	`aRequest` is the request to check.
 func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
 	return (nil != ph.ul)
 } // NeedAuthentication()
@@ -543,7 +531,7 @@ func (ph TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Req
 		msg := fmt.Sprintf("unsupported request method: %v", aRequest.Method)
 		apachelogger.Log("TPageHandler.ServeHTTP()", msg)
 
-		http.Error(aWriter, "HTTP Method Not Allowed", http.StatusMethodNotAllowed)
+		http.Error(aWriter, msg, http.StatusMethodNotAllowed)
 	}
 } // ServeHTTP()
 
