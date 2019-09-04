@@ -3,19 +3,19 @@
 {{- end -}}
 
 {{- define "bodypage" -}}
-{{- $lang := "de" -}}
-{{- if .Lang}}{{$lang = .Lang}}{{end -}}
-{{- if eq $lang "de" -}}
-	<h3>Datenschutz</h3>
-	<p class="justified">Diese Web-Präsentation speichert keinerlei personenbeziehbare Daten. Es werden weder Internet-Kekse (eng. „cookies“) verwendet, noch wird JavaScript eingesetzt. Ein sog. „Tracking“ findet nicht statt.</p>
-	<p class="justified">Die von Ihrem Web-Brauser beim Aufruf unserer Seiten übermittelten Daten – insbesondere Ihre IP-Nummer – werden nur in anonymisierter Form gespeichert und ausgewertet. Ein Rückschluss auf Ihre Identität ist damit – auch mit eventueller Hilfe Ihres ISP – nicht möglich.</p>
-	<p class="justified">Keine der im Rahmen Ihrer Nutzung dieser Web-Präsentation anfallenden Daten werden an Dritte weitergegeben. Werkzeuge zur Reichweitenanalyse mittels der anonymisierten Zugriffs-Protokolle werden ausschließlich lokal eingesetzt, um mögliche technische Netzwerk-Probleme aufzuspüren.</p>
-	<p></p>
-{{- else -}}
-	<h3>Privacy</h3>
-	<p class="justified">This web-presentation doesn't store personal data of any kind. Neither socalled "cookies" are used nor is JavaScript. A socalled "tracking" does not happen.</p>
-	<p class="justified">The data transmitted by your web browser when calling up our pages - in particular your IP number - will only be stored and evaluated in anonymous form. A traceback to you – even with the assistance of your ISP – is not possible.</p>
-	<p class="justified">None of the data arising from your use of this web-presentation will be passed on to third parties. Tools for range analysis using the anonymous access protocols are only used locally to detect possible technical network problems.</p>
-	<p></p>
-{{- end -}}
+	{{- $lang := "de" -}}
+	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	<blockquote class="centered">
+	{{- if eq $lang "de" -}}
+		<h3>Datenschutz</h3>
+		<p>Diese Web-Präsentation speichert keinerlei personenbeziehbare Daten. Es werden weder Internet-Kekse (eng. „cookies“) verwendet, noch wird JavaScript eingesetzt. Ein sog. „Tracking“ findet nicht statt.</p>
+		<p>Die von Ihrem Web-Brauser beim Aufruf unserer Seiten übermittelten Daten – insbesondere Ihre IP-Nummer – werden nur in anonymisierter Form gespeichert und ausgewertet. Ein Rückschluss auf Ihre Identität ist damit – auch mit eventueller Hilfe Ihres ISP – nicht möglich.</p>
+		<p>Keine der im Rahmen Ihrer Nutzung dieser Web-Präsentation anfallenden Daten werden an Dritte weitergegeben. Werkzeuge zur Reichweitenanalyse mittels der anonymisierten Zugriffs-Protokolle werden ausschließlich lokal eingesetzt, um mögliche technische Netzwerk-Probleme aufzuspüren.</p>
+	{{- else -}}
+		<h3>Privacy</h3>
+		<p>This web-presentation doesn't store personal data of any kind. Neither socalled "cookies" are used nor is JavaScript. A socalled "tracking" does not happen.</p>
+		<p>The data transmitted by your web browser when calling up our pages - in particular your IP number - will only be stored and evaluated in anonymous form. A traceback to you – even with the assistance of your ISP – is not possible.</p>
+		<p>None of the data arising from your use of this web-presentation will be passed on to third parties. Tools for range analysis using the anonymous access protocols are only used locally to detect possible technical network problems.</p>
+	{{- end -}}
+	</blockquote>
 {{- end -}}

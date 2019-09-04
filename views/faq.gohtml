@@ -5,17 +5,23 @@
 {{- define "bodypage" -}}
 	{{- $lang := "de" -}}
 	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
+	<blockquote>
 	{{- if eq $lang "de" -}}
-		<h3>Häufig Angesprochene Fragen</h3>
+		<h3 class="centered">Häufig Angesprochene Fragen</h3>
 		<dl>
+			<dt>Wozu dienen die Kontroll-Elemente oben auf der Seite?</dt>
+			<dd>Erklärungen dazu finden Sie auf der <a href="/hilfe#helppage">Hilfe-Seite</a>.</dd>
 		<dt></dt>
 		<dd></dd>
 		</dl>
 	{{- else -}}
-		<h3>Frequently Asked Questions</h3>
+		<h3 class="centered">Frequently Asked Questions</h3>
 		<dl>
+			<dt>What are the controls at the top of the page for?</dt>
+			<dd>Explanations can be found on the <a href="/help#helppage">Help page</a>.</dd>
 		<dt></dt>
 		<dd></dd>
 		</dl>
 	{{- end -}}
+	</blockquote>
 {{- end -}}

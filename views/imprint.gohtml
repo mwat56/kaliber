@@ -5,19 +5,19 @@
 {{- define "bodypage" -}}
 	{{- $lang := "de" -}}
 	{{- if .Lang}}{{$lang = .Lang}}{{end -}}
-	<article id="imprint">
+	<blockquote id="imprint" class="centered">
 	{{- if eq $lang "de" -}}
 		<h3>Impressum</h3>
 		<p>Dies ist eine private Web-Präsentation von<br>
 		<em>M.Watermann, Berlin, Deutschland</em>.</p>
 		<p>Sie können Kontakt aufnehmen mit der EMail-Adresse<br>
-		<code><u>support(at)mwat.de</u></code></p>
+		<code><u>support(at)mwat.de</u></code>.<br></p>
 	{{- else -}}
 		<h3>Imprint</h3>
 		<p>This is a private web presentation by<br>
 		<em>M.Watermann, Berlin, Germany</em>.</p>
 		<p>You can get in contact with the email address<br>
-		<code><u>support(at)mwat.de</u></code></p>
+		<code><u>support(at)mwat.de</u></code>.<br></p>
 	{{- end -}}
-	</article>
+	</blockquote>
 {{- end -}}
