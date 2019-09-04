@@ -1,6 +1,7 @@
 {{- define "naviline" -}}
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
+
 <div class="naviline">
 {{- if eq $lang "de" -}}
 <p class="naviline">Bücher &nbsp; {{if .BFirst}}<strong>{{.BFirst}}</strong>{{end}} &nbsp; bis &nbsp; {{if .BLast}}<strong>{{.BLast}}</strong>{{end}} &nbsp; von &nbsp; {{if .BCount}}<strong>{{.BCount}}</strong>{{end}}</p>
@@ -10,33 +11,33 @@
 <table class="prevnext"><tr><td>
 {{- if $.HasFirst -}}
 	{{- if eq $lang "de" -}}
-	<a class="button" href="/first" title=" Erste Seite mit Büchern"><img alt="Erste" src="/img/first.gif"></a>
+	<a class="button" href="/first#navigation" title=" Erste Seite mit Büchern"><img alt="Erste" src="/img/first.gif"></a>
 	{{- else -}}
-	<a class="button" href="/first" title=" First page of books"><img alt="First" src="/img/first.gif"></a>
+	<a class="button" href="/first#navigation" title=" First page of books"><img alt="First" src="/img/first.gif"></a>
 	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasPrev -}}
 	{{- if eq $lang "de" -}}
-	<a class="button" href="/prev" title=" Vorherige Seite mit Büchern"><img alt="Vorige" src="/img/prev.gif"></a>
+	<a class="button" href="/prev#navigation" title=" Vorherige Seite mit Büchern"><img alt="Vorige" src="/img/prev.gif"></a>
 	{{- else -}}
-	<a class="button" href="/prev" title=" Previous page of books"><img alt="Prev" src="/img/prev.gif"></a>
+	<a class="button" href="/prev#navigation" title=" Previous page of books"><img alt="Prev" src="/img/prev.gif"></a>
 	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasNext -}}
 	{{- if eq $lang "de" -}}
-	<a class="button" href="/next" title=" Nächste Seite mit Büchern"><img alt="Nächste" src="/img/next.gif"></a>
+	<a class="button" href="/next#navigation" title=" Nächste Seite mit Büchern"><img alt="Nächste" src="/img/next.gif"></a>
 	{{- else -}}
-	<a class="button" href="/next" title=" Next page of books"><img alt="Next" src="/img/next.gif"></a>
+	<a class="button" href="/next#navigation" title=" Next page of books"><img alt="Next" src="/img/next.gif"></a>
 	{{- end -}}
 {{- end -}}
 </td><td>
 {{- if $.HasLast -}}
 	{{- if eq $lang "de" -}}
-	<a class="button" href="/last" title=" Letzte Seite mit Büchern"><img alt="Letzte" src="/img/last.gif"></a>
+	<a class="button" href="/last#navigation" title=" Letzte Seite mit Büchern"><img alt="Letzte" src="/img/last.gif"></a>
 	{{- else -}}
-	<a class="button" href="/last" title=" Last page of books"><img alt="Last" src="/img/last.gif"></a>
+	<a class="button" href="/last#navigation" title=" Last page of books"><img alt="Last" src="/img/last.gif"></a>
 	{{- end -}}
 {{- end -}}
 </td></tr></table>
