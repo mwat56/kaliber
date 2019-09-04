@@ -95,7 +95,7 @@ select option:hover {
 	background: #fff;
 	color: #030;
 }
-p.mainlinks {
+p#mainlinks {
 	border-top-color: #ffc;
 }
 pre {

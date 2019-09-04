@@ -218,8 +218,6 @@ p {
 blockquote p {
 	margin: 0.4ex 0;
 	padding: 0.4ex 0;
-	text-align: inherit;
-	text-indent: inherit;
 }
 pre, textarea {
 	border-radius: 1ex;
@@ -290,6 +288,7 @@ body, #body {
 	min-height: 3em;
 	width: 100%;
 }
+#faqpage dl dd,
 #helppage dl dd {
 	border-radius: 1ex;
 	line-height: 1.5;
@@ -350,7 +349,6 @@ article.document h2 {
 	margin: 1em auto;
 }
 .centered, .error {
-	margin: 0 auto;
 	text-align: center;
 }
 blockquote.comment {
@@ -456,7 +454,7 @@ td.label {
 .left {
 	text-align: left;
 }
-p.mainlinks {
+p#mainlinks {
 	border-top: thin solid transparent;
 	margin: 0.5ex 0 0 0;
 }
