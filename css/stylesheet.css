@@ -291,6 +291,7 @@ body, #body {
 	width: 100%;
 }
 #helppage dl dd {
+	border-radius: 1ex;
 	line-height: 1.5;
 	margin: 0 2ex 0 4ex;
 	padding: 0.3ex 1ex;
