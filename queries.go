@@ -110,7 +110,7 @@ FROM books b`
 var (
 	having = map[string]string{
 		"all":       ``,
-		"authors":    `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
+		"authors":   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
 		"format":    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
 		"lang":      `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
 		"publisher": `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
@@ -417,7 +417,7 @@ func goCheckFile(aCheck <-chan bool, wasCopied chan<- bool) {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
 
-	//lint:ignore S1000 – we need the separate `more` field
+	//lint:ignore S1000 – we only need the separate `more` field
 	for {
 		select {
 		case _, more := <-aCheck:
