@@ -249,7 +249,7 @@ func (db *tDataBase) dbReopen() error {
 		// handles since each query seems to hold its own file handle.
 		// "mode=ro" is self-explanatory since we don't change the
 		// DB in any way.
-		dsn := `file:` + db.dbFileName + `?cache=shared&mode=ro`
+		dsn := `file:` + db.dbFileName + `?cache=shared&mode=ro&_case_sensitive_like=1&immutable=0&_query_only=1`
 		if db.DB, err = sql.Open("sqlite3", dsn); nil != err {
 			return err
 		}
