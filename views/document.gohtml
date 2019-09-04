@@ -6,133 +6,134 @@
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
 {{- $doc := $.Document -}}
-<!-- {{- $qoc := $.QOC -}} -->
+<!-- We need the SPACES below to allow the browser to wrap the lines -->
 <article class="document">
-<h2>{{$doc.Title}}</h2>
-<div class="meta">
-	<table class="meta">
-	{{- if $doc.Authors -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Autoren{{else}}Authors{{end}}:</td><td>
-		{{- range $i, $author := $doc.Authors -}}
-			{{- $name := $author.Name -}}
-			{{- $url := $author.URL -}}
-			<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+	<h2>{{$doc.Title}}</h2>
+	<div class="meta">
+		<table class="meta">
+		{{- if $doc.Authors -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Autoren{{else}}Authors{{end}}:</td><td>
+			{{- range $i, $author := $doc.Authors -}}
+				{{- $name := $author.Name -}}
+				{{- $url := $author.URL -}}
+				<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- end -}}
+			</td>
+		</tr>
 		{{- end -}}
-		</td>
-	</tr>
-	{{- end -}}
 
-	{{- if $doc.Files -}}
-	<tr>
-		<td class="label">Downloads:</td><td>
-		{{- range $i, $file := $doc.Files -}}
-			{{- $name := $file.Name -}}
-			{{- $url := $file.URL -}}
-		<a class="button" title="download {{$name}}" href="{{$url}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+		{{- if $doc.Files -}}
+		<tr>
+			<td class="label">Downloads:</td><td>
+			{{- range $i, $file := $doc.Files -}}
+				{{- $name := $file.Name -}}
+				{{- $url := $file.URL -}}
+			<a class="button" title="download {{$name}}" href="{{$url}}#bodypage">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- end -}}
+			</td>
+		</tr>
 		{{- end -}}
-		</td>
-	</tr>
-	{{- end -}}
 
-	{{- if $doc.Series -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Serie{{else}}Series{{end}}:</td><td>
-		{{- $series := $doc.Series -}}
-		{{- $name := $series.Name -}}
-		{{- $url := $series.URL -}}
-		<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
-		{{- $doc.SeriesIndex -}}
-		</td>
-	</tr>
-	{{- end -}}
 
-	{{- if $doc.Publisher -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Verlag{{else}}Publisher{{end}}:</td><td>
-		{{- $pub := $doc.Publisher -}}
-		{{- $name := $pub.Name -}}
-		{{- $url := $pub.URL -}}
-		<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a>
-		</td>
-	</tr>
-	{{- end -}}
-
-	{{- if $doc.PubDate -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Publiziert{{else}}Published{{end}}:</td><td>
-			{{- $doc.PubDate -}}
-		</td>
-	</tr>
-	{{- end -}}
-
-	{{- if $doc.Pages -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Seiten{{else}}Pages{{end}}:</td><td>
-		{{- if lt 0 $doc.Pages}}{{$doc.Pages}}{{end -}}
-		</td>
-	</tr>
-	{{- end -}}
-
-	{{- if $doc.Identifiers -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Kennzeichen{{else}}Identifiers{{end}}:</td><td>
-		{{- range $i, $ident := $doc.Identifiers -}}
-			{{- $name := $ident.Name -}}
-			{{- $url := $ident.URL -}}
-			<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+		{{- if $doc.Series -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Serie{{else}}Series{{end}}:</td><td>
+			{{- $series := $doc.Series -}}
+			{{- $name := $series.Name -}}
+			{{- $url := $series.URL -}}
+			<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- $doc.SeriesIndex -}}
+			</td>
+		</tr>
 		{{- end -}}
-		</td>
-	</tr>
-	{{- end -}}
 
-	{{- if $doc.Tags -}}
-	<tr>
-		<td class="label">Tags:</td><td>
-		{{- range $i, $tag := $doc.Tags -}}
-			{{- $name := $tag.Name -}}
-			{{- $url := $tag.URL -}}
-			<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+		{{- if $doc.Publisher -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Verlag{{else}}Publisher{{end}}:</td><td>
+			{{- $pub := $doc.Publisher -}}
+			{{- $name := $pub.Name -}}
+			{{- $url := $pub.URL -}}
+			<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a>
+			</td>
+		</tr>
 		{{- end -}}
-		</td>
-	</tr>
-	{{- end -}}
 
-	{{- if $doc.Language -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Sprache{{else}}Language{{end}}:</td><td>
-		{{- $language := $doc.Language -}}
-		{{- $name := $language.Name -}}
-		{{- $url := $language.URL -}}
-		<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
-		</td>
-	</tr>
-	{{- end -}}
-
-	{{- if $doc.Formats -}}
-	<tr>
-		<td class="label">{{if eq $lang "de"}}Formate{{else}}Formats{{end}}:</td><td>
-		{{- range $i, $format := $doc.Formats -}}
-			{{- $name := $format.Name -}}
-			{{- $url := $format.URL -}}
-			<a class="button" href="{{$url}}" title="show all {{$name}}s">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+		{{- if $doc.PubDate -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Publiziert{{else}}Published{{end}}:</td><td>
+				{{- $doc.PubDate -}}
+			</td>
+		</tr>
 		{{- end -}}
-		</td>
-	</tr>
-	{{- end -}}
 
-	<!-- TODO integrate custom columns -->
+		{{- if $doc.Pages -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Seiten{{else}}Pages{{end}}:</td><td>
+			{{- if lt 0 $doc.Pages}}{{$doc.Pages}}{{end -}}
+			</td>
+		</tr>
+		{{- end -}}
 
-	</table>
+		{{- if $doc.Identifiers -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Kennzeichen{{else}}Identifiers{{end}}:</td><td>
+			{{- range $i, $ident := $doc.Identifiers -}}
+				{{- $name := $ident.Name -}}
+				{{- $url := $ident.URL -}}
+				<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- end -}}
+			</td>
+		</tr>
+		{{- end -}}
 
-	{{- if $doc.Comment -}}
-	<div class="comment">
-		{{- $doc.Comment -}}
+		{{- if $doc.Tags -}}
+		<tr>
+			<td class="label">Tags:</td><td>
+			{{- range $i, $tag := $doc.Tags -}}
+				{{- $name := $tag.Name -}}
+				{{- $url := $tag.URL -}}
+				<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- end -}}
+			</td>
+		</tr>
+		{{- end -}}
+
+		{{- if $doc.Language -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Sprache{{else}}Language{{end}}:</td><td>
+			{{- $language := $doc.Language -}}
+			{{- $name := $language.Name -}}
+			{{- $url := $language.URL -}}
+			<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			</td>
+		</tr>
+		{{- end -}}
+
+		{{- if $doc.Formats -}}
+		<tr>
+			<td class="label">{{if eq $lang "de"}}Formate{{else}}Formats{{end}}:</td><td>
+			{{- range $i, $format := $doc.Formats -}}
+				{{- $name := $format.Name -}}
+				{{- $url := $format.URL -}}
+				<a class="button" href="{{$url}}#bodypage" title="show all {{$name}}s">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- end -}}
+			</td>
+		</tr>
+		{{- end -}}
+
+		<!-- TODO integrate custom columns -->
+
+		</table>
+
+		{{- if $doc.Comment -}}
+		<div class="comment">
+			{{- $doc.Comment -}}
+		</div>
+		{{- end -}}
 	</div>
-	{{- end -}}
-</div>
-<div class="cover">
-	<p class="cover"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></p>
-</div>
+	<div class="cover">
+		<p class="cover"><img alt="Cover" class="cover" src="{{$doc.Thumb}}"></p>
+	</div>
 </article>
 {{- end -}}

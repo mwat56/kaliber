@@ -8,21 +8,23 @@
 {{- else -}}
 	{{- template "backline" . -}}
 {{- end -}}
-<p class="mainlinks"><small>
+<p id="mainlinks"><small>
 	{{- if eq $lang "de" -}}
-<img src="/img/favicon.ico" alt="*">
-– <a href="/">Startseite</a>
-– <a href="/impressum">Impressum</a>
-– <a href="/datenschutz">Datenschutz</a>
-– <a href="/hilfe">Hilfe</a>
-– <img src="/img/favicon.ico" alt="*">
+	<img src="/img/favicon.ico" alt="*">
+	– <a href="/#navigation">Startseite</a>
+	– <a href="/impressum#bodypage">Impressum</a>
+	– <a href="/datenschutz#bodypage">Datenschutz</a>
+	– <a href="/hilfe#bodypage">Hilfe</a>
+	– <a href="/faq#bodypage">FAQ</a>
+	– <img src="/img/favicon.ico" alt="*">
 	{{- else -}}
-<img src="/img/favicon.ico" alt="*">
-– <a href="/">Startpage</a>
-– <a href="/imprint">Imprint</a>
-– <a href="/privacy">Privacy</a>
-– <a href="/help">Help</a>
-– <img src="/img/favicon.ico" alt="*">
+	<img src="/img/favicon.ico" alt="*">
+	– <a href="/#navigation">Startpage</a>
+	– <a href="/imprint#bodypage">Imprint</a>
+	– <a href="/privacy#bodypage">Privacy</a>
+	– <a href="/help#bodypage">Help</a>
+	– <a href="/faq#bodypage">FAQ</a>
+	– <img src="/img/favicon.ico" alt="*">
 	{{- end -}}
 </small></p></footer>
 </form><!-- FORM opened in 03header.gohtml -->
