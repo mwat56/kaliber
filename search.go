@@ -65,7 +65,7 @@ func (exp *tExpression) allSQL() (rWhere string) {
 func (exp *tExpression) buildSQL() (rWhere string) {
 	b := 2 // number of brackets to close
 	switch exp.entity {
-	case "authors":
+	case "authors", "author": // accept (wrong) "author"
 		rWhere = `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name`
 
 	case "comment":
@@ -83,7 +83,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 	case "series":
 		rWhere = `(b.id IN (SELECT bs.book FROM books_series_link bs JOIN series s ON(bs.series = s.id) WHERE (s.name`
 
-	case "tags":
+	case "tags", "tag": // accept (wrong) "tag"
 		rWhere = `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name`
 
 	case "title":
