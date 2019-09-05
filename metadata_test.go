@@ -31,8 +31,8 @@ func Test_mdReadMetadataFile(t *testing.T) {
 				t.Errorf("mdReadMetadataFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if 0 == len(*mdMetadataDbPrefs) {
-				t.Errorf("mdReadMetadataFile() = %v, want %v", len(*mdMetadataDbPrefs), "> 0")
+			if 0 == len(mdMetadataDbPrefs) {
+				t.Errorf("mdReadMetadataFile() = %v, want %v", len(mdMetadataDbPrefs), "> 0")
 			}
 		})
 	}

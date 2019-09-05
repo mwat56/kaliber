@@ -44,7 +44,7 @@ var (
 	mdFieldsMetadata *map[string]interface{}
 
 	// cache of all DB metadata preferemces
-	mdMetadataDbPrefs *map[string]interface{}
+	mdMetadataDbPrefs map[string]interface{}
 
 	// raw virtual libraries list
 	mdVirtLibsRaw *map[string]interface{}
@@ -87,7 +87,7 @@ func mdReadMetadataFile() error {
 	delete(jsdata, `saved_searches`)
 	delete(jsdata, `update_all_last_mod_dates_on_start`)
 	delete(jsdata, `user_categories`)
-	mdMetadataDbPrefs = &jsdata
+	mdMetadataDbPrefs = jsdata
 
 	return nil
 } // mdReadMetadataFile()
@@ -102,7 +102,7 @@ func mdReadFieldMetadata() error {
 		apachelogger.Log("md.mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
-	section, ok := (*mdMetadataDbPrefs)[mdFieldMetadata]
+	section, ok := mdMetadataDbPrefs[mdFieldMetadata]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdFieldMetadata)
 		apachelogger.Log("md.mdReadFieldMetadata", msg)
@@ -149,7 +149,7 @@ func mdReadVirtLibs() error {
 		return errors.New(msg)
 	}
 
-	section, ok := (*mdMetadataDbPrefs)[mdVirtualLibraries]
+	section, ok := mdMetadataDbPrefs[mdVirtualLibraries]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdVirtualLibraries)
 		apachelogger.Log("md.mdReadVirtLibs", msg)
