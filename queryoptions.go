@@ -342,7 +342,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			}
 			if "" != vl {
 				if vlList, err := GetVirtLibList(); nil == err {
-					if vld, ok := (*vlList)[vl]; ok {
+					if vld, ok := (vlList)[vl]; ok {
 						qo.Matching = vld.Def
 					}
 				}

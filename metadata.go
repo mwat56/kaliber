@@ -50,7 +50,7 @@ var (
 	mdVirtLibsRaw *map[string]interface{}
 
 	// virtual libraries list
-	mdVirtLibList *map[string]TmdVirtLibStruct
+	mdVirtLibList map[string]TmdVirtLibStruct
 )
 
 // `mdReadMetadataFile()` returns a map of the JSON data read.
@@ -219,7 +219,7 @@ var (
 
 // GetVirtLibList returns a list of virtual library definitions
 // and SQL code to access them.
-func GetVirtLibList() (*map[string]TmdVirtLibStruct, error) {
+func GetVirtLibList() (map[string]TmdVirtLibStruct, error) {
 	if nil != mdVirtLibList {
 		return mdVirtLibList, nil
 	}
@@ -230,15 +230,15 @@ func GetVirtLibList() (*map[string]TmdVirtLibStruct, error) {
 		return nil, err
 	}
 
-	list := make(map[string]TmdVirtLibStruct, len(*jsList))
+	mdVirtLibList := make(map[string]TmdVirtLibStruct, len(*jsList))
 	for key, value := range *jsList {
 		vl := NewSearch(value).Parse()
-		list[key] = TmdVirtLibStruct{
+
+		mdVirtLibList[key] = TmdVirtLibStruct{
 			Def: dotStarRE.ReplaceAllLiteralString(value, "%"),
 			SQL: vl.Where(),
 		}
 	}
-	mdVirtLibList = &list
 
 	return mdVirtLibList, nil
 } // GetVirtLibList()
@@ -247,21 +247,21 @@ func GetVirtLibList() (*map[string]TmdVirtLibStruct, error) {
 //
 //	aSelected Name of the currently selected library.
 func GetVirtLibOptions(aSelected string) string {
-	vlList, err := GetVirtLibList()
+	_, err := GetVirtLibList()
 	if nil != err {
 		msg := fmt.Sprintf("GetVirtLibList(): %v", err)
 		apachelogger.Log("md.GetVirtLibOptions", msg)
 		return ""
 	}
 
-	list := make([]string, 0, len(*vlList)+1)
+	list := make([]string, 0, len(mdVirtLibList)+1)
 	if (0 == len(aSelected)) || ("-" == aSelected) {
 		list = append(list, `<option value="-" SELECTED> – </option>`)
 		aSelected = ""
 	} else {
 		list = append(list, `<option value="-"> – </option>`)
 	}
-	for key := range *vlList {
+	for key := range mdVirtLibList {
 		option := `<option value="` + key + `"`
 		if key == aSelected {
 			option += ` SELECTED`

@@ -64,10 +64,10 @@ func Test_mdGetLibDefs(t *testing.T) {
 
 func Test_GetVirtLibList(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
-	wl1 := &map[string]TmdVirtLibStruct{}
+	wl1 := map[string]TmdVirtLibStruct{}
 	tests := []struct {
 		name    string
-		want    *map[string]TmdVirtLibStruct
+		want    map[string]TmdVirtLibStruct
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -80,8 +80,8 @@ func Test_GetVirtLibList(t *testing.T) {
 				t.Errorf("GetVirtLibList() error = %v,\nwantErr %v", err, tt.wantErr)
 				return
 			}
-			if 0 == len(*got) {
-				t.Errorf("GetVirtLibList() = %v, want %v", len(*got), "> 0")
+			if 0 == len(got) {
+				t.Errorf("GetVirtLibList() = %v, want %v", len(got), "> 0")
 			}
 		})
 	}
