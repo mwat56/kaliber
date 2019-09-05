@@ -230,7 +230,7 @@ func GetVirtLibList() (map[string]TmdVirtLibStruct, error) {
 		return nil, err
 	}
 
-	mdVirtLibList := make(map[string]TmdVirtLibStruct, len(*jsList))
+	mdVirtLibList = make(map[string]TmdVirtLibStruct, len(*jsList))
 	for key, value := range *jsList {
 		vl := NewSearch(value).Parse()
 
