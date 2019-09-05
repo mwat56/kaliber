@@ -1,8 +1,8 @@
 *~
+0replace
 cache/
 certs/*
 *.db
-_demo/
 .git/
 go-build-executable.sh
 img/*
