@@ -90,17 +90,20 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		b, rWhere = 1, `(b.title`
 
 	default:
+		if 0 == len(exp.entity) {
+			return
+		}
+		field := strings.ToLower(exp.entity)
 		if '#' != exp.entity[0] {
-			return // unknown data field
+			field = "#" + field
 		}
-		// possibly an user-defined field
-		if isCustom, err := GetMetaFieldValue(exp.entity, "is_custom"); (nil != err) || (true != isCustom) {
+		if isCustom, err := GetMetaFieldValue(field, "is_custom"); (nil != err) || (true != isCustom) {
+			return // no user-defined field
+		}
+		if isCategory, err := GetMetaFieldValue(field, "is_category"); (nil != err) || (true != isCategory) {
 			return
 		}
-		if isCategory, err := GetMetaFieldValue(exp.entity, "is_category"); (nil != err) || (true != isCategory) {
-			return
-		}
-		itable, err := GetMetaFieldValue(exp.entity, "table")
+		itable, err := GetMetaFieldValue(field, "table")
 		if nil != err {
 			return
 		}
@@ -108,7 +111,6 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		if !ok {
 			return
 		}
-
 		rWhere = fmt.Sprintf(`(b.id IN (SELECT lt.book FROM books_%s_link lt JOIN %s t ON(lt.value = t.id) WHERE (t.value`, table, table) // #nosec G201
 	}
 

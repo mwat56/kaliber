@@ -11,6 +11,51 @@ import (
 	"testing"
 )
 
+func Test_tExpression_buildSQL(t *testing.T) {
+	ex1 := tExpression{
+		entity:  "author",
+		matcher: "~",
+		not:     false,
+		op:      "",
+		term:    "Watermann",
+	}
+	w1 := `(b.id IN (SELECT ba.book FROM books_authors_link ba JOIN authors a ON(ba.author = a.id) WHERE (a.name LIKE "%Watermann%")))`
+	ex2 := tExpression{
+		entity:  "Genre",
+		matcher: "~",
+		not:     false,
+		op:      "",
+		term:    "Computer.*",
+	}
+	w2 := `(b.id IN (SELECT lt.book FROM books_custom_column_1_link lt JOIN custom_column_1 t ON(lt.value = t.id) WHERE (t.value LIKE "%Computer.*%")))`
+	ex3 := tExpression{
+		entity:  "#hyph",
+		matcher: "=",
+		not:     false,
+		op:      "",
+		term:    "yes",
+	}
+	w3 := `(b.id IN (SELECT lt.book FROM books_custom_column_3_link lt JOIN custom_column_3 t ON(lt.value = t.id) WHERE (t.value = "yes")))`
+	tests := []struct {
+		name       string
+		fields     tExpression
+		wantRWhere string
+	}{
+		// TODO: Add test cases.
+		{" 1", ex1, w1},
+		{" 2", ex2, w2},
+		{" 3", ex3, w3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exp := &tt.fields
+			if gotRWhere := exp.buildSQL(); gotRWhere != tt.wantRWhere {
+				t.Errorf("tExpression.buildSQL() = %v,\nwant %v", gotRWhere, tt.wantRWhere)
+			}
+		})
+	}
+} // Test_tExpression_buildSQL()
+
 func TestTSearch_Clause(t *testing.T) {
 	o0 := NewSearch(``)
 	o1 := NewSearch(`tags:"="`)
