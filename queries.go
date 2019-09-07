@@ -96,6 +96,9 @@ FROM books b `
 	// see `QueryBy()`. `QuerySearch()`
 	calibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
+	// see `()`
+	calibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
+
 	// see `QueryIDs()`
 	calibreIDQuery = `SELECT id, path FROM books `
 
@@ -149,7 +152,7 @@ var (
 	calibreLibraryPath = ""
 
 	// The active `tDatabase` instance initialised by `DBopen()`.
-	sqliteDatabase tDataBase
+	sqliteDB tDataBase
 
 	// Optional file to log all SQL queries.
 	sqlTraceFile = ""
@@ -322,26 +325,26 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 func DBopen() error {
 	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
 	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
-	sqliteDatabase.dbFileName = dName
-	sqliteDatabase.doCheck = make(chan struct{}, 64)
-	sqliteDatabase.wasCopied = make(chan struct{}, 1)
+	sqliteDB.dbFileName = dName
+	sqliteDB.doCheck = make(chan struct{}, 64)
+	sqliteDB.wasCopied = make(chan struct{}, 1)
 
 	// prepare the local database copy:
 	if _, err := copyDatabaseFile(sName, dName); nil != err {
 		return err
 	}
 	// signal for `dbReopen()`:
-	sqliteDatabase.wasCopied <- struct{}{}
+	sqliteDB.wasCopied <- struct{}{}
 
 	// start monitoring the original database file:
-	go goCheckFile(sqliteDatabase.doCheck, sqliteDatabase.wasCopied)
+	go goCheckFile(sqliteDB.doCheck, sqliteDB.wasCopied)
 
-	return sqliteDatabase.dbReopen()
+	return sqliteDB.dbReopen()
 } // DBopen()
 
 // `doQueryAll()` returns a list of documents with all available fields.
 func doQueryAll(aQuery string) (*TDocList, error) {
-	rows, err := sqliteDatabase.Query(aQuery)
+	rows, err := sqliteDB.Query(aQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -755,7 +758,7 @@ func prepTags(aTag tPSVstring) *tTagList {
 
 // QueryBy returns all documents according to `aOption`.
 func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := sqliteDatabase.Query(calibreCountQuery +
+	if rows, err := sqliteDB.Query(calibreCountQuery +
 		havIng(aOption.Entity, aOption.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
@@ -772,13 +775,43 @@ func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	return
 } // QueryBy()
 
+type (
+	// TCustomColumn contains info about a user-defined data field.
+	TCustomColumn struct {
+		ID                    int
+		Label, Name, Datatype string
+	}
+
+	// TCustomColumnList is a list/slice of `TCustomColumnRec`.
+	TCustomColumnList []TCustomColumn
+)
+
+// QueryCustomColumns returns data about user-defined columns in `Calibre`.
+func QueryCustomColumns() (*TCustomColumnList, error) {
+	rows, err := sqliteDB.Query(calibreCustomColumnsQuery)
+	if nil != err {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(TCustomColumnList, 0, 8)
+	for rows.Next() {
+		var cc TCustomColumn
+		if err = rows.Scan(&cc.ID, &cc.Label, &cc.Name, &cc.Datatype); nil == err {
+			result = append(result, cc)
+		}
+	}
+
+	return &result, nil
+} // QueryCustomColumns()
+
 // QueryDocMini returns the document identified by `aID`.
 //
 // This function fills only the document fields `ID`, `formats`,
 // `path`, and `Title`.
 func QueryDocMini(aID TID) *TDocument {
 	query := calibreMiniQuery + fmt.Sprintf(` WHERE b.id = %d`, aID)
-	rows, err := sqliteDatabase.Query(query)
+	rows, err := sqliteDB.Query(query)
 	if nil != err {
 		return nil
 	}
@@ -812,7 +845,7 @@ func QueryDocument(aID TID) *TDocument {
 // `path` fields set.
 // This function is used `thumbnails`.
 func QueryIDs() (*TDocList, error) {
-	rows, err := sqliteDatabase.Query(calibreIDQuery)
+	rows, err := sqliteDB.Query(calibreIDQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -837,7 +870,7 @@ func QueryLimit(aStart, aLength uint) (*TDocList, error) {
 // QuerySearch returns a list of documents
 func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	where := NewSearch(aOption.Matching)
-	if rows, err := sqliteDatabase.Query(calibreCountQuery + where.Clause()); nil == err {
+	if rows, err := sqliteDB.Query(calibreCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
