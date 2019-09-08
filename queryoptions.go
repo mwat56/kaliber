@@ -15,9 +15,14 @@ import (
 	"strings"
 )
 
+type (
+	// TSortType is used for the sorting options.
+	TSortType uint8
+)
+
 // Constants defining the ORDER_BY clause
 const (
-	qoSortUnsorted      = uint8(iota)
+	qoSortUnsorted      = TSortType(iota)
 	qoSortByAcquisition // acquisition date
 	qoSortByAuthor
 	qoSortByLanguage
@@ -54,18 +59,18 @@ type (
 	// This type is used by the HTTP pagehandler when receiving
 	// a page's data.
 	TQueryOptions struct {
-		ID          TID    // an entity ID to lookup
-		Descending  bool   // sort direction
-		Entity      string // limiting query to a certain entity (authors, publisher, series, tags)
-		GuiLang     uint8  // GUI language
-		Layout      uint8  // either `qoLayoutList` or `qoLayoutGrid`
-		LimitLength uint   // number of documents per page
-		LimitStart  uint   // starting number
-		Matching    string // text to lookup in all documents
-		QueryCount  uint   // number of DB records matching the query options
-		SortBy      uint8  // display order of documents (`qoSortByXXX`)
-		Theme       uint8  // CSS presentation theme
-		VirtLib     string // virtual libraries
+		ID          TID       // an entity ID to lookup
+		Descending  bool      // sort direction
+		Entity      string    // query for a certain entity (authors, publisher, series, tags)
+		GuiLang     uint8     // GUI language
+		Layout      uint8     // either `qoLayoutList` or `qoLayoutGrid`
+		LimitLength uint      // number of documents per page
+		LimitStart  uint      // starting number
+		Matching    string    // text to lookup in all documents
+		QueryCount  uint      // number of DB records matching the query options
+		SortBy      TSortType // display order of documents (`qoSortByXXX`)
+		Theme       uint8     // CSS presentation theme
+		VirtLib     string    // virtual libraries
 	}
 )
 
@@ -203,7 +208,7 @@ func (qo *TQueryOptions) SelectSortByOptions() *TStringMap {
 	return &result
 } // SelectSortByOptions()
 
-func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort uint8, aIndex string) {
+func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort TSortType, aIndex string) {
 	if aSort == qo.SortBy {
 		(*aMap)[aIndex] = `<option SELECTED value="` + aIndex + `">`
 	} else {
@@ -291,7 +296,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	}
 
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
-		var sb uint8
+		var sb TSortType
 		switch fsb {
 		case "acquisition":
 			sb = qoSortByAcquisition
@@ -341,9 +346,9 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 				qo.VirtLib = vl
 			}
 			if "" != vl {
-				if vlList, err := GetVirtLibList(); nil == err {
+				if vlList, err := GetVirtualLibraryList(); nil == err {
 					if vld, ok := vlList[vl]; ok {
-						qo.Matching = vld.Def
+						qo.Matching = vld
 					}
 				}
 			}
