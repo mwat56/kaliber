@@ -27,9 +27,9 @@ import (
 )
 
 const (
-	// `calibreBaseQuery` is the default query to get document data.
+	// `quCalibreBaseQuery` is the default query to get document data.
 	// By appending `WHERE` and `LIMIT` clauses the resultset gets stinted.
-	calibreBaseQuery = `SELECT b.id,
+	quCalibreBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
 	FROM authors a
@@ -94,24 +94,25 @@ b.has_cover
 FROM books b `
 
 	// see `QueryBy()`. `QuerySearch()`
-	calibreCountQuery = `SELECT COUNT(b.id) FROM books b `
+	quCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
 	// see `()`
-	calibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
+	quCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
 
 	// see `QueryIDs()`
-	calibreIDQuery = `SELECT id, path FROM books `
+	quCalibreIDQuery = `SELECT id, path FROM books `
 
 	// see `QueryDoc()`
-	calibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
+	quCalibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
 FROM data d WHERE d.book = b.id), "") formats,
 b.path,
 b.title
-FROM books b`
+FROM books b
+WHERE b.id = %d`
 )
 
 var (
-	having = map[string]string{
+	quHaving = map[string]string{
 		"all":       ``,
 		"authors":   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
 		"format":    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
@@ -126,10 +127,10 @@ var (
 
 const (
 	// Name of the `Calibre` database
-	calibreDatabaseFilename = "metadata.db"
+	quCalibreDatabaseFilename = "metadata.db"
 
 	// Calibre's metadata/preferences store
-	calibrePreferencesFile = "metadata_db_prefs_backup.json"
+	quCalibrePreferencesFile = "metadata_db_prefs_backup.json"
 )
 
 type (
@@ -146,70 +147,74 @@ type (
 
 var (
 	// Pathname to the cached `Calibre` database
-	calibreCachePath = ""
+	quCalibreCachePath = ""
 
 	// Pathname to the original `Calibre` database
-	calibreLibraryPath = ""
+	quCalibreLibraryPath = ""
 
 	// The active `tDatabase` instance initialised by `DBopen()`.
-	sqliteDB tDataBase
+	quSqliteDB tDataBase
 
 	// Optional file to log all SQL queries.
-	sqlTraceFile = ""
+	quSQLTraceFile = ""
 )
 
 // CalibreCachePath returns the directory of the copied `Calibre` databse.
 func CalibreCachePath() string {
-	return calibreCachePath
+	return quCalibreCachePath
 } // CalibreCachePath()
 
 // CalibreLibraryPath returns the base directory of the `Calibre` library.
 func CalibreLibraryPath() string {
-	return calibreLibraryPath
+	return quCalibreLibraryPath
 } // CalibreLibraryPath()
 
 // CalibrePreferencesFile returns the complete path-/filename of the
 // `Calibre` library's preferences file.
 func CalibrePreferencesFile() string {
-	return filepath.Join(calibreLibraryPath, calibrePreferencesFile)
+	return filepath.Join(quCalibreLibraryPath, quCalibrePreferencesFile)
 } // CalibrePreferencesFile()
 
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
+//
+//	`aPath` is the directory path to use for caching the Calibre library.
 func SetCalibreCachePath(aPath string) string {
 	if path, err := filepath.Abs(aPath); nil == err {
 		aPath = path
 	}
 	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
-		calibreCachePath = aPath
+		quCalibreCachePath = aPath
 	} else if err := os.MkdirAll(aPath, os.ModeDir|0775); nil == err {
-		calibreCachePath = aPath
+		quCalibreCachePath = aPath
 	}
 
-	return calibreCachePath
+	return quCalibreCachePath
 } // SetCalibreCachePath()
 
 // SetCalibreLibraryPath sets the base directory of the `Calibre` library.
+//
+//	`aPath` is the directory path where the Calibre library resides.
 func SetCalibreLibraryPath(aPath string) string {
 	if path, err := filepath.Abs(aPath); nil == err {
 		aPath = path
 	}
 	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
-		calibreLibraryPath = aPath
+		quCalibreLibraryPath = aPath
 	} else {
-		calibreLibraryPath = ""
+		quCalibreLibraryPath = ""
 	}
 
-	return calibreLibraryPath
+	return quCalibreLibraryPath
 } // CalibreLibraryPath()
 
 // CalibreDatabaseFile returns the complete path-/filename of the `Calibre` library.
 func CalibreDatabaseFile() string {
-	return filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
+	return filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
 } // CalibreDatabaseFile()
 
 // SQLtraceFile returns the optional file used for logging all SQL queries.
 func SQLtraceFile() string {
-	return sqlTraceFile
+	return quSQLTraceFile
 } // SQLtraceFile()
 
 // SetSQLtraceFile sets the filename to use for logging SQL queries.
@@ -222,15 +227,16 @@ func SetSQLtraceFile(aFilename string) {
 		var doOnce sync.Once
 		doOnce.Do(func() {
 			if path, err := filepath.Abs(aFilename); nil == err {
-				sqlTraceFile = path
+				quSQLTraceFile = path
 				// start the background writer:
-				go goWrite(sqlTraceFile, sqlTraceQueue)
+				go goWrite(quSQLTraceFile, quSQLTraceQueue)
 			}
 		})
 
 		return
 	}
-	sqlTraceFile = ""
+
+	quSQLTraceFile = ""
 } // SetSQLtraceFile()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -323,28 +329,28 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 
 // DBopen establishes a new database connection.
 func DBopen() error {
-	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
-	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
-	sqliteDB.dbFileName = dName
-	sqliteDB.doCheck = make(chan struct{}, 64)
-	sqliteDB.wasCopied = make(chan struct{}, 1)
+	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
+	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
+	quSqliteDB.dbFileName = dName
+	quSqliteDB.doCheck = make(chan struct{}, 64)
+	quSqliteDB.wasCopied = make(chan struct{}, 1)
 
 	// prepare the local database copy:
 	if _, err := copyDatabaseFile(sName, dName); nil != err {
 		return err
 	}
 	// signal for `dbReopen()`:
-	sqliteDB.wasCopied <- struct{}{}
+	quSqliteDB.wasCopied <- struct{}{}
 
 	// start monitoring the original database file:
-	go goCheckFile(sqliteDB.doCheck, sqliteDB.wasCopied)
+	go goCheckFile(quSqliteDB.doCheck, quSqliteDB.wasCopied)
 
-	return sqliteDB.dbReopen()
+	return quSqliteDB.dbReopen()
 } // DBopen()
 
 // `doQueryAll()` returns a list of documents with all available fields.
 func doQueryAll(aQuery string) (*TDocList, error) {
-	rows, err := sqliteDB.Query(aQuery)
+	rows, err := quSqliteDB.Query(aQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -388,7 +394,7 @@ func escapeQuery(aSource string) string {
 	for i := 0; i < sLen; i++ {
 		character = aSource[i]
 		switch character {
-		case '\n', '\r', '\\', '"': //, '\''
+		case '\n', '\r', '\\', '"':
 			// We do not escape the apostrophe since it can be
 			// a legitimate part of the search term and we use
 			// double quotes to enclose those terms.
@@ -398,6 +404,7 @@ func escapeQuery(aSource string) string {
 			character = 'Z'
 		default:
 		}
+
 		if escape {
 			result[j] = '\\'
 			result[j+1] = character
@@ -412,12 +419,12 @@ func escapeQuery(aSource string) string {
 	return string(result[0:j])
 } // escapeQuery()
 
-// `goCheckFile()` checks in the background whether the original database
-// file has changed. If so, that file is copied into the cache directory
-// from where it is read and used by the `sqliteDatabase` instance.
+// `goCheckFile()` checks in background whether the original database
+// file has changed. If so, that file is copied to the cache directory
+// from where it is read and used by the `quSQLiteDB` instance.
 func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
-	sName := filepath.Join(calibreLibraryPath, calibreDatabaseFilename)
-	dName := filepath.Join(calibreCachePath, calibreDatabaseFilename)
+	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
+	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
 
 	//lint:ignore S1000 – we only need the separate `more` field
 	for {
@@ -435,23 +442,23 @@ func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 
 const (
 	// Half a second to sleep in `goWrite()`.
-	halfSecond = 500 * time.Millisecond
+	quHalfSecond = 500 * time.Millisecond
 )
 
 var (
 	// The channel to send SQL to and read messages from
-	sqlTraceQueue = make(chan string, 64)
+	quSQLTraceQueue = make(chan string, 64)
 )
 
 // `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
 func goSQLtrace(aQuery string, aTime time.Time) {
-	if 0 == len(sqlTraceFile) {
+	if 0 == len(quSQLTraceFile) {
 		return
 	}
 	aQuery = strings.ReplaceAll(aQuery, "\t", " ")
 	aQuery = strings.ReplaceAll(aQuery, "\n", " ")
 
-	sqlTraceQueue <- aTime.Format("2006-01-02 15:04:05 ") +
+	quSQLTraceQueue <- aTime.Format("2006-01-02 15:04:05 ") +
 		strings.ReplaceAll(aQuery, "  ", " ")
 } // goSQLtrace()
 
@@ -475,7 +482,7 @@ func goWrite(aLogfile string, aSource <-chan string) {
 	}()
 
 	// let the application initialise:
-	time.Sleep(halfSecond)
+	time.Sleep(quHalfSecond)
 
 	for { // wait for strings to write
 		select {
@@ -504,7 +511,7 @@ func goWrite(aLogfile string, aSource <-chan string) {
 
 		default:
 			if nil == file {
-				time.Sleep(halfSecond)
+				time.Sleep(quHalfSecond)
 			} else {
 				if os.Stderr != file {
 					_ = file.Close()
@@ -521,7 +528,7 @@ func havIng(aEntity string, aID TID) string {
 		return ""
 	}
 
-	return fmt.Sprintf(having[aEntity], aID)
+	return fmt.Sprintf(quHaving[aEntity], aID)
 } // havIng()
 
 // `limit()` returns a LIMIT clause defined by `aStart` and `aLength`.
@@ -533,19 +540,19 @@ func limit(aStart, aLength uint) string {
 //
 // The `aOrder` argument can be one of the following constants:
 //
-//	SortUnsorted = uint8(iota)
-//	SortByAuthor
-//	SortByLanguage
-//	SortByPublisher
-//	SortByRating
-//	SortBySize
-//	SortBySeries
-//	SortByTags
-//	SortByTime
-//	SortByTitle
+//	qoSortUnsorted      = TSortType(iota)
+//	qoSortByAuthor
+//	qoSortByLanguage
+//	qoSortByPublisher
+//	qoSortByRating
+//	qoSortBySeries
+//	qoSortBySize
+//	qoSortByTags
+//	qoSortByTime
+//	qoSortByTitle
 //
-// `aDescending` if `true` the query result is sorted in DESCending order.
-func orderBy(aOrder uint8, aDescending bool) string {
+//	`aDescending` if `true` the query result is sorted in DESCending order.
+func orderBy(aOrder TSortType, aDescending bool) string {
 	desc := "" // " ASC " is default
 	if aDescending {
 		desc = " DESC"
@@ -579,6 +586,9 @@ func orderBy(aOrder uint8, aDescending bool) string {
 	return " ORDER BY " + result + desc + " "
 } // orderBy()
 
+// `prepAuthors()` returns a sorted list of document authors.
+//
+//	`aAuthor`
 func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 	alist := strings.Split(aAuthor, ", ")
 	result := make(tAuthorList, 0, len(alist))
@@ -603,6 +613,9 @@ func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 	return &result
 } // prepAuthors()
 
+// `prepFormats()` returns a sorted list of document formats.
+//
+//	`aFormat`
 func prepFormats(aFormat tPSVstring) *tFormatList {
 	list := strings.Split(aFormat, ", ")
 	result := make(tFormatList, 0, len(list))
@@ -627,6 +640,9 @@ func prepFormats(aFormat tPSVstring) *tFormatList {
 	return &result
 } // prepFormats()
 
+// `prepIdentifiers()` returns a sorted list of document identifiers.
+//
+//	`aIdentifier`
 func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 	list := strings.Split(aIdentifier, ", ")
 	result := make(tIdentifierList, 0, len(list))
@@ -652,6 +668,9 @@ func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 	return &result
 } // prepIdentifiers
 
+// `prepLanguage()` returns a document's language.
+//
+//	`aLanguage`
 func prepLanguage(aLanguage tPSVstring) *tLanguage {
 	list := strings.Split(aLanguage, ", ")
 	for _, val := range list {
@@ -672,11 +691,14 @@ func prepLanguage(aLanguage tPSVstring) *tLanguage {
 
 var (
 	// RegEx to find a document's number of pages
-	pagesRE = regexp.MustCompile(`(?si)<meta name="calibre:user_metadata:#pages" .*?, &quot;#value#&quot;: (\d+),`)
+	quPagesRE = regexp.MustCompile(`(?si)<meta name="calibre:user_metadata:#pages" .*?, &quot;#value#&quot;: (\d+),`)
 )
 
+// `prepPages()` prepares the document's `Pages` property.
+//
+//	`aPath` is the directory/path of the document to use.
 func prepPages(aPath string) int {
-	fName := filepath.Join(calibreLibraryPath, aPath, "metadata.opf")
+	fName := filepath.Join(quCalibreLibraryPath, aPath, "metadata.opf")
 	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
 		return 0
 	}
@@ -684,7 +706,7 @@ func prepPages(aPath string) int {
 	if nil != err {
 		return 0
 	}
-	match := pagesRE.FindSubmatch(metadata)
+	match := quPagesRE.FindSubmatch(metadata)
 	if (nil == match) || (1 > len(match)) {
 		return 0
 	}
@@ -696,6 +718,9 @@ func prepPages(aPath string) int {
 	return num
 } // prepPages()
 
+// `prepPublisher()`
+//
+//	`aPublisher`
 func prepPublisher(aPublisher tPSVstring) *tPublisher {
 	list := strings.Split(aPublisher, ", ")
 	for _, val := range list {
@@ -714,6 +739,9 @@ func prepPublisher(aPublisher tPSVstring) *tPublisher {
 	return nil
 } // prepPublisher()
 
+// `prepSeries()`
+//
+//	`aSeries`
 func prepSeries(aSeries tPSVstring) *tSeries {
 	list := strings.Split(aSeries, ", ")
 	for _, val := range list {
@@ -732,6 +760,9 @@ func prepSeries(aSeries tPSVstring) *tSeries {
 	return nil
 } // prepSeries()
 
+// `prepTags()` returns a sorted list of document tags.
+//
+//	`aTag`
 func prepTags(aTag tPSVstring) *tTagList {
 	list := strings.Split(aTag, ", ")
 	result := make(tTagList, 0, len(list))
@@ -756,20 +787,26 @@ func prepTags(aTag tPSVstring) *tTagList {
 	return &result
 } // prepTags()
 
-// QueryBy returns all documents according to `aOption`.
-func QueryBy(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := sqliteDB.Query(calibreCountQuery +
-		havIng(aOption.Entity, aOption.ID)); nil == err {
+// QueryBy returns all documents according to `aOptions`.
+//
+// The function returns in `rCount` the number of documents found,
+// in `rList` either `nil` or a list list of documents,
+// in `rErr` either `nil` or an error occurred during the search.
+//
+//	`aOptions` The options to configure the query.
+func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+	if rows, err := quSqliteDB.Query(quCalibreCountQuery +
+		havIng(aOptions.Entity, aOptions.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(calibreBaseQuery +
-			havIng(aOption.Entity, aOption.ID) +
-			orderBy(aOption.SortBy, aOption.Descending) +
-			limit(aOption.LimitStart, aOption.LimitLength))
+		rList, rErr = doQueryAll(quCalibreBaseQuery +
+			havIng(aOptions.Entity, aOptions.ID) +
+			orderBy(aOptions.SortBy, aOptions.Descending) +
+			limit(aOptions.LimitStart, aOptions.LimitLength))
 	}
 
 	return
@@ -788,7 +825,7 @@ type (
 
 // QueryCustomColumns returns data about user-defined columns in `Calibre`.
 func QueryCustomColumns() (*TCustomColumnList, error) {
-	rows, err := sqliteDB.Query(calibreCustomColumnsQuery)
+	rows, err := quSqliteDB.Query(quCalibreCustomColumnsQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -809,13 +846,15 @@ func QueryCustomColumns() (*TCustomColumnList, error) {
 //
 // This function fills only the document fields `ID`, `formats`,
 // `path`, and `Title`.
+//
+//	`aID` The document ID to lookup.
 func QueryDocMini(aID TID) *TDocument {
-	query := calibreMiniQuery + fmt.Sprintf(` WHERE b.id = %d`, aID)
-	rows, err := sqliteDB.Query(query)
+	rows, err := quSqliteDB.Query(fmt.Sprintf(quCalibreMiniQuery, aID))
 	if nil != err {
 		return nil
 	}
 	defer rows.Close()
+
 	if rows.Next() {
 		var formats tPSVstring
 		doc := newDocument()
@@ -830,8 +869,10 @@ func QueryDocMini(aID TID) *TDocument {
 } // QueryDocMini()
 
 // QueryDocument returns the `TDocument` identified by `aID`.
+//
+//	`aID` The document ID to lookup.
 func QueryDocument(aID TID) *TDocument {
-	list, _ := doQueryAll(calibreBaseQuery + fmt.Sprintf("WHERE b.id=%d ", aID))
+	list, _ := doQueryAll(quCalibreBaseQuery + fmt.Sprintf("WHERE b.id=%d ", aID))
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
@@ -843,12 +884,14 @@ func QueryDocument(aID TID) *TDocument {
 
 // QueryIDs returns a list of documents with only the `ID` and
 // `path` fields set.
-// This function is used `thumbnails`.
+//
+// This function is used by `thumbnails`.
 func QueryIDs() (*TDocList, error) {
-	rows, err := sqliteDB.Query(calibreIDQuery)
+	rows, err := quSqliteDB.Query(quCalibreIDQuery)
 	if nil != err {
 		return nil, err
 	}
+	defer rows.Close()
 
 	result := newDocList()
 	for rows.Next() {
@@ -860,27 +903,26 @@ func QueryIDs() (*TDocList, error) {
 	return result, nil
 } // QueryIDs()
 
-/*
-// QueryLimit returns a list of `TDocument` objects.
-func QueryLimit(aStart, aLength uint) (*TDocList, error) {
-	return doQueryAll(calibreBaseQuery + limit(aStart, aLength))
-} // QueryLimit()
-*/
-
-// QuerySearch returns a list of documents
-func QuerySearch(aOption *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	where := NewSearch(aOption.Matching)
-	if rows, err := sqliteDB.Query(calibreCountQuery + where.Clause()); nil == err {
+// QuerySearch returns a list of documents.
+//
+// The function returns in `rCount` the number of documents found,
+// in `rList` either `nil` or a list list of documents,
+// in `rErr` either `nil` or an error occurred during the search.
+//
+//	`aOptions` The options to configure the query.
+func QuerySearch(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+	where := NewSearch(aOptions.Matching)
+	if rows, err := quSqliteDB.Query(quCalibreCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(calibreBaseQuery +
+		rList, rErr = doQueryAll(quCalibreBaseQuery +
 			where.Clause() +
-			orderBy(aOption.SortBy, aOption.Descending) +
-			limit(aOption.LimitStart, aOption.LimitLength))
+			orderBy(aOptions.SortBy, aOptions.Descending) +
+			limit(aOptions.LimitStart, aOptions.LimitLength))
 	}
 
 	return

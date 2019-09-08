@@ -72,12 +72,13 @@
 					{{- $name := $language.Name -}}
 					{{- $url := $language.URL -}}
 					<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;
+					</p>
 				{{- end -}}
 
 				{{- if $doc.Comment -}}
 					<blockquote class="comment">{{$doc.Comment}}</blockquote>
 				{{- end -}}
-			</div>
+			</div><!-- class="meta" -->
 		</article>
 	{{- end -}}<!-- range -->
 {{- end -}}<!-- $.Documents -->

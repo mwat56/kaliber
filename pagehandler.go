@@ -52,7 +52,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.dd = s
 
-	result.docFS = http.FileServer(http.Dir(calibreLibraryPath))
+	result.docFS = http.FileServer(http.Dir(CalibreLibraryPath()))
 
 	if s, err = AppArguments.Get("lang"); nil == err {
 		result.lang = s

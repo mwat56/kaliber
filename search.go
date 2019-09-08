@@ -74,7 +74,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 	case "format":
 		rWhere = `(b.id IN (SELECT d.book FROM data d WHERE (d.format`
 
-	case "language":
+	case "languages", "language": // accept (wrong) "language"
 		rWhere = `(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code`
 
 	case "publisher":
@@ -111,7 +111,7 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		if !ok {
 			return
 		}
-		rWhere = fmt.Sprintf(`(b.id IN (SELECT lt.book FROM books_%s_link lt JOIN %s t ON(lt.value = t.id) WHERE (t.value`, table, table) // #nosec G201
+		rWhere = fmt.Sprintf(`(b.id IN (SELECT lct.book FROM books_%s_link lct JOIN %s ct ON(lct.value = ct.id) WHERE (ct.value`, table, table) // #nosec G201
 	}
 
 	term := escapeQuery(exp.term)
@@ -141,48 +141,49 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // Clause returns the produced WHERE clause.
-func (so *TSearch) Clause() string {
+func (so *TSearch) Clause() (rWhere string) {
 	if 0 < len(so.raw) {
 		so.Parse()
 	}
 	if 0 < len(so.where) {
-		return ` WHERE ` + so.where // #nosec G202
+		rWhere = ` WHERE ` + so.where // #nosec G202
 	}
 
-	return ""
+	return
 } // Clause()
 
 /*
 There are several forms to recognise:
 
-"just a search term" -> lookup ALL book entities;
-`entity:"=searchterm"` -> lookup exact match of `searchterm` in `entity`;
-`entity:"~searchterm"` -> lookup `searchterm` contained in `entity`.
+"just a search term" => lookup ALL book entities;
+`entity:"=searchterm"` => lookup exact match of `searchterm` in `entity`;
+`entity:"~searchterm"` => lookup `searchterm` contained in `entity`.
 
 All three expressions can be combined by AND and OR.
 All three expressions can be negated by a leading `!`.
 */
 
 var (
-	// RegEx to find a search expression
-	searchExpressionRE = regexp.MustCompile(
-		`(?i)((!?)(#?\w+):)"([=~]?)([^"]*)"(\s*(AND|OR))?`)
-	//       12   3       4      5       6   7
-
-	searchRemainderRE = regexp.MustCompile(
-		`\s*(!?)\s*([\w ]+)`)
-	//      1      2
-
-	replacementLookup = map[string]string{
+	// Lookup table for missing comparison values
+	soReplacementLookup = map[string]string{
 		`AND`: `(1=1)`,
 		`OR`:  `(1=0)`,
 		``:    ``,
 	}
+
+	// RegEx to find a search expression
+	soSearchExpressionRE = regexp.MustCompile(
+		`(?i)((!?)(#?\w+):)"([=~]?)([^"]*)"(\s*(AND|OR))?`)
+	//       12   3       4      5       6   7
+
+	soSearchRemainderRE = regexp.MustCompile(
+		`\s*(!?)\s*([\w ]+)`)
+	//      1      2
 )
 
 func (so *TSearch) p1() *TSearch {
 	op, p, s, w := "", 0, "", strings.TrimSpace(so.raw)
-	for matches := searchExpressionRE.FindStringSubmatch(w); 7 < len(matches); matches = searchExpressionRE.FindStringSubmatch(w) {
+	for matches := soSearchExpressionRE.FindStringSubmatch(w); 7 < len(matches); matches = soSearchExpressionRE.FindStringSubmatch(w) {
 		if 0 == len(matches[4]) {
 			matches[4] = `=` // default to exact match
 		}
@@ -195,14 +196,14 @@ func (so *TSearch) p1() *TSearch {
 		}
 		s = exp.buildSQL()
 		if 0 == len(s) {
-			s = replacementLookup[op]
+			s = soReplacementLookup[op]
 		}
 		w = strings.Replace(w, matches[0], s, 1)
 		p = strings.Index(w, s) + len(s)
 		op = exp.op // save the latest operant for below
 	}
 	if p < len(w) { // check whether there's something behind the last expression
-		matches := searchRemainderRE.FindStringSubmatch(w[p:])
+		matches := soSearchRemainderRE.FindStringSubmatch(w[p:])
 		if 2 < len(matches) {
 			exp := &tExpression{
 				not:  ("!" == matches[1]),
@@ -228,7 +229,7 @@ func (so *TSearch) Parse() *TSearch {
 		so.next, so.where = "", ""
 		return so
 	}
-	if searchExpressionRE.MatchString(so.raw) {
+	if soSearchExpressionRE.MatchString(so.raw) {
 		return so.p1()
 	}
 

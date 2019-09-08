@@ -62,8 +62,8 @@ func TestTDocument_coverAbs(t *testing.T) {
 		path: "John Scalzi/Zoe's Tale (6730)",
 	}
 	w2 := d2.path + "/cover.jpg"
-	w3 := filepath.Join(calibreLibraryPath, w1)
-	w4 := filepath.Join(calibreLibraryPath, w2)
+	w3 := filepath.Join(quCalibreLibraryPath, w1)
+	w4 := filepath.Join(quCalibreLibraryPath, w2)
 	d5 := TDocument{
 		ID:   4793,
 		path: "Gail Carriger/Soulless [1] (4793)",
@@ -72,7 +72,7 @@ func TestTDocument_coverAbs(t *testing.T) {
 	type args struct {
 		aRelative bool
 	}
-	w6 := filepath.Join(calibreLibraryPath, w5)
+	w6 := filepath.Join(quCalibreLibraryPath, w5)
 	tests := []struct {
 		name    string
 		fields  TDocument

@@ -73,7 +73,6 @@ func checkThumbDir(aDirectory string) {
 
 // `checkThumbFile()` deletes orphaned thumbnail files.
 func checkThumbFile(aFilename string) {
-	// log.Println(aFilename) //FIXME REMOVE
 	baseName := path.Base(aFilename)
 	docID, err := strconv.Atoi(baseName[:len(baseName)-4])
 	if nil != err {
@@ -81,7 +80,7 @@ func checkThumbFile(aFilename string) {
 		apachelogger.Log("checkThumbFile()", msg)
 		return
 	}
-	// log.Println(docID) //FIXME REMOVE
+
 	doc := QueryDocument(docID)
 	if nil == doc {
 		// remove thumbnail for non-existing document
@@ -97,7 +96,6 @@ func checkThumbFile(aFilename string) {
 		apachelogger.Log("checkThumbFile()", msg)
 		return
 	}
-	// log.Println(cFile) //FIXME REMOVE
 
 	tFI, err := os.Stat(aFilename)
 	if nil != err {
@@ -105,12 +103,14 @@ func checkThumbFile(aFilename string) {
 		apachelogger.Log("checkThumbFile()", msg)
 		return
 	}
+
 	cFI, err := os.Stat(cFile)
 	if nil != err {
 		msg := fmt.Sprintf("os.Stat(%s): %v", cFile, err)
 		apachelogger.Log("checkThumbFile()", msg)
 		return
 	}
+
 	if tFI.ModTime().Before(cFI.ModTime()) {
 		// remove outdated thumbnail
 		if err = os.Remove(aFilename); nil != err {
@@ -220,7 +220,7 @@ func Thumbnail(aDoc *TDocument) (string, error) {
 		return "", err
 	}
 	if !sFI.Mode().IsRegular() {
-		return "", fmt.Errorf("not a regula file: %s", sName)
+		return "", fmt.Errorf("not a regular file: %s", sName)
 	}
 
 	dName := ThumbnailName(aDoc)

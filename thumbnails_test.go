@@ -18,7 +18,7 @@ func setup4Testing() {
 func Test_makeThumbDir(t *testing.T) {
 	d1 := &TDocument{
 		ID:   7628,
-		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
 	type args struct {
 		aDoc *TDocument
@@ -79,7 +79,7 @@ func TestThumbnailName(t *testing.T) {
 	setup4Testing()
 	d1 := &TDocument{
 		ID:   7628,
-		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
 	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/img/0076/007628.jpg"
 	ThumbnailRemove(d1)
@@ -107,7 +107,7 @@ func TestThumbnailRemove(t *testing.T) {
 	setup4Testing()
 	d1 := &TDocument{
 		ID:   7628,
-		path: calibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
 	type args struct {
 		aDoc *TDocument

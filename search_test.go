@@ -27,7 +27,7 @@ func Test_tExpression_buildSQL(t *testing.T) {
 		op:      "",
 		term:    "Computer.*",
 	}
-	w2 := `(b.id IN (SELECT lt.book FROM books_custom_column_1_link lt JOIN custom_column_1 t ON(lt.value = t.id) WHERE (t.value LIKE "%Computer.*%")))`
+	w2 := `(b.id IN (SELECT lct.book FROM books_custom_column_1_link lct JOIN custom_column_1 ct ON(lct.value = ct.id) WHERE (ct.value LIKE "%Computer.*%")))`
 	ex3 := tExpression{
 		entity:  "#hyph",
 		matcher: "=",
@@ -35,7 +35,7 @@ func Test_tExpression_buildSQL(t *testing.T) {
 		op:      "",
 		term:    "yes",
 	}
-	w3 := `(b.id IN (SELECT lt.book FROM books_custom_column_3_link lt JOIN custom_column_3 t ON(lt.value = t.id) WHERE (t.value = "yes")))`
+	w3 := `(b.id IN (SELECT lct.book FROM books_custom_column_3_link lct JOIN custom_column_3 ct ON(lct.value = ct.id) WHERE (ct.value = "yes")))`
 	tests := []struct {
 		name       string
 		fields     tExpression
@@ -118,7 +118,7 @@ func TestTSearch_p1(t *testing.T) {
 	}
 	o7 := NewSearch("tags:\"~Magic.\" or #genre:\"~Magic.\"")
 	w7 := &TSearch{
-		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Magic.%")))OR (b.id IN (SELECT lt.book FROM books_custom_column_1_link lt JOIN custom_column_1 t ON(lt.value = t.id) WHERE (t.value LIKE "%Magic.%")))`,
+		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name LIKE "%Magic.%")))OR (b.id IN (SELECT lct.book FROM books_custom_column_1_link lct JOIN custom_column_1 ct ON(lct.value = ct.id) WHERE (ct.value LIKE "%Magic.%")))`,
 	}
 	o8 := NewSearch(" tags:\"~Magic.\" ")
 	w8 := &TSearch{

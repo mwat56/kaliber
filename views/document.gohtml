@@ -1,12 +1,12 @@
 {{- define "document" -}}
-{{template "htmlpage" .}}
+	{{template "htmlpage" .}}
 {{- end -}}
 
 {{- define "bodypage" -}}
 {{- $lang := "de" -}}
 {{- if .Lang}}{{$lang = .Lang}}{{end -}}
 {{- $doc := $.Document -}}
-<!-- We need the SPACES below to allow the browser to wrap the lines -->
+<!-- We need the SHY/SPACES below to allow for the browser to wrap the lines -->
 <article class="document">
 	<h2>{{$doc.Title}}</h2>
 	<div class="meta">
@@ -29,12 +29,11 @@
 			{{- range $i, $file := $doc.Files -}}
 				{{- $name := $file.Name -}}
 				{{- $url := $file.URL -}}
-			<a class="button" title="download {{$name}}" href="{{$url}}#bodypage">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+				<a class="button" title="download {{$name}}" href="{{$url}}#bodypage">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 			{{- end -}}
 			</td>
 		</tr>
 		{{- end -}}
-
 
 		{{- if $doc.Series -}}
 		<tr>
@@ -61,19 +60,15 @@
 
 		{{- if $doc.PubDate -}}
 		<tr>
-			<td class="label">{{if eq $lang "de"}}Publiziert{{else}}Published{{end}}:</td><td>
-				{{- $doc.PubDate -}}
-			</td>
+			<td class="label">{{if eq $lang "de"}}Publiziert{{else}}Published{{end}}:</td><td>{{$doc.PubDate}}</td>
 		</tr>
 		{{- end -}}
 
-		{{- if $doc.Pages -}}
+		{{- if $doc.Pages -}}{{- if lt 0 $doc.Pages -}}
 		<tr>
-			<td class="label">{{if eq $lang "de"}}Seiten{{else}}Pages{{end}}:</td><td>
-			{{- if lt 0 $doc.Pages}}{{$doc.Pages}}{{end -}}
-			</td>
+			<td class="label">{{if eq $lang "de"}}Seiten{{else}}Pages{{end}}:</td><td>{{$doc.Pages}}</td>
 		</tr>
-		{{- end -}}
+		{{- end}}{{end -}}
 
 		{{- if $doc.Identifiers -}}
 		<tr>
