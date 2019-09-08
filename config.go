@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/mwat56/ini"
@@ -129,6 +130,7 @@ func iniData() {
 } // iniData()
 
 func init() {
+	testing.Init() // workaround for Go 1.13
 	initArguments()
 } // init()
 
