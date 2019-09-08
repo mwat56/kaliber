@@ -24,33 +24,33 @@ const (
 	// Name of the JSON section holding e.g. user-defined field definitions.
 	mdFieldMetadata = "field_metadata"
 
+	// Name of the JSON section holding the virtual library names to hide..
+	mdHiddenVirtualLibraries = "virt_libs_hidden"
+
 	// Name of the JSON section holding the virtual library definitions.
 	mdVirtualLibraries = "virtual_libraries"
 )
 
 type (
-	// Structure of the `virtual_libraries` JSON section.
-	tMdLibList map[string]string
-
-	// TmdVirtLibStruct is a structure to hold a virtual library definition.
-	TmdVirtLibStruct struct {
-		Def string // Calibre's definitions
-		SQL string // SQL: WHERE clause
-	}
+	// TVirtualLibraryList is the `virtual_libraries` JSON metadata section.
+	TVirtualLibraryList map[string]string
 )
 
 var (
 	// cache of "field_metadata" list
 	mdFieldsMetadata *map[string]interface{}
 
-	// cache of all DB metadata preferemces
+	// list of virtual libraries to hide
+	mdHiddenVirtLibs map[string]interface{}
+
+	// cache of all DB metadata preferences
 	mdMetadataDbPrefs map[string]interface{}
+
+	// virtual libraries list
+	mdVirturalLibraryList TVirtualLibraryList
 
 	// raw virtual libraries list
 	mdVirtLibsRaw *map[string]interface{}
-
-	// virtual libraries list
-	mdVirtLibList map[string]TmdVirtLibStruct
 )
 
 // `mdReadMetadataFile()` returns a map of the JSON data read.
@@ -62,7 +62,7 @@ func mdReadMetadataFile() error {
 	srcFile, err := os.OpenFile(fName, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", fName, err)
-		apachelogger.Log("md.mdReadMetadataFile", msg)
+		apachelogger.Log("mdReadMetadataFile", msg)
 		return errors.New(msg)
 	}
 	defer srcFile.Close()
@@ -71,14 +71,12 @@ func mdReadMetadataFile() error {
 	dec := json.NewDecoder(srcFile)
 	if err := dec.Decode(&jsdata); err != nil {
 		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
-		apachelogger.Log("md.mdReadMetadataFile", msg)
+		apachelogger.Log("mdReadMetadataFile", msg)
 		return errors.New(msg)
 	}
 
 	// remove unneeded list entries:
-	delete(jsdata, `books view split pane state`)
 	delete(jsdata, `column_icon_rules`)
-	delete(jsdata, `column_color_rules`)
 	delete(jsdata, `cover_grid_icon_rules`)
 	delete(jsdata, `gui_view_history`)
 	delete(jsdata, `namespaced:CountPagesPlugin:settings`)
@@ -99,13 +97,13 @@ func mdReadFieldMetadata() error {
 	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Log("md.mdReadFieldMetadata", msg)
+		apachelogger.Log("mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
 	section, ok := mdMetadataDbPrefs[mdFieldMetadata]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdFieldMetadata)
-		apachelogger.Log("md.mdReadFieldMetadata", msg)
+		apachelogger.Log("mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
 	fmd := section.(map[string]interface{})
@@ -122,7 +120,7 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 	}
 	if err := mdReadFieldMetadata(); nil != err {
 		msg := fmt.Sprintf("mdReadFieldMetadata(): %v", err)
-		apachelogger.Log("md.mdGetFieldData", msg)
+		apachelogger.Log("mdGetFieldData", msg)
 		return nil, errors.New(msg)
 	}
 
@@ -130,7 +128,7 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 	fd, ok := fmd[aField]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", aField)
-		apachelogger.Log("md.mdGetFieldData", msg)
+		apachelogger.Log("mdGetFieldData", msg)
 		return nil, errors.New(msg)
 	}
 	result = fd.(map[string]interface{})
@@ -138,50 +136,91 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 	return result, nil
 } // mdGetFieldData()
 
-// `mdReadVirtLibs()` reads the raw virt.library definitions.
-func mdReadVirtLibs() error {
+// `mdReadHiddenVirtualLibraries()` reads the list ob hidden libraries to hide.
+func mdReadHiddenVirtualLibraries() error {
+	if nil != mdHiddenVirtLibs {
+		return nil
+	}
+	if err := mdReadMetadataFile(); nil != err {
+		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
+		apachelogger.Log("mdReadHiddenVirtualLibraries", msg)
+		return errors.New(msg)
+	}
+
+	section, ok := mdMetadataDbPrefs[mdHiddenVirtualLibraries]
+	if !ok {
+		msg := fmt.Sprintf("no such JSON section: %s", mdHiddenVirtualLibraries)
+		apachelogger.Log("mdReadHiddenVirtualLibraries", msg)
+		return errors.New(msg)
+	}
+
+	hvl := section.([]interface{})
+	if 0 == len(hvl) {
+		return nil
+	}
+	mdHiddenVirtLibs = make(map[string]interface{}, len(hvl))
+	for _, val := range hvl {
+		lib := val.(string)
+		mdHiddenVirtLibs[lib] = struct{}{}
+	}
+
+	return nil
+} // mdReadHiddenVirtualLibraries()
+
+// `mdReadVirtualLibraries()` reads the raw virt.library definitions.
+func mdReadVirtualLibraries() error {
 	if nil != mdVirtLibsRaw {
 		return nil
 	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Log("md.mdReadVirtLibs", msg)
+		apachelogger.Log("mdReadVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 
 	section, ok := mdMetadataDbPrefs[mdVirtualLibraries]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdVirtualLibraries)
-		apachelogger.Log("md.mdReadVirtLibs", msg)
+		apachelogger.Log("mdReadVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 	vlr := section.(map[string]interface{})
 	mdVirtLibsRaw = &vlr
 
 	return nil
-} // mdReadVirtLibs()
+} // mdReadVirtualLibraries()
 
-// `mdGetLibDefs()` returns a map of virtual library definitions.
-func mdGetLibDefs() (*tMdLibList, error) {
-	if err := mdReadVirtLibs(); nil != err {
-		msg := fmt.Sprintf("mdReadVirtLibs(): %v", err)
-		apachelogger.Log("md.mdGetLibDefs", msg)
+// `mdVirtualLibDefinitions()` returns a map of virtual library definitions.
+func mdVirtualLibDefinitions() (*TVirtualLibraryList, error) {
+	if err := mdReadVirtualLibraries(); nil != err {
+		msg := fmt.Sprintf("mdReadVirtualLibraries(): %v", err)
+		apachelogger.Log("mdVirtualLibDefinitions", msg)
+		return nil, errors.New(msg)
+	}
+	if err := mdReadHiddenVirtualLibraries(); nil != err {
+		msg := fmt.Sprintf("mdReadHiddenVirtualLibraries(): %v", err)
+		apachelogger.Log("mdVirtualLibDefinitions", msg)
 		return nil, errors.New(msg)
 	}
 
 	m := *mdVirtLibsRaw
-	result := make(tMdLibList, len(m))
+	result := make(TVirtualLibraryList, len(m))
 	for key, value := range m {
+		if nil != mdHiddenVirtLibs {
+			if _, ok := mdHiddenVirtLibs[key]; ok {
+				continue
+			}
+		}
 		if definition, ok := value.(string); ok {
 			result[key] = definition
 		} else {
 			msg := fmt.Sprintf("json.value.(string): wrong type %v", value)
-			apachelogger.Log("md.mdGetLibDefs", msg)
+			apachelogger.Log("mdVirtualLibDefinitions", msg)
 		}
 	}
 
 	return &result, nil
-} // mdGetLibDefs()
+} // mdVirtualLibDefinitions()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -214,54 +253,52 @@ func GetMetaFieldValue(aSection, aField string) (interface{}, error) {
 
 var (
 	// RegEx to find `.*` in a virt.lib. definition
-	dotStarRE = regexp.MustCompile(`(\.?\*)`)
+	mdDotStarRE = regexp.MustCompile(`(\.?\*)`)
 )
 
-// GetVirtLibList returns a list of virtual library definitions
+// GetVirtualLibraryList returns a list of virtual library definitions
 // and SQL code to access them.
-func GetVirtLibList() (map[string]TmdVirtLibStruct, error) {
-	if nil != mdVirtLibList {
-		return mdVirtLibList, nil
+func GetVirtualLibraryList() (TVirtualLibraryList, error) {
+	if nil != mdVirturalLibraryList {
+		return mdVirturalLibraryList, nil
 	}
-	jsList, err := mdGetLibDefs()
+	jsList, err := mdVirtualLibDefinitions()
 	if nil != err {
-		msg := fmt.Sprintf("mdGetLibDefs(): %v", err)
+		msg := fmt.Sprintf("mdVirtualLibDefinitions(): %v", err)
 		apachelogger.Log("md.GetVirtLibList", msg)
 		return nil, err
 	}
 
-	mdVirtLibList = make(map[string]TmdVirtLibStruct, len(*jsList))
+	mdVirturalLibraryList = make(TVirtualLibraryList, len(*jsList))
 	for key, value := range *jsList {
-		vl := NewSearch(value).Parse()
 
-		mdVirtLibList[key] = TmdVirtLibStruct{
-			Def: dotStarRE.ReplaceAllLiteralString(value, "%"),
-			SQL: vl.Where(),
-		}
+		//TODO check for libraries to hide
+
+		mdVirturalLibraryList[key] = mdDotStarRE.ReplaceAllLiteralString(value, "%")
 	}
 
-	return mdVirtLibList, nil
-} // GetVirtLibList()
+	return mdVirturalLibraryList, nil
+} // GetVirtualLibraryList()
 
 // GetVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
 //
 //	aSelected Name of the currently selected library.
 func GetVirtLibOptions(aSelected string) string {
-	_, err := GetVirtLibList()
+	_, err := GetVirtualLibraryList()
 	if nil != err {
 		msg := fmt.Sprintf("GetVirtLibList(): %v", err)
 		apachelogger.Log("md.GetVirtLibOptions", msg)
 		return ""
 	}
 
-	list := make([]string, 0, len(mdVirtLibList)+1)
+	list := make([]string, 0, len(mdVirturalLibraryList)+1)
 	if (0 == len(aSelected)) || ("-" == aSelected) {
 		list = append(list, `<option value="-" SELECTED> – </option>`)
 		aSelected = ""
 	} else {
 		list = append(list, `<option value="-"> – </option>`)
 	}
-	for key := range mdVirtLibList {
+	for key := range mdVirturalLibraryList {
 		option := `<option value="` + key + `"`
 		if key == aSelected {
 			option += ` SELECTED`
