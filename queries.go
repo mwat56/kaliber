@@ -718,7 +718,7 @@ func prepPages(aPath string) int {
 	return num
 } // prepPages()
 
-// `prepPublisher()`
+// `prepPublisher()` returns a document's publisher.
 //
 //	`aPublisher`
 func prepPublisher(aPublisher tPSVstring) *tPublisher {
@@ -739,7 +739,7 @@ func prepPublisher(aPublisher tPSVstring) *tPublisher {
 	return nil
 } // prepPublisher()
 
-// `prepSeries()`
+// `prepSeries()` returns a document's series.
 //
 //	`aSeries`
 func prepSeries(aSeries tPSVstring) *tSeries {
