@@ -67,9 +67,9 @@ func setupSignals(aServer *http.Server) {
 			msg := fmt.Sprintf("%s captured '%v', stopping program and exiting ...", os.Args[0], signal)
 			log.Println(msg)
 			apachelogger.Log(`kaliber/catchSignals`, msg)
-			runtime.Gosched() // let the logger log …
+			runtime.Gosched() // let the logger write
 			if err := aServer.Shutdown(context.Background()); nil != err {
-				log.Fatalf("%s: %v", os.Args[0], err)
+				log.Fatalf("%s: %v\n", os.Args[0], err)
 			}
 		}
 	}()
@@ -84,7 +84,7 @@ func main() {
 		ck, cp, s string
 	)
 	Me, _ := filepath.Abs(os.Args[0])
-	if err = kaliber.DBopen(); nil != err {
+	if err = kaliber.OpenDatabase(); nil != err {
 		kaliber.ShowHelp()
 		s = fmt.Sprintf("%s: %v", Me, err)
 		apachelogger.Log("Kaliber/main", s)
@@ -92,7 +92,7 @@ func main() {
 		log.Fatalln(s)
 	}
 
-	// handle user maintenance:
+	// handle commandline user maintenance:
 	userCmdline()
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {

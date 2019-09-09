@@ -16,8 +16,8 @@ import (
 
 func openDBforTesting() {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
-	if err := DBopen(); nil != err {
-		log.Fatalf("DBopen: %v", err)
+	if err := OpenDatabase(); nil != err {
+		log.Fatalf("OpenDatabase(): %v", err)
 	}
 	SetSQLtraceFile("./SQLtrace.sql")
 } // openDBforTesting()
@@ -297,7 +297,7 @@ func Test_prepTags(t *testing.T) {
 	}
 } // Test_prepTags()
 
-func TestDBopen(t *testing.T) {
+func TestOpenDatabase(t *testing.T) {
 	SetCalibreLibraryPath(`/var/opt/Calibre`)
 	tests := []struct {
 		name    string
@@ -308,12 +308,12 @@ func TestDBopen(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DBopen(); (err != nil) != tt.wantErr {
-				t.Errorf("DBopen() error = %v, wantErr %v", err, tt.wantErr)
+			if err := OpenDatabase(); (err != nil) != tt.wantErr {
+				t.Errorf("OpenDatabase() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
-} // TestDBopen()
+} // TestOpenDatabase()
 
 func Test_queryDocument(t *testing.T) {
 	openDBforTesting()

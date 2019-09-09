@@ -327,27 +327,6 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 	return true, os.Rename(tName, aDst)
 } // copyDatabaseFile()
 
-// DBopen establishes a new database connection.
-func DBopen() error {
-	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
-	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
-	quSqliteDB.dbFileName = dName
-	quSqliteDB.doCheck = make(chan struct{}, 64)
-	quSqliteDB.wasCopied = make(chan struct{}, 1)
-
-	// prepare the local database copy:
-	if _, err := copyDatabaseFile(sName, dName); nil != err {
-		return err
-	}
-	// signal for `dbReopen()`:
-	quSqliteDB.wasCopied <- struct{}{}
-
-	// start monitoring the original database file:
-	go goCheckFile(quSqliteDB.doCheck, quSqliteDB.wasCopied)
-
-	return quSqliteDB.dbReopen()
-} // DBopen()
-
 // `doQueryAll()` returns a list of documents with all available fields.
 func doQueryAll(aQuery string) (*TDocList, error) {
 	rows, err := quSqliteDB.Query(aQuery)
@@ -535,6 +514,27 @@ func havIng(aEntity string, aID TID) string {
 func limit(aStart, aLength uint) string {
 	return fmt.Sprintf("LIMIT %d, %d ", aStart, aLength)
 } // limit()
+
+// OpenDatabase establishes a new database connection.
+func OpenDatabase() error {
+	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
+	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
+	quSqliteDB.dbFileName = dName
+	quSqliteDB.doCheck = make(chan struct{}, 64)
+	quSqliteDB.wasCopied = make(chan struct{}, 1)
+
+	// prepare the local database copy:
+	if _, err := copyDatabaseFile(sName, dName); nil != err {
+		return err
+	}
+	// signal for `dbReopen()`:
+	quSqliteDB.wasCopied <- struct{}{}
+
+	// start monitoring the original database file:
+	go goCheckFile(quSqliteDB.doCheck, quSqliteDB.wasCopied)
+
+	return quSqliteDB.dbReopen()
+} // OpenDatabase()
 
 // `orderBy()` returns a ORDER_BY clause defined by `aOrder` and `aDesc`.
 //
