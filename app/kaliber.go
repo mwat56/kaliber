@@ -53,24 +53,30 @@ func userCmdline() {
 	}
 } // userCmdline()
 
-// `setupSinals()` configures the capture of the interrupts `SIGINT`,
+// `setupSignals()` configures the capture of the interrupts `SIGINT`,
 // `SIGKILL`, and `SIGTERM` to terminate the program gracefully.
-func setupSinals(aServer *http.Server) {
-	// handle `CTRL-C` and `kill(9)` and `kill(15)`.
+//
+//	`aServer` The server instance to shutdown if a signal arrives.
+func setupSignals(aServer *http.Server) {
+	// handle `CTRL-C`, and `kill(15)`.
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		for signal := range c {
-			log.Printf("%s captured '%v', stopping program and exiting ...", os.Args[0], signal)
+			msg := fmt.Sprintf("%s captured '%v', stopping program and exiting ...", os.Args[0], signal)
+			log.Println(msg)
+			apachelogger.Log(`kaliber/catchSignals`, msg)
+			runtime.Gosched() // let the logger log …
 			if err := aServer.Shutdown(context.Background()); nil != err {
 				log.Fatalf("%s: %v", os.Args[0], err)
 			}
 		}
 	}()
-} // setupSinals()
+} // setupSignals()
 
 func main() {
+	kaliber.InitConfig()
 	var (
 		err       error
 		handler   http.Handler
@@ -119,12 +125,11 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      10 * time.Second,
 	}
-	setupSinals(server)
+	setupSignals(server)
 
 	ck, _ = kaliber.AppArguments.Get("certKey")
 	cp, _ = kaliber.AppArguments.Get("certPem")
-
-	if 0 < len(ck) && (0 < len(cp)) {
+	if (0 < len(ck)) && (0 < len(cp)) {
 		s = fmt.Sprintf("%s listening HTTPS at %s", Me, ph.Address())
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)

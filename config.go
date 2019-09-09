@@ -14,9 +14,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
-	"testing"
 	"time"
 
 	"github.com/mwat56/ini"
@@ -76,12 +74,15 @@ func absolute(aBaseDir, aDir string) string {
 	return filepath.Join(aBaseDir, aDir)
 } // absolute()
 
-// `iniData()` returns the config values read from INI file(s).
+// `readIniData()` returns the config values read from INI file(s).
+//
 // The steps here are:
-// (1) read the global `/etc/kaliber.ini`,
-// (2) read the user-local `~/.kaliber.ini`,
-// (3) read the `-ini` commandline argument.
-func iniData() {
+//	(1) read the local `./.kaliber.ini`,
+//	(2) read the global `/etc/kaliber.ini`,
+//	(3) read the user-local `~/.kaliber.ini`,
+//	(4) read the user-local `~/.config/kaliber.ini`,
+//	(5) read the `-ini` commandline argument.
+func readIniData() {
 	// (1) ./
 	fName, _ := filepath.Abs("./kaliber.ini")
 	ini1, err := ini.New(fName)
@@ -97,12 +98,7 @@ func iniData() {
 	}
 
 	// (3) ~user/
-	if usr, err := user.Current(); nil != err {
-		fName = os.Getenv("HOME")
-	} else {
-		fName = usr.HomeDir
-	}
-	if 0 < len(fName) {
+	if fName, _ = os.UserHomeDir(); 0 < len(fName) {
 		fName, _ = filepath.Abs(filepath.Join(fName, ".kaliber.ini"))
 		if ini2, err := ini.New(fName); nil == err {
 			ini1.Merge(ini2)
@@ -110,10 +106,21 @@ func iniData() {
 		}
 	}
 
-	// (4) cmdline
-	aLen := len(os.Args)
-	for i := 1; i < aLen; i++ {
+	// (4) ~/.config/
+	if confDir, err := os.UserConfigDir(); nil == err {
+		fName, _ = filepath.Abs(filepath.Join(confDir, "kaliber.ini"))
+		if ini2, err := ini.New(fName); nil == err {
+			ini1.Merge(ini2)
+			ini1.AddSectionKey("", "inifile", fName)
+		}
+	}
+
+	// (5) cmdline
+	for aLen, i := len(os.Args), 1; i < aLen; i++ {
 		if `-ini` == os.Args[i] {
+			//XXX Note that this works only if `-ini` and
+			// filename are two separate arguments. It will
+			// fail if it's given in the form `-ini=filename`.
 			i++
 			if i < aLen {
 				fName, _ = filepath.Abs(os.Args[i])
@@ -127,22 +134,25 @@ func iniData() {
 	}
 
 	AppArguments = tAguments{*ini1.GetSection("")}
-} // iniData()
+} // readIniData()
 
+/*
 func init() {
+	// see: https://github.com/microsoft/vscode-go/issues/2734
 	testing.Init() // workaround for Go 1.13
-	initArguments()
+	InitConfig()
 } // init()
+*/
 
-// `initArguments()` reads the commandline arguments into a list
-// structure merging it with key-value pairs read from an INI file.
+// InitConfig reads the commandline arguments into a list
+// structure merging it with key-value pairs read from INI file(s).
 //
 // The steps here are:
-// (1) read the INI file(s),
-// (2) merge the commandline arguments the INI values
+//	(a) read the INI file(s),
+//	(b) merge the commandline arguments with the INI values
 // into the global `AppArguments` variable.
-func initArguments() {
-	iniData()
+func InitConfig() {
+	readIniData()
 
 	bppInt, _ := AppArguments.AsInt("booksperpage")
 	flag.IntVar(&bppInt, "booksperpage", bppInt,
@@ -176,7 +186,7 @@ func initArguments() {
 
 	langStr, _ := AppArguments.Get("lang")
 	flag.StringVar(&langStr, "lang", langStr,
-		"(optional) the default language to use ")
+		"the default language to use ")
 
 	libName, _ := AppArguments.Get("libraryname")
 	flag.StringVar(&libName, "libraryname", libName,
@@ -193,13 +203,7 @@ func initArguments() {
 	s, _ = AppArguments.Get("logfile")
 	logFile := absolute(dataDir, s)
 	flag.StringVar(&logFile, "log", logFile,
-		"(optional) name of the logfile to write to\n")
-
-	/*
-		ndBool := false
-		flag.BoolVar(&ndBool, "nd", ndBool,
-			"(optional) no daemon: whether to not daemonise the program")
-	*/
+		"name of the logfile to write to\n")
 
 	portInt, _ := AppArguments.AsInt("port")
 	flag.IntVar(&portInt, "port", portInt,
@@ -207,12 +211,12 @@ func initArguments() {
 
 	realmStr, _ := AppArguments.Get("realm")
 	flag.StringVar(&realmStr, "realm", realmStr,
-		"(optional) <hostName> name of host/domain to secure by BasicAuth\n")
+		"<hostName> name of host/domain to secure by BasicAuth\n")
 
 	s, _ = AppArguments.Get("sessiondir")
 	sessionDir := absolute(dataDir, s)
 	flag.StringVar(&sessionDir, "sessiondir", sessionDir,
-		"<directory> (optional) the directory to store session files\n")
+		"<directory> the directory to store session files\n")
 
 	sessionTTL, _ := AppArguments.AsInt("sessionttl")
 	flag.IntVar(&sessionTTL, "sessionttl", sessionTTL,
@@ -220,12 +224,12 @@ func initArguments() {
 
 	sidName, _ := AppArguments.Get("sidname")
 	flag.StringVar(&sidName, "sidname", sidName,
-		"(optional) <name> the name of the session ID to use\n")
+		"<name> the name of the session ID to use\n")
 
 	s, _ = AppArguments.Get("sqltrace")
 	sqlTrace := absolute(dataDir, s)
 	flag.StringVar(&sqlTrace, "sqltrace", sqlTrace,
-		"(optional) name of the SQL logfile to write to\n")
+		"name of the SQL logfile to write to\n")
 
 	themeStr, _ := AppArguments.Get("theme")
 	flag.StringVar(&themeStr, "theme", themeStr,
@@ -233,28 +237,28 @@ func initArguments() {
 
 	uaStr := ""
 	flag.StringVar(&uaStr, "ua", uaStr,
-		"<userName> (optional) user add: add a username to the password file")
+		"<userName> user add: add a username to the password file")
 
 	ucStr := ""
 	flag.StringVar(&ucStr, "uc", ucStr,
-		"<userName> (optional) user check: check a username in the password file")
+		"<userName> user check: check a username in the password file")
 
 	udStr := ""
 	flag.StringVar(&udStr, "ud", udStr,
-		"<userName> (optional) user delete: remove a username from the password file")
+		"<userName> user delete: remove a username from the password file")
 
 	s, _ = AppArguments.Get("passfile")
 	ufStr := absolute(dataDir, s)
 	flag.StringVar(&ufStr, "uf", ufStr,
-		"<fileName> (optional) user passwords file storing user/passwords for BasicAuth\n")
+		"<fileName> user passwords file storing user/passwords for BasicAuth\n")
 
 	ulBool := false
 	flag.BoolVar(&ulBool, "ul", ulBool,
-		"(optional) user list: show all users in the password file")
+		"user list: show all users in the password file")
 
 	uuStr := ""
 	flag.StringVar(&uuStr, "uu", uuStr,
-		"<userName> (optional) user update: update a username in the password file")
+		"<userName> user update: update a username in the password file")
 
 	flag.Usage = ShowHelp
 	flag.Parse() // // // // // // // // // // // // // // // // // // //
@@ -319,15 +323,6 @@ func initArguments() {
 		logFile = absolute(dataDir, logFile)
 	}
 	AppArguments.set("logfile", logFile)
-
-	/*
-		if ndBool {
-			s = "true"
-		} else {
-			s = ""
-		}
-		AppArguments.set("nd", s)
-	*/
 
 	AppArguments.set("port", fmt.Sprintf("%d", portInt))
 
