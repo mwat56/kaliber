@@ -176,9 +176,9 @@ func TestTSearch_Parse(t *testing.T) {
 	w7 := &TSearch{
 		where: ``,
 	}
-	o8 := NewSearch(`lang:"=eng"`)
+	o8 := NewSearch(`languages:"=eng"`)
 	w8 := &TSearch{
-		where: ``,
+		where: `(b.id IN (SELECT bl.book FROM books_languages_link bl JOIN languages l ON(bl.lang_code = l.id) WHERE (l.lang_code = "eng")))`,
 	}
 	tests := []struct {
 		name   string

@@ -79,7 +79,7 @@ IFNULL((SELECT group_concat(l.lang_code || "|" || l.id, ", ")
 	FROM books_languages_link bll
 	JOIN languages l ON(bll.lang_code = l.id)
 	WHERE (bll.book = b.id)
-), "") language,
+), "") languages,
 b.isbn,
 IFNULL((SELECT group_concat(i.type || "|" || i.id || "|" || i.val, ", ")
 	FROM identifiers i
@@ -116,7 +116,7 @@ var (
 		"all":       ``,
 		"authors":   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
 		"format":    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
-		"lang":      `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
+		"languages": `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
 		"publisher": `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
 		"series":    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
 		"tags":      `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
@@ -337,15 +337,15 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 
 	result := newDocList()
 	for rows.Next() {
-		var authors, formats, identifiers, language,
+		var authors, formats, identifiers, languages,
 			publisher, series, tags tPSVstring
 
 		doc := newDocument()
-		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &language, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
+		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &languages, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
 		doc.authors = prepAuthors(authors)
 		doc.formats = prepFormats(formats)
 		doc.identifiers = prepIdentifiers(identifiers)
-		doc.language = prepLanguage(language)
+		doc.languages = prepLanguages(languages)
 		doc.Pages = prepPages(doc.path)
 		doc.publisher = prepPublisher(publisher)
 		doc.series = prepSeries(series)
@@ -559,7 +559,7 @@ func orderBy(aOrder TSortType, aDescending bool) string {
 	case qoSortByAuthor:
 		result = "b.author_sort" + desc + ", b.pubdate"
 	case qoSortByLanguage:
-		result = "language" + desc + ", b.author_sort" + desc + ", b.sort"
+		result = "languages" + desc + ", b.author_sort" + desc + ", b.sort"
 	case qoSortByPublisher:
 		result = "publisher" + desc + ", b.author_sort" + desc + ", b.sort"
 	case qoSortByRating:
@@ -599,7 +599,7 @@ func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 			Name: a[0],
 		})
 	}
-	if 0 < len(result) {
+	if 1 < len(result) {
 		sort.Slice(result, func(i, j int) bool {
 			return (result[i].Name < result[j].Name) // descending
 		})
@@ -626,7 +626,7 @@ func prepFormats(aFormat tPSVstring) *tFormatList {
 			Name: a[0],
 		})
 	}
-	if 0 < len(result) {
+	if 1 < len(result) {
 		sort.Slice(result, func(i, j int) bool {
 			return (result[i].Name < result[j].Name) // descending
 		})
@@ -654,7 +654,7 @@ func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 			URL:  a[2],
 		})
 	}
-	if 0 < len(result) {
+	if 1 < len(result) {
 		sort.Slice(result, func(i, j int) bool {
 			return (result[i].Name < result[j].Name) // descending
 		})
@@ -663,26 +663,32 @@ func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 	return &result
 } // prepIdentifiers
 
-// `prepLanguage()` returns a document's language.
+// `prepLanguages()` returns a document's languages.
 //
 //	`aLanguage`
-func prepLanguage(aLanguage tPSVstring) *tLanguage {
-	list := strings.Split(aLanguage, ", ")
-	for _, val := range list {
+func prepLanguages(aLanguage tPSVstring) *tLanguageList {
+	llist := strings.Split(aLanguage, ", ")
+	result := make(tLanguageList, 0, len(llist))
+	for _, val := range llist {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
 		a := append(strings.SplitN(val, "|", 2), "")
 		num, _ := strconv.Atoi(a[1])
-		return &tLanguage{
+		result = append(result, TEntity{
 			ID:   num,
 			Name: a[0],
-		}
+		})
+	}
+	if 1 < len(result) {
+		sort.Slice(result, func(i, j int) bool {
+			return (result[i].Name < result[j].Name) // descending
+		})
 	}
 
-	return nil
-} // prepLanguage()
+	return &result
+} // prepLanguages()
 
 var (
 	// RegEx to find a document's number of pages
@@ -773,7 +779,7 @@ func prepTags(aTag tPSVstring) *tTagList {
 			Name: a[0],
 		})
 	}
-	if 0 < len(result) {
+	if 1 < len(result) {
 		sort.Slice(result, func(i, j int) bool {
 			return (result[i].Name < result[j].Name) // descending
 		})

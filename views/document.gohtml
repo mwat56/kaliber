@@ -94,13 +94,14 @@
 		</tr>
 		{{- end -}}
 
-		{{- if $doc.Language -}}
+		{{- if $doc.Languages -}}
 		<tr>
 			<td class="label">{{if eq $lang "de"}}Sprache{{else}}Language{{end}}:</td><td>
-			{{- $language := $doc.Language -}}
-			{{- $name := $language.Name -}}
-			{{- $url := $language.URL -}}
-			<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- range $i, $language := $doc.Languages -}}
+				{{- $name := $language.Name -}}
+				{{- $url := $language.URL -}}
+				<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+			{{- end -}}
 			</td>
 		</tr>
 		{{- end -}}

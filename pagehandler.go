@@ -29,7 +29,7 @@ type (
 		addr     string              // listen address ("1.2.3.4:5678")
 		dd       string              // datadir: base dir for data
 		docFS    http.Handler        // document file server
-		lang     string              // default language
+		lang     string              // default GUI language
 		ln       string              // the library's name
 		realm    string              // host/domain to secure by BasicAuth
 		staticFS http.Handler        // static file server
@@ -251,7 +251,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	}
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
-	case "all", "authors", "format", "language", "publisher", "series", "tags":
+	case "all", "authors", "format", "languages", "publisher", "series", "tags":
 		id, term := splitIDterm(tail)
 		qo.Entity = path
 		qo.ID = id

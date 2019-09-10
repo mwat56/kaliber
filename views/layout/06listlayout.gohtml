@@ -66,12 +66,13 @@
 					</p>
 				{{- end -}}
 
-				{{- if $doc.Language -}}
+				{{- if $doc.Languages -}}
 					<p>{{if eq $lang "de"}}Sprache{{else}}Language{{end}} &shy;
-					{{- $language := $doc.Language -}}
-					{{- $name := $language.Name -}}
-					{{- $url := $language.URL -}}
-					<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;
+					{{- range $i, $language := $doc.Languages -}}
+						{{- $name := $language.Name -}}
+						{{- $url := $language.URL -}}
+						<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;
+					{{- end -}}
 					</p>
 				{{- end -}}
 

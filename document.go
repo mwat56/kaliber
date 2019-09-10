@@ -47,8 +47,8 @@ type (
 	// A list of identifiers
 	tIdentifierList = TEntityList
 
-	// A single language code
-	tLanguage = TEntity
+	// A list of language codes
+	tLanguageList = TEntityList
 
 	// TStringMap is a map of strings indexed by string.
 	TStringMap map[string]string
@@ -77,7 +77,7 @@ type (
 		hasCover    bool
 		identifiers *tIdentifierList
 		ISBN        string
-		language    *tLanguage
+		languages   *tLanguageList
 		lccn        string
 		Pages       int
 		path        string
@@ -285,19 +285,23 @@ func (doc *TDocument) Identifiers() *TEntityList {
 	return nil
 } // Identifiers()
 
-// Language returns an ID/Name/URL language struct.
-func (doc *TDocument) Language() *TEntity {
-	if nil == doc.language {
+// Languages returns an ID/Name/URL language struct.
+func (doc *TDocument) Languages() *TEntityList {
+	if nil == doc.languages {
 		return nil
 	}
-	result := TEntity{
-		ID:   doc.language.ID,
-		Name: doc.language.Name,
-		URL:  fmt.Sprintf("/language/%d/%s", doc.language.ID, doc.language.Name),
+	result := make(TEntityList, 0, len(*doc.languages))
+	for _, language := range *doc.languages {
+		ent := TEntity{
+			ID:   language.ID,
+			Name: language.Name,
+			URL:  fmt.Sprintf("/languages/%d/%s", language.ID, language.Name),
+		}
+		result = append(result, ent)
 	}
 
 	return &result
-} // Language()
+} // Languages()
 
 // PubDate returns the formatted `pubdate` property.
 func (doc *TDocument) PubDate() string {
