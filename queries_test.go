@@ -7,7 +7,11 @@
 package kaliber
 
 import (
+	"crypto/md5"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -15,7 +19,11 @@ import (
 )
 
 func openDBforTesting() {
-	SetCalibreLibraryPath("/var/opt/Calibre/")
+	libPath := `/var/opt/Calibre`
+	s := fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
+	ucd, _ := os.UserCacheDir()
+	SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+	SetCalibreLibraryPath(libPath)
 	if err := OpenDatabase(); nil != err {
 		log.Fatalf("OpenDatabase(): %v", err)
 	}
@@ -298,7 +306,11 @@ func Test_prepTags(t *testing.T) {
 } // Test_prepTags()
 
 func TestOpenDatabase(t *testing.T) {
-	SetCalibreLibraryPath(`/var/opt/Calibre`)
+	libPath := `/var/opt/Calibre`
+	s := fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
+	ucd, _ := os.UserCacheDir()
+	SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+	SetCalibreLibraryPath(libPath)
 	tests := []struct {
 		name    string
 		wantErr bool

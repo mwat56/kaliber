@@ -178,7 +178,7 @@ func CalibrePreferencesFile() string {
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
 //
 //	`aPath` is the directory path to use for caching the Calibre library.
-func SetCalibreCachePath(aPath string) string {
+func SetCalibreCachePath(aPath string) {
 	if path, err := filepath.Abs(aPath); nil == err {
 		aPath = path
 	}
@@ -187,8 +187,6 @@ func SetCalibreCachePath(aPath string) string {
 	} else if err := os.MkdirAll(aPath, os.ModeDir|0775); nil == err {
 		quCalibreCachePath = aPath
 	}
-
-	return quCalibreCachePath
 } // SetCalibreCachePath()
 
 // SetCalibreLibraryPath sets the base directory of the `Calibre` library.
@@ -287,7 +285,9 @@ func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // `copyDatabaseFile()` copies Calibre's database file to our cache directory.
-func copyDatabaseFile(aSrc, aDst string) (bool, error) {
+func copyDatabaseFile() (bool, error) {
+	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
+	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
 	var (
 		err          error
 		sFile, tFile *os.File
@@ -301,20 +301,20 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 			_ = tFile.Close()
 		}
 	}()
-	if sFI, err = os.Stat(aSrc); nil != err {
+	if sFI, err = os.Stat(sName); nil != err {
 		return false, err
 	}
-	if dFI, err = os.Stat(aDst); nil == err {
+	if dFI, err = os.Stat(dName); nil == err {
 		if sFI.ModTime().Before(dFI.ModTime()) {
 			return false, nil
 		}
 	}
 
-	if sFile, err = os.Open(aSrc); /* #nosec G304 */ err != nil {
+	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
 		return false, err
 	}
 
-	tName := aDst + `~`
+	tName := dName + `~`
 	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
 		return false, err
 	}
@@ -322,9 +322,9 @@ func copyDatabaseFile(aSrc, aDst string) (bool, error) {
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return false, err
 	}
-	go goSQLtrace("-- copied "+aSrc+" to "+aDst, time.Now())
+	go goSQLtrace("-- copied "+sName+" to "+dName, time.Now())
 
-	return true, os.Rename(tName, aDst)
+	return true, os.Rename(tName, dName)
 } // copyDatabaseFile()
 
 // `doQueryAll()` returns a list of documents with all available fields.
@@ -402,9 +402,6 @@ func escapeQuery(aSource string) string {
 // file has changed. If so, that file is copied to the cache directory
 // from where it is read and used by the `quSQLiteDB` instance.
 func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
-	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
-	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
-
 	//lint:ignore S1000 – we only need the separate `more` field
 	for {
 		select {
@@ -412,7 +409,7 @@ func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 			if !more {
 				return // channel closed
 			}
-			if copied, err := copyDatabaseFile(sName, dName); copied && (nil == err) {
+			if copied, err := copyDatabaseFile(); copied && (nil == err) {
 				aCopied <- struct{}{}
 			}
 		}
@@ -517,14 +514,12 @@ func limit(aStart, aLength uint) string {
 
 // OpenDatabase establishes a new database connection.
 func OpenDatabase() error {
-	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
-	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
-	quSqliteDB.dbFileName = dName
+	quSqliteDB.dbFileName = filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
 	quSqliteDB.doCheck = make(chan struct{}, 64)
 	quSqliteDB.wasCopied = make(chan struct{}, 1)
 
 	// prepare the local database copy:
-	if _, err := copyDatabaseFile(sName, dName); nil != err {
+	if _, err := copyDatabaseFile(); nil != err {
 		return err
 	}
 	// signal for `dbReopen()`:

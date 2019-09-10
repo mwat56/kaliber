@@ -7,15 +7,23 @@
 package kaliber
 
 import (
+	"crypto/md5"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
 func setup4Testing() {
-	SetCalibreCachePath("./img")
-	SetCalibreLibraryPath("/var/opt/Calibre/")
+	libPath := `/var/opt/Calibre`
+	s := fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
+	ucd, _ := os.UserCacheDir()
+	SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+	SetCalibreLibraryPath(libPath)
 } // setup4Testing
 
 func Test_makeThumbDir(t *testing.T) {
+	setup4Testing()
 	d1 := &TDocument{
 		ID:   7628,
 		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
@@ -47,8 +55,8 @@ func TestThumbnail(t *testing.T) {
 		ID:   7628,
 		path: "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
-	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/img/0076/007628.jpg"
-	ThumbnailRemove(d1)
+	w1 := `/home/matthias/.cache/kaliber/abb302a1831a12171af82e2cd612b4e9/0076/007628.jpg`
+	thumbnailRemove(d1)
 	type args struct {
 		aDoc *TDocument
 	}
@@ -65,11 +73,11 @@ func TestThumbnail(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := Thumbnail(tt.args.aDoc)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Thumbnail() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Thumbnail() error = %v,\nwantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Thumbnail() = %v, want %v", got, tt.want)
+				t.Errorf("Thumbnail() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}
@@ -81,8 +89,8 @@ func TestThumbnailName(t *testing.T) {
 		ID:   7628,
 		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
-	w1 := "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/img/0076/007628.jpg"
-	ThumbnailRemove(d1)
+	w1 := `/home/matthias/.cache/kaliber/abb302a1831a12171af82e2cd612b4e9/0076/007628.jpg`
+	thumbnailRemove(d1)
 	type args struct {
 		aDoc *TDocument
 	}
@@ -96,7 +104,7 @@ func TestThumbnailName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ThumbnailName(tt.args.aDoc); got != tt.want {
+			if got := thumbnailName(tt.args.aDoc); got != tt.want {
 				t.Errorf("ThumbnailName() = %v,\nwant %v", got, tt.want)
 			}
 		})
@@ -122,7 +130,7 @@ func TestThumbnailRemove(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ThumbnailRemove(tt.args.aDoc); (err != nil) != tt.wantErr {
+			if err := thumbnailRemove(tt.args.aDoc); (err != nil) != tt.wantErr {
 				t.Errorf("ThumbnailRemove() error = %v,\nwantErr %v", err, tt.wantErr)
 			}
 		})
