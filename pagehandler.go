@@ -27,6 +27,7 @@ type (
 	// TPageHandler provides the handling of HTTP request/response.
 	TPageHandler struct {
 		addr     string              // listen address ("1.2.3.4:5678")
+		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
 		dd       string              // datadir: base dir for data
 		docFS    http.Handler        // document file server
 		lang     string              // default GUI language
@@ -46,6 +47,8 @@ func NewPageHandler() (*TPageHandler, error) {
 		s   string
 	)
 	result := new(TPageHandler)
+
+	result.cacheFS = http.FileServer(http.Dir(CalibreCachePath()))
 
 	if s, err = AppArguments.Get("datadir"); nil != err {
 		return nil, err
@@ -396,13 +399,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		file, err := filepath.Rel(ph.dd, tName)
+		file, err := filepath.Rel(CalibreCachePath(), tName)
 		if nil != err {
 			http.NotFound(aWriter, aRequest)
 			return
 		}
 		aRequest.URL.Path = file
-		ph.staticFS.ServeHTTP(aWriter, aRequest)
+		ph.cacheFS.ServeHTTP(aWriter, aRequest)
 
 	case "views": // files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
