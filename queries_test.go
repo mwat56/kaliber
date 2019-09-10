@@ -475,9 +475,9 @@ func TestQuerySearch(t *testing.T) {
 	qo1 := NewQueryOptions()
 	qo1.Matching = `Golang`
 	qo2 := NewQueryOptions()
-	qo2.Matching = `language:"=eng"`
+	qo2.Matching = `languages:"=eng"`
 	qo3 := NewQueryOptions()
-	qo3.Matching = `language:"=deu"`
+	qo3.Matching = `languages:"=deu"`
 	type args struct {
 		aOption *TQueryOptions
 	}
@@ -533,3 +533,30 @@ func Test_escapeQuery(t *testing.T) {
 		})
 	}
 } // Test_escapeQuery()
+
+func TestQueryDocMini(t *testing.T) {
+	openDBforTesting()
+	type args struct {
+		aID TID
+	}
+	tests := []struct {
+		name string
+		args args
+		want *TDocument
+	}{
+		// TODO: Add test cases.
+		{" 1", args{0}, nil},
+		{" 2", args{1}, newDocument()},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := QueryDocMini(tt.args.aID)
+			if (nil == got) && (nil != tt.want) {
+				t.Errorf("QueryDocMini() = %v,\nwant %v", got, tt.want)
+			}
+			if (nil != got) && (nil == tt.want) {
+				t.Errorf("QueryDocMini() = %v,\nwant %v", got, tt.want)
+			}
+		})
+	}
+} // TestQueryDocMini()
