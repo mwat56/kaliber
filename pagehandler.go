@@ -127,13 +127,13 @@ func newViewList(aDirectory string) (*TViewList, error) {
 } // newViewList()
 
 var (
-	splitTermRE = regexp.MustCompile(`(\d+)/(.+)$`)
+	phSplitTermRE = regexp.MustCompile(`(\d+)/(.+)$`)
 )
 
 // `splitIDterm()` splits `aTail` into an ID and a string term.
 // This function is a helper of `TPageHandler.handleGET()`.
 func splitIDterm(aTail string) (rID TID, rTerm string) {
-	matches := splitTermRE.FindStringSubmatch(aTail)
+	matches := phSplitTermRE.FindStringSubmatch(aTail)
 	if (nil != matches) && (1 < len(matches)) {
 		rID, _ = strconv.Atoi(matches[1])
 		rTerm = matches[2]
@@ -144,7 +144,7 @@ func splitIDterm(aTail string) (rID TID, rTerm string) {
 
 var (
 	// RegEx to find path and possible added path components
-	urlPartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
+	phURLpartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
 )
 
 // URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
@@ -156,7 +156,7 @@ func URLparts(aURL string) (rDir, rPath string) {
 	if result, err := url.QueryUnescape(aURL); nil == err {
 		aURL = result
 	}
-	matches := urlPartsRE.FindStringSubmatch(aURL)
+	matches := phURLpartsRE.FindStringSubmatch(aURL)
 	if 2 < len(matches) {
 		return matches[1], matches[2]
 	}
@@ -239,7 +239,7 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 
 var (
 	// extract ID and file format from URL
-	fileParseRE = regexp.MustCompile(`^(\d+)/([^/]+?)/(.*)`)
+	phFileParseRE = regexp.MustCompile(`^(\d+)/([^/]+?)/(.*)`)
 )
 
 // `handleGET()` processes the HTTP GET requests.
@@ -313,7 +313,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
 	case "file":
-		matches := fileParseRE.FindStringSubmatch(tail)
+		matches := phFileParseRE.FindStringSubmatch(tail)
 		if (nil == matches) || (3 > len(matches)) {
 			http.NotFound(aWriter, aRequest)
 			return
