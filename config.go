@@ -311,7 +311,11 @@ func InitConfig() {
 	// To allow for use of multiple libraries we add the MD5
 	// of the libraryPath to our cache path.
 	s = fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
-	SetCalibreCachePath(filepath.Join(dataDir, "img", s))
+	if ucd, err := os.UserCacheDir(); (nil != err) || (0 == len(ucd)) {
+		SetCalibreCachePath(filepath.Join(dataDir, "img", s))
+	} else {
+		SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+	}
 	SetCalibreLibraryPath(libPath)
 
 	if "0" == listenStr {
@@ -358,7 +362,7 @@ func InitConfig() {
 	AppArguments.set("ul", s)
 
 	AppArguments.set("uu", uuStr)
-} // initArguments()
+} // InitConfig()
 
 // ShowHelp lists the commandline options to `Stderr`.
 func ShowHelp() {
