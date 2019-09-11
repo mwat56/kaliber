@@ -6,61 +6,65 @@
 
 package kaliber
 
-//lint:file-ignore ST1017 - I prefer Yoda conditions
-
 import (
 	"reflect"
 	"testing"
 )
 
-func Test_mdReadMetadataFile(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre")
-	var v1 TVirtualLibraryList
+func Test_BookFieldVisible(t *testing.T) {
+	type args struct {
+		aFieldname string
+	}
 	tests := []struct {
-		name    string
-		want    *TVirtualLibraryList
-		wantErr bool
+		name string
+		args args
+		want bool
 	}{
 		// TODO: Add test cases.
-		{" 1", &v1, false},
+		{" 1", args{"title"}, false},
+		{" 2", args{"sort"}, true},
+		{" 3", args{"n.a."}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := mdReadMetadataFile()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("mdReadMetadataFile() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if 0 == len(mdMetadataDbPrefs) {
-				t.Errorf("mdReadMetadataFile() = %v, want %v", len(mdMetadataDbPrefs), "> 0")
+			if got := BookFieldVisible(tt.args.aFieldname); got != tt.want {
+				t.Errorf("BookFieldVisible() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // Test_mdReadMetadataFile()
+} // Test_BookFieldVisible()
 
-func Test_mdVirtualLibDefinitions(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre")
+func Test_GetMetaFieldValue(t *testing.T) {
+	type args struct {
+		aField string
+		aKey   string
+	}
 	tests := []struct {
 		name    string
-		want    *TVirtualLibraryList
+		args    args
+		want    interface{}
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", nil, false},
+		{" 1", args{"authors", "is_category"}, true, false},
+		{" 2", args{"authors", "table"}, "authors", false},
+		{" 3", args{"#genre", "is_category"}, true, false},
+		{" 4", args{"#genre", "is_custom"}, true, false},
+		{" 5", args{"#genre", "table"}, "custom_column_1", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := mdVirtualLibDefinitions()
+			got, err := GetMetaFieldValue(tt.args.aField, tt.args.aKey)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("mdVirtualLibDefinitions() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetMetaFieldValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if 0 == len(*got) {
-				t.Errorf("mdVirtualLibDefinitions() = %v, want %v", len(*got), "> 0")
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetMetaFieldValue() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // Test_mdVirtualLibDefinitions()
+} // Test_GetMetaFieldValue()
 
 func Test_GetVirtLibList(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
@@ -109,27 +113,6 @@ func Test_GetVirtLibOptions(t *testing.T) {
 	}
 } // Test_GetVirtLibOptions()
 
-func Test_mdReadFieldMetadata(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre")
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := mdReadFieldMetadata(); (err != nil) != tt.wantErr {
-				t.Errorf("mdReadFieldMetadata() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if 0 == len(*mdFieldsMetadata) {
-				t.Errorf("GetVirtLibList() = %v, want %v", len(*mdFieldsMetadata), "> 0")
-			}
-		})
-	}
-} // Test_mdReadFieldMetadata()
-
 func Test_mdGetFieldData(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
 	var w1 map[string]interface{}
@@ -163,6 +146,89 @@ func Test_mdGetFieldData(t *testing.T) {
 	}
 } // Test_mdGetFieldData()
 
+func Test_mdReadBookDisplayFields(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := mdReadBookDisplayFields(); (err != nil) != tt.wantErr {
+				t.Errorf("mdReadBookDisplayFields() error = %w, wantErr %v", err, tt.wantErr)
+			}
+			if nil == mdBookDisplayFieldsList {
+				t.Errorf("mdReadBookDisplayFields() error = %v, want %s", nil, "!nil")
+			}
+		})
+	}
+} // Test_mdReadBookDisplayFields()
+
+func Test_mdReadFieldMetadata(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := mdReadFieldMetadata(); (err != nil) != tt.wantErr {
+				t.Errorf("mdReadFieldMetadata() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if 0 == len(*mdFieldsMetadataList) {
+				t.Errorf("GetVirtLibList() = %v, want %v", len(*mdFieldsMetadataList), "> 0")
+			}
+		})
+	}
+} // Test_mdReadFieldMetadata()
+
+func Test_mdReadHiddenVirtualLibraries(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := mdReadHiddenVirtualLibraries(); (err != nil) != tt.wantErr {
+				t.Errorf("mdReadHiddenVirtualLibraries() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+} // Test_mdReadHiddenVirtualLibraries()
+
+func Test_mdReadMetadataFile(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
+	var v1 TVirtualLibraryList
+	tests := []struct {
+		name    string
+		want    *TVirtualLibraryList
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", &v1, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := mdReadMetadataFile()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("mdReadMetadataFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if 0 == len(*mdMetadataDbPrefs) {
+				t.Errorf("mdReadMetadataFile() = %v, want %v", len(*mdMetadataDbPrefs), "> 0")
+			}
+		})
+	}
+} // Test_mdReadMetadataFile()
+
 func Test_mdReadVirtualLibraries(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
 	tests := []struct {
@@ -184,51 +250,26 @@ func Test_mdReadVirtualLibraries(t *testing.T) {
 	}
 } // Test_mdReadVirtualLibraries()
 
-func Test_GetMetaFieldValue(t *testing.T) {
-	type args struct {
-		aField string
-		aKey   string
-	}
+func Test_mdVirtualLibDefinitions(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	tests := []struct {
 		name    string
-		args    args
-		want    interface{}
+		want    *TVirtualLibraryList
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{"authors", "is_category"}, true, false},
-		{" 2", args{"authors", "table"}, "authors", false},
-		{" 3", args{"#genre", "is_category"}, true, false},
-		{" 4", args{"#genre", "is_custom"}, true, false},
-		{" 5", args{"#genre", "table"}, "custom_column_1", false},
+		{" 1", nil, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetMetaFieldValue(tt.args.aField, tt.args.aKey)
+			got, err := mdVirtualLibDefinitions()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetMetaFieldValue() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("mdVirtualLibDefinitions() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetMetaFieldValue() = %v, want %v", got, tt.want)
+			if 0 == len(*got) {
+				t.Errorf("mdVirtualLibDefinitions() = %v, want %v", len(*got), "> 0")
 			}
 		})
 	}
-} // Test_GetMetaFieldValue()
-
-func Test_mdReadHiddenVirtualLibraries(t *testing.T) {
-	tests := []struct {
-		name    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := mdReadHiddenVirtualLibraries(); (err != nil) != tt.wantErr {
-				t.Errorf("mdReadHiddenVirtualLibraries() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-} // Test_mdReadHiddenVirtualLibraries()
+} // Test_mdVirtualLibDefinitions()

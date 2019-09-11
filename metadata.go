@@ -21,6 +21,9 @@ import (
 )
 
 const (
+	// Name of the JSON section holding the names of book fields.
+	mdBookDisplayFields = "book_display_fields"
+
 	// Name of the JSON section holding e.g. user-defined field definitions.
 	mdFieldMetadata = "field_metadata"
 
@@ -32,19 +35,25 @@ const (
 )
 
 type (
+	// tBookDisplayFieldsList is the `book_display_fields` metadata list.
+	tBookDisplayFieldsList map[string]bool
+
 	// TVirtualLibraryList is the `virtual_libraries` JSON metadata section.
 	TVirtualLibraryList map[string]string
 )
 
 var (
+	// cache of "book_display_fields" list
+	mdBookDisplayFieldsList tBookDisplayFieldsList
+
 	// cache of "field_metadata" list
-	mdFieldsMetadata *map[string]interface{}
+	mdFieldsMetadataList *map[string]interface{}
 
 	// list of virtual libraries to hide
 	mdHiddenVirtLibs map[string]interface{}
 
 	// cache of all DB metadata preferences
-	mdMetadataDbPrefs map[string]interface{}
+	mdMetadataDbPrefs *map[string]interface{}
 
 	// virtual libraries list
 	mdVirturalLibraryList TVirtualLibraryList
@@ -85,14 +94,61 @@ func mdReadMetadataFile() error {
 	delete(jsdata, `saved_searches`)
 	delete(jsdata, `update_all_last_mod_dates_on_start`)
 	delete(jsdata, `user_categories`)
-	mdMetadataDbPrefs = jsdata
+	mdMetadataDbPrefs = &jsdata
 
 	return nil
 } // mdReadMetadataFile()
 
+// `mdReadBookDisplayFields()`
+func mdReadBookDisplayFields() error {
+	if nil != mdBookDisplayFieldsList {
+		return nil // field metadata already read
+	}
+	if err := mdReadMetadataFile(); nil != err {
+		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
+		apachelogger.Log("mdReadBookDisplayFields", msg)
+		return errors.New(msg)
+	}
+	section, ok := (*mdMetadataDbPrefs)[mdBookDisplayFields]
+	if !ok {
+		msg := fmt.Sprintf("no such JSON section: %s", mdBookDisplayFields)
+		apachelogger.Log("mdReadBookDisplayFields", msg)
+		return errors.New(msg)
+	}
+
+	data := section.([]interface{})
+	mdBookDisplayFieldsList = make(tBookDisplayFieldsList, len(data))
+	for _, raw := range data {
+		entry := raw.([]interface{})
+		field := entry[0].(string)
+		display := entry[1].(bool)
+		mdBookDisplayFieldsList[field] = display
+	}
+
+	return nil
+} // mdReadBookDisplayFields()
+
+// BookFieldVisible returns whether `aFieldname` should be visible or not.
+//
+//	`aFieldname` The nname of the field/column to check.
+func BookFieldVisible(aFieldname string) bool {
+	if nil == mdBookDisplayFieldsList {
+		if err := mdReadBookDisplayFields(); nil != err {
+			msg := fmt.Sprintf("mdReadBookDisplayFields(): %v", err)
+			apachelogger.Log("BookFieldVisible", msg)
+			return true
+		}
+	}
+	if result, ok := mdBookDisplayFieldsList[aFieldname]; ok {
+		return result
+	}
+
+	return true
+} // BookFieldVisible()
+
 // `mdReadFieldMetadata()`
 func mdReadFieldMetadata() error {
-	if nil != mdFieldsMetadata {
+	if nil != mdFieldsMetadataList {
 		return nil // field metadata already read
 	}
 	if err := mdReadMetadataFile(); nil != err {
@@ -100,14 +156,14 @@ func mdReadFieldMetadata() error {
 		apachelogger.Log("mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
-	section, ok := mdMetadataDbPrefs[mdFieldMetadata]
+	section, ok := (*mdMetadataDbPrefs)[mdFieldMetadata]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdFieldMetadata)
 		apachelogger.Log("mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
 	fmd := section.(map[string]interface{})
-	mdFieldsMetadata = &fmd
+	mdFieldsMetadataList = &fmd
 
 	return nil
 } // mdReadFieldMetadata()
@@ -124,7 +180,7 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 		return nil, errors.New(msg)
 	}
 
-	fmd := *mdFieldsMetadata
+	fmd := *mdFieldsMetadataList
 	fd, ok := fmd[aField]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", aField)
@@ -147,7 +203,7 @@ func mdReadHiddenVirtualLibraries() error {
 		return errors.New(msg)
 	}
 
-	section, ok := mdMetadataDbPrefs[mdHiddenVirtualLibraries]
+	section, ok := (*mdMetadataDbPrefs)[mdHiddenVirtualLibraries]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdHiddenVirtualLibraries)
 		apachelogger.Log("mdReadHiddenVirtualLibraries", msg)
@@ -178,7 +234,7 @@ func mdReadVirtualLibraries() error {
 		return errors.New(msg)
 	}
 
-	section, ok := mdMetadataDbPrefs[mdVirtualLibraries]
+	section, ok := (*mdMetadataDbPrefs)[mdVirtualLibraries]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdVirtualLibraries)
 		apachelogger.Log("mdReadVirtualLibraries", msg)
