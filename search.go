@@ -97,13 +97,13 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		if '#' != exp.entity[0] {
 			field = "#" + field
 		}
-		if isCustom, err := GetMetaFieldValue(field, "is_custom"); (nil != err) || (true != isCustom) {
+		if isCustom, err := MetaFieldValue(field, "is_custom"); (nil != err) || (true != isCustom) {
 			return // no user-defined field
 		}
-		if isCategory, err := GetMetaFieldValue(field, "is_category"); (nil != err) || (true != isCategory) {
+		if isCategory, err := MetaFieldValue(field, "is_category"); (nil != err) || (true != isCategory) {
 			return
 		}
-		itable, err := GetMetaFieldValue(field, "table")
+		itable, err := MetaFieldValue(field, "table")
 		if nil != err {
 			return
 		}

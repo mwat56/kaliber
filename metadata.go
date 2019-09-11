@@ -38,8 +38,8 @@ type (
 	// tBookDisplayFieldsList is the `book_display_fields` metadata list.
 	tBookDisplayFieldsList map[string]bool
 
-	// TVirtualLibraryList is the `virtual_libraries` JSON metadata section.
-	TVirtualLibraryList map[string]string
+	// TVirtLibList is the `virtual_libraries` JSON metadata section.
+	TVirtLibList map[string]string
 )
 
 var (
@@ -56,7 +56,7 @@ var (
 	mdMetadataDbPrefs *map[string]interface{}
 
 	// virtual libraries list
-	mdVirturalLibraryList TVirtualLibraryList
+	mdVirtLibList TVirtLibList
 
 	// raw virtual libraries list
 	mdVirtLibsRaw *map[string]interface{}
@@ -127,24 +127,6 @@ func mdReadBookDisplayFields() error {
 
 	return nil
 } // mdReadBookDisplayFields()
-
-// BookFieldVisible returns whether `aFieldname` should be visible or not.
-//
-//	`aFieldname` The nname of the field/column to check.
-func BookFieldVisible(aFieldname string) bool {
-	if nil == mdBookDisplayFieldsList {
-		if err := mdReadBookDisplayFields(); nil != err {
-			msg := fmt.Sprintf("mdReadBookDisplayFields(): %v", err)
-			apachelogger.Log("BookFieldVisible", msg)
-			return true
-		}
-	}
-	if result, ok := mdBookDisplayFieldsList[aFieldname]; ok {
-		return result
-	}
-
-	return true
-} // BookFieldVisible()
 
 // `mdReadFieldMetadata()`
 func mdReadFieldMetadata() error {
@@ -246,8 +228,8 @@ func mdReadVirtualLibraries() error {
 	return nil
 } // mdReadVirtualLibraries()
 
-// `mdVirtualLibDefinitions()` returns a map of virtual library definitions.
-func mdVirtualLibDefinitions() (*TVirtualLibraryList, error) {
+// `mdVirtLibDefinitions()` returns a map of virtual library definitions.
+func mdVirtLibDefinitions() (*TVirtLibList, error) {
 	if err := mdReadVirtualLibraries(); nil != err {
 		msg := fmt.Sprintf("mdReadVirtualLibraries(): %v", err)
 		apachelogger.Log("mdVirtualLibDefinitions", msg)
@@ -260,7 +242,7 @@ func mdVirtualLibDefinitions() (*TVirtualLibraryList, error) {
 	}
 
 	m := *mdVirtLibsRaw
-	result := make(TVirtualLibraryList, len(m))
+	result := make(TVirtLibList, len(m))
 	for key, value := range m {
 		if nil != mdHiddenVirtLibs {
 			if _, ok := mdHiddenVirtLibs[key]; ok {
@@ -280,81 +262,75 @@ func mdVirtualLibDefinitions() (*TVirtualLibraryList, error) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// GetMetaFieldValue returns the value of `aField` of `aSection`.
+// BookFieldVisible returns whether `aFieldname` should be visible or not.
 //
-//	aSection Name of the field metadata section.
+// If `aFieldname` can't be found the function returns `true` and an error,
+// otherwise the (boolean) `visible` value and `nil`.
+//
+//	`aFieldname` The name of the field/column to check.
+func BookFieldVisible(aFieldname string) (rVisible bool, rErr error) {
+	if nil == mdBookDisplayFieldsList {
+		if err := mdReadBookDisplayFields(); nil != err {
+			msg := fmt.Sprintf("mdReadBookDisplayFields(): %v", err)
+			apachelogger.Log("md.BookFieldVisible", msg)
+			return true, errors.New(msg)
+		}
+	}
+	if result, ok := mdBookDisplayFieldsList[aFieldname]; ok {
+		return result, nil
+	}
+
+	msg := fmt.Sprintf("field name doesn't exist: %s", aFieldname)
+	apachelogger.Log("md.BookFieldVisible", msg)
+	return true, errors.New(msg)
+} // BookFieldVisible()
+
+// MetaFieldValue returns the value of `aField` of `aSection`.
+//
+//	aSection Name of the field's metadata section.
 //	aField Name of the data field within `aSection`.
-func GetMetaFieldValue(aSection, aField string) (interface{}, error) {
+func MetaFieldValue(aSection, aField string) (interface{}, error) {
 	if (0 == len(aSection)) || (0 == len(aField)) {
-		msg := fmt.Sprintf(`GetMetaFieldValue(): empty arguments ("%s". "%s")`, aSection, aField)
+		msg := fmt.Sprintf(`md.MetaFieldValue(): empty arguments ("%s". "%s")`, aSection, aField)
 		return nil, errors.New(msg)
 	}
 
 	fmd, err := mdGetFieldData(aSection)
 	if nil != err {
 		msg := fmt.Sprintf("mdGetFieldData(): %v", err)
-		apachelogger.Log("md.GetMetaFieldValue", msg)
+		apachelogger.Log("md.MetaFieldValue", msg)
 		return nil, errors.New(msg)
 	}
 
 	result, ok := fmd[aField]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s[%s]", aSection, aField)
-		apachelogger.Log("md.GetMetaFieldValue", msg)
+		apachelogger.Log("md.MetaFieldValue", msg)
 		return nil, errors.New(msg)
 	}
 
 	return result, nil
-} // GetMetaFieldValue()
+} // MetaFieldValue()
 
-var (
-	// RegEx to find `.*` in a virt.lib. definition
-	mdDotStarRE = regexp.MustCompile(`(\.?\*)`)
-)
-
-// GetVirtualLibraryList returns a list of virtual library definitions
-// and SQL code to access them.
-func GetVirtualLibraryList() (TVirtualLibraryList, error) {
-	if nil != mdVirturalLibraryList {
-		return mdVirturalLibraryList, nil
-	}
-	jsList, err := mdVirtualLibDefinitions()
-	if nil != err {
-		msg := fmt.Sprintf("mdVirtualLibDefinitions(): %v", err)
-		apachelogger.Log("md.GetVirtLibList", msg)
-		return nil, err
-	}
-
-	mdVirturalLibraryList = make(TVirtualLibraryList, len(*jsList))
-	for key, value := range *jsList {
-
-		//TODO check for libraries to hide
-
-		mdVirturalLibraryList[key] = mdDotStarRE.ReplaceAllLiteralString(value, "%")
-	}
-
-	return mdVirturalLibraryList, nil
-} // GetVirtualLibraryList()
-
-// GetVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
+// VirtLibOptions returns the SELECT/OPTIONs of the virtual libraries.
 //
 //	aSelected Name of the currently selected library.
-func GetVirtLibOptions(aSelected string) string {
-	_, err := GetVirtualLibraryList()
+func VirtLibOptions(aSelected string) string {
+	_, err := VirtualLibraryList()
 	if nil != err {
-		msg := fmt.Sprintf("GetVirtLibList(): %v", err)
-		apachelogger.Log("md.GetVirtLibOptions", msg)
+		msg := fmt.Sprintf("md.VirtualLibraryList(): %v", err)
+		apachelogger.Log("md.VirtLibOptions", msg)
 		return ""
 	}
 
-	list := make([]string, 0, len(mdVirturalLibraryList)+1)
+	list := make([]string, 0, len(mdVirtLibList)+1)
 	if (0 == len(aSelected)) || ("-" == aSelected) {
 		list = append(list, `<option value="-" SELECTED> – </option>`)
 		aSelected = ""
 	} else {
 		list = append(list, `<option value="-"> – </option>`)
 	}
-	for key := range mdVirturalLibraryList {
+	for key := range mdVirtLibList {
 		option := `<option value="` + key + `"`
 		if key == aSelected {
 			option += ` SELECTED`
@@ -368,6 +344,35 @@ func GetVirtLibOptions(aSelected string) string {
 	})
 
 	return strings.Join(list, "\n")
-} // GetVirtLibOptions()
+} // VirtLibOptions()
+
+var (
+	// RegEx to find `.*` in a virt.lib. definition
+	mdDotStarRE = regexp.MustCompile(`(\.?\*)`)
+)
+
+// VirtualLibraryList returns a list of virtual library definitions
+// and SQL code to access them.
+func VirtualLibraryList() (TVirtLibList, error) {
+	if nil != mdVirtLibList {
+		return mdVirtLibList, nil
+	}
+	jsList, err := mdVirtLibDefinitions()
+	if nil != err {
+		msg := fmt.Sprintf("mdVirtLibDefinitions(): %v", err)
+		apachelogger.Log("md.VirtualLibraryList", msg)
+		return nil, err
+	}
+
+	mdVirtLibList = make(TVirtLibList, len(*jsList))
+	for key, value := range *jsList {
+
+		//TODO check for libraries to hide
+
+		mdVirtLibList[key] = mdDotStarRE.ReplaceAllLiteralString(value, "%")
+	}
+
+	return mdVirtLibList, nil
+} // VirtualLibraryList()
 
 /* _EoF_ */

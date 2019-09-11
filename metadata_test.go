@@ -16,18 +16,24 @@ func Test_BookFieldVisible(t *testing.T) {
 		aFieldname string
 	}
 	tests := []struct {
-		name string
-		args args
-		want bool
+		name    string
+		args    args
+		want    bool
+		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{"title"}, false},
-		{" 2", args{"sort"}, true},
-		{" 3", args{"n.a."}, true},
+		{" 1", args{"title"}, false, false},
+		{" 2", args{"sort"}, true, false},
+		{" 3", args{"n.a."}, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := BookFieldVisible(tt.args.aFieldname); got != tt.want {
+			got, err := BookFieldVisible(tt.args.aFieldname)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BookFieldVisible() error = %w, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
 				t.Errorf("BookFieldVisible() = %v, want %v", got, tt.want)
 			}
 		})
@@ -54,7 +60,7 @@ func Test_GetMetaFieldValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetMetaFieldValue(tt.args.aField, tt.args.aKey)
+			got, err := MetaFieldValue(tt.args.aField, tt.args.aKey)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetMetaFieldValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -79,7 +85,7 @@ func Test_GetVirtLibList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetVirtualLibraryList()
+			got, err := VirtualLibraryList()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetVirtLibList() error = %v,\nwantErr %v", err, tt.wantErr)
 				return
@@ -106,7 +112,7 @@ func Test_GetVirtLibOptions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetVirtLibOptions(tt.args.aSelected); 0 == len(got) {
+			if got := VirtLibOptions(tt.args.aSelected); 0 == len(got) {
 				t.Errorf("GetVirtLibOptions() = %v,\nwant %v", got, "> 0")
 			}
 		})
@@ -206,10 +212,10 @@ func Test_mdReadHiddenVirtualLibraries(t *testing.T) {
 
 func Test_mdReadMetadataFile(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
-	var v1 TVirtualLibraryList
+	var v1 TVirtLibList
 	tests := []struct {
 		name    string
-		want    *TVirtualLibraryList
+		want    *TVirtLibList
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -254,7 +260,7 @@ func Test_mdVirtualLibDefinitions(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
 	tests := []struct {
 		name    string
-		want    *TVirtualLibraryList
+		want    *TVirtLibList
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -262,7 +268,7 @@ func Test_mdVirtualLibDefinitions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := mdVirtualLibDefinitions()
+			got, err := mdVirtLibDefinitions()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("mdVirtualLibDefinitions() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -241,7 +241,7 @@ func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 
 // SelectVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
 func (qo *TQueryOptions) SelectVirtLibOptions() string {
-	return GetVirtLibOptions(qo.VirtLib)
+	return VirtLibOptions(qo.VirtLib)
 } // SelectVirtLibOptions()
 
 // Update returns a `TQueryOptions` instance with updated values
@@ -346,7 +346,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 				qo.VirtLib = vl
 			}
 			if "" != vl {
-				if vlList, err := GetVirtualLibraryList(); nil == err {
+				if vlList, err := VirtualLibraryList(); nil == err {
 					if vld, ok := vlList[vl]; ok {
 						qo.Matching = vld
 					}
