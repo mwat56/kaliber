@@ -38,6 +38,9 @@ func goThumbCleanup() {
 	for _, numDir := range dirNames {
 		checkThumbBase(numDir)
 	}
+
+	// just mark that function as `used`:
+	_ = thumbnailRemove(NewDocument())
 } // goThumbCleanup()
 
 // `checkThumbBase()`
@@ -234,8 +237,9 @@ func thumbnailName(aDoc *TDocument) string {
 	return filepath.Join(CalibreCachePath(), name[:4], name+`.jpg`)
 } // thumbnailName()
 
-// thumbnailRemove deletes the thumbnail of `aDoc`.
+// `thumbnailRemove()` deletes the thumbnail of `aDoc`.
 func thumbnailRemove(aDoc *TDocument) error {
+	//XXX This function is only needed for during testing.
 	fName := thumbnailName(aDoc)
 	err := os.Remove(fName)
 	if nil == err {

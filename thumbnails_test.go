@@ -117,6 +117,7 @@ func TestThumbnailRemove(t *testing.T) {
 		ID:   7628,
 		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
+	d2 := NewDocument()
 	type args struct {
 		aDoc *TDocument
 	}
@@ -127,6 +128,7 @@ func TestThumbnailRemove(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{" 1", args{d1}, false},
+		{" 2", args{d2}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
