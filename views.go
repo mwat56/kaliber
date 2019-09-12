@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -38,21 +37,6 @@ func addExternURLtagets(aPage []byte) []byte {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-func authorList(aList *TEntityList) string {
-	if nil == aList {
-		return ""
-	}
-	result := ""
-	for _, author := range *aList {
-		result += author.Name + ", "
-	}
-	if strings.HasSuffix(result, ", ") {
-		result = result[:len(result)-2]
-	}
-
-	return result + ": "
-} // authorList()
-
 // `htmlSafe()` returns `aText` as template.HTML.
 func htmlSafe(aText string) template.HTML {
 	return template.HTML(aText) // #nosec G203
@@ -69,7 +53,6 @@ func selectOption(aMap *TStringMap, aValue string) template.HTML {
 
 var (
 	viewFunctionMap = template.FuncMap{
-		"authorList":   authorList,   // returns a comma separated author list
 		"htmlSafe":     htmlSafe,     // returns `aText` as template.HTML
 		"selectOption": selectOption, // returns a Select Option
 	}

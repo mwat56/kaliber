@@ -25,14 +25,14 @@ This file provides functions and methods to handle a single document.
 */
 
 type (
-	// TID is the database index type.
+	// TID is the database index type (i.e. `int`).
 	TID = int
 
 	// TEntity is a basic entity structure.
 	TEntity struct {
-		ID   TID
-		Name string
-		URL  string
+		ID   TID    // database row ID
+		Name string // name of the column/field
+		URL  string // local URL to access this entity
 	}
 
 	// TEntityList is a list of entities
@@ -101,7 +101,25 @@ type (
 	TDocList []TDocument
 )
 
-// Authors returns a list of ID/Name author fields.
+// AuthorList returns a CSV list of the document's author(s).
+func (doc *TDocument) AuthorList() string {
+	if nil == doc.authors {
+		return ""
+	}
+
+	lLen, result := len(*doc.authors)-1, ""
+	for idx, author := range *doc.authors {
+		if idx < lLen {
+			result += author.Name + ", "
+		} else {
+			result += author.Name
+		}
+	}
+
+	return result
+} // AuthorList()
+
+// Authors returns a list of ID/Name/URL author fields.
 func (doc *TDocument) Authors() *TEntityList {
 	if nil == doc.authors {
 		return nil
@@ -124,12 +142,19 @@ func (doc *TDocument) Comment() template.HTML {
 	return template.HTML(doc.comments) // #nosec G203
 } // Comment()
 
-// Cover returns the absolute URL path-filename of the document's cover image.
+// Cover returns the URL path/filename for the document's cover image.
 func (doc *TDocument) Cover() string {
 	return fmt.Sprintf("/cover/%d/cover.gif", doc.ID)
 } // Cover()
 
-// `coverAbs()` returns the path-filename of the document's cover image.
+// `coverAbs()` returns the path/filename of the document's cover image.
+//
+// If `aRelative` is `true` the function result is the path/filename
+// relative to `CalibreLibraryPath()`, otherwise it's the document
+// cover's complete path/filename.
+//
+//	`aRelative` Flag indicating a complete or relative path/filename
+// of he document's cover is requested.
 func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	if 0 <= strings.Index(dir, `[`) {
@@ -138,10 +163,9 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	}
 	filenames, err := filepath.Glob(dir + "/cover.*")
 	if nil != err {
-		//TODO better error handling
 		return "", err
 	}
-	if 1 > len(filenames) {
+	if 0 == len(filenames) {
 		return "", errors.New(`TDocument.coverAbs(): no matching filenames found`)
 	}
 	if !aRelative {
@@ -149,7 +173,6 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	}
 	dir, err = filepath.Rel(CalibreLibraryPath(), filenames[0])
 	if nil != err {
-		//TODO better error handling
 		return "", err
 	}
 
@@ -184,7 +207,7 @@ func (doc *TDocument) Filenames() *TPathList {
 	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
-			continue // we ignore these documents
+			continue // we ignore this file type
 		}
 		ext := strings.ToLower(format.Name)
 		if filenames, err := filepath.Glob(dir + "/*." + ext); nil == err {
@@ -258,6 +281,8 @@ func (doc *TDocument) Identifiers() *TEntityList {
 		switch ident.Name {
 		case "amazon", "mobi-asin":
 			ent.URL = fmt.Sprintf("https://www.amazon.com/dp/%s", ident.URL)
+		case "amazon_uk":
+			ent.URL = fmt.Sprintf("https://www.amazon.co.uk/dp/%s", ident.URL)
 		case "amazon_de":
 			ent.URL = fmt.Sprintf("https://www.amazon.de/dp/%s", ident.URL)
 		case "barnesnoble":
@@ -303,7 +328,7 @@ func (doc *TDocument) Languages() *TEntityList {
 	return &result
 } // Languages()
 
-// PubDate returns the formatted `pubdate` property.
+// PubDate returns the document's formatted publication date.
 func (doc *TDocument) PubDate() string {
 	y, m, _ := doc.pubdate.Date()
 	if 101 == y {
@@ -385,17 +410,19 @@ func (doc *TDocument) Timestamp() string {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// Add appends `aDoc` to the list of documents.
-func (dl *TDocList) Add(aDoc *TDocument) *TDocList {
-	*dl = append(*dl, *aDoc)
+// Add appends a document to the list of documents.
+//
+//	`aDocument` The document to add to the list.
+func (dl *TDocList) Add(aDocument *TDocument) *TDocList {
+	*dl = append(*dl, *aDocument)
 
 	return dl
 } // Add()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// newDocument returns a new `TDocument` instance.
-func newDocument() *TDocument {
+// NewDocument returns a new `TDocument` instance.
+func NewDocument() *TDocument {
 	result := &TDocument{
 		authors:     &tAuthorList{},
 		formats:     &tFormatList{},
@@ -404,13 +431,13 @@ func newDocument() *TDocument {
 	}
 
 	return result
-} // newDocument()
+} // NewDocument()
 
-// newDocList returns a new `TDocList` instance.
-func newDocList() *TDocList {
+// NewDocList returns a new `TDocList` instance.
+func NewDocList() *TDocList {
 	result := make(TDocList, 0, 32)
 
 	return &result
-} // newDocList()
+} // NewDocList()
 
 /* _EoF_ */

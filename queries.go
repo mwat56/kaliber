@@ -227,7 +227,7 @@ func SetSQLtraceFile(aFilename string) {
 			if path, err := filepath.Abs(aFilename); nil == err {
 				quSQLTraceFile = path
 				// start the background writer:
-				go goWrite(quSQLTraceFile, quSQLTraceQueue)
+				go goWrite(quSQLTraceFile, quSQLTraceChannel)
 			}
 		})
 
@@ -335,13 +335,16 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 	}
 	defer rows.Close()
 
-	result := newDocList()
+	result := NewDocList()
 	for rows.Next() {
 		var authors, formats, identifiers, languages,
 			publisher, series, tags tPSVstring
 
-		doc := newDocument()
+		doc := NewDocument()
 		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &languages, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
+
+		//TODO check for (un)visible fields
+
 		doc.authors = prepAuthors(authors)
 		doc.formats = prepFormats(formats)
 		doc.identifiers = prepIdentifiers(identifiers)
@@ -423,7 +426,7 @@ const (
 
 var (
 	// The channel to send SQL to and read messages from
-	quSQLTraceQueue = make(chan string, 64)
+	quSQLTraceChannel = make(chan string, 64)
 )
 
 // `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
@@ -434,16 +437,17 @@ func goSQLtrace(aQuery string, aTime time.Time) {
 	aQuery = strings.ReplaceAll(aQuery, "\t", " ")
 	aQuery = strings.ReplaceAll(aQuery, "\n", " ")
 
-	quSQLTraceQueue <- aTime.Format("2006-01-02 15:04:05 ") +
+	quSQLTraceChannel <- aTime.Format("2006-01-02 15:04:05 ") +
 		strings.ReplaceAll(aQuery, "  ", " ")
 } // goSQLtrace()
 
 // `goWrite()` performs the actual file write.
 //
-// This function is run only once, handling all write requests.
+// This function is run only once, handling all write requests
+// in background.
 //
 //	`aLogfile` The name of the logfile to write to.
-//	`aSource` The source of log messages to write.
+//	`aSource` The source of the log messages to write.
 func goWrite(aLogfile string, aSource <-chan string) {
 	var (
 		err  error
@@ -452,7 +456,7 @@ func goWrite(aLogfile string, aSource <-chan string) {
 		txt  string
 	)
 	defer func() {
-		if os.Stderr != file {
+		if (nil != file) && (os.Stderr != file) {
 			_ = file.Close()
 		}
 	}()
@@ -498,14 +502,14 @@ func goWrite(aLogfile string, aSource <-chan string) {
 	}
 } // goWrite()
 
-// `havIng()` returns a string limiting the query to the given `aID`.
-func havIng(aEntity string, aID TID) string {
+// `having()` returns a string limiting the query to the given `aID`.
+func having(aEntity string, aID TID) string {
 	if (0 == len(aEntity)) || ("all" == aEntity) || (0 == aID) {
 		return ""
 	}
 
 	return fmt.Sprintf(quHaving[aEntity], aID)
-} // havIng()
+} // having()
 
 // `limit()` returns a LIMIT clause defined by `aStart` and `aLength`.
 func limit(aStart, aLength uint) string {
@@ -797,7 +801,7 @@ func prepTags(aTag tPSVstring) *tTagList {
 //	`aOptions` The options to configure the query.
 func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	if rows, err := quSqliteDB.Query(quCalibreCountQuery +
-		havIng(aOptions.Entity, aOptions.ID)); nil == err {
+		having(aOptions.Entity, aOptions.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
@@ -805,7 +809,7 @@ func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) 
 	}
 	if 0 < rCount {
 		rList, rErr = doQueryAll(quCalibreBaseQuery +
-			havIng(aOptions.Entity, aOptions.ID) +
+			having(aOptions.Entity, aOptions.ID) +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))
 	}
@@ -858,7 +862,7 @@ func QueryDocMini(aID TID) *TDocument {
 
 	if rows.Next() {
 		var formats tPSVstring
-		doc := newDocument()
+		doc := NewDocument()
 		doc.ID = aID
 		_ = rows.Scan(&doc.ID, &formats, &doc.path, &doc.Title)
 		doc.formats = prepFormats(formats)
@@ -894,9 +898,9 @@ func QueryIDs() (*TDocList, error) {
 	}
 	defer rows.Close()
 
-	result := newDocList()
+	result := NewDocList()
 	for rows.Next() {
-		doc := newDocument()
+		doc := NewDocument()
 		_ = rows.Scan(&doc.ID, &doc.path)
 		result.Add(doc)
 	}

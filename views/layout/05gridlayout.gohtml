@@ -4,10 +4,10 @@
 		<article class="grid">
 			<div class="cover">
 			{{- $author := "" -}}
-				{{- if $doc.Authors -}}
-				{{- $author = authorList $doc.Authors -}}
+				{{- if $doc.AuthorList -}}
+					{{- $author = $doc.AuthorList -}}
 				{{- end -}}
-				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}#bodypage" title="{{$author}}{{$doc.Title}}"><img alt="{{$author}}{{$doc.Title}}" class="cover" src="{{$doc.Thumb}}"></a>
+				<a id="b{{.ID}}" name="b{{.ID}}" href="{{.DocLink}}#bodypage" title="{{$author}}: {{$doc.Title}}"><img alt="{{$author}}: {{$doc.Title}}" class="cover" src="{{$doc.Thumb}}"></a>
 			</div>
 		</article>
 	{{- end -}}<!-- range -->

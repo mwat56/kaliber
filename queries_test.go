@@ -546,7 +546,7 @@ func TestQueryDocMini(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{" 1", args{0}, nil},
-		{" 2", args{1}, newDocument()},
+		{" 2", args{1}, NewDocument()},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

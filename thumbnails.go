@@ -200,7 +200,7 @@ func Thumbnail(aDoc *TDocument) (string, error) {
 	)
 
 	// Get the path/filename of the document's cover:
-	if sName, err = aDoc.coverAbs(false); nil != err {
+	if sName, err = aDoc.CoverFile(); nil != err {
 		return "", err
 	}
 	if sFI, err = os.Stat(sName); nil != err {
