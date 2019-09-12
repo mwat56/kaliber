@@ -55,7 +55,7 @@ type (
 
 	// TPathList is a map of document formats holding the
 	// respective library file.
-	TPathList TStringMap
+	TPathList = TStringMap
 
 	// A single publisher
 	tPublisher = TEntity
@@ -66,8 +66,8 @@ type (
 	// A list of tags
 	tTagList = TEntityList
 
-	// A single document (e.g. book, magazin etc.)
-	tDocument struct {
+	// TDocument represents a single document (e.g. book)
+	TDocument struct {
 		ID          TID
 		authors     *tAuthorList
 		authorSort  string
@@ -93,12 +93,6 @@ type (
 		TitleSort   string
 		uuid        string
 	}
-
-	// TDocument represents a single document (e.g. book)
-	TDocument tDocument
-
-	// TDocList is a list of `TDocument` instances.
-	TDocList []TDocument
 )
 
 // AuthorList returns a CSV list of the document's author(s).
@@ -424,14 +418,22 @@ func (dl *TDocList) Add(aDocument *TDocument) *TDocList {
 // NewDocument returns a new `TDocument` instance.
 func NewDocument() *TDocument {
 	result := &TDocument{
-		authors:     &tAuthorList{},
-		formats:     &tFormatList{},
-		identifiers: &tIdentifierList{},
-		tags:        &tTagList{},
+		// authors:     &tAuthorList{},
+		// formats:     &tFormatList{},
+		// identifiers: &tIdentifierList{},
+		// languages:   &tLanguageList{},
+		// publisher:   &tPublisher{},
+		// series:      &tSeries{},
+		// tags:        &tTagList{},
 	}
 
 	return result
 } // NewDocument()
+
+type (
+	// TDocList is a list of `TDocument` instances.
+	TDocList []TDocument
+)
 
 // NewDocList returns a new `TDocList` instance.
 func NewDocList() *TDocList {

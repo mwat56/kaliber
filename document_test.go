@@ -203,13 +203,14 @@ func TestTDocument_Files(t *testing.T) {
 				Name: "PDF",
 			},
 		},
-		path: "Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+		path:  "Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+		Title: "this is the document's title",
 	}
 	w1 := &TEntityList{
 		TEntity{
 			ID:   2,
 			Name: "PDF",
-			URL:  "/file/1/PDF/.pdf",
+			URL:  "/file/1/PDF/this_is_the_document%27s_title.pdf",
 		},
 	}
 	tests := []struct {
