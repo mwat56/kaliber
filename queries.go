@@ -337,22 +337,76 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 
 	result := NewDocList()
 	for rows.Next() {
-		var authors, formats, identifiers, languages,
+		var (
+			authors, formats, identifiers, languages,
 			publisher, series, tags tPSVstring
-
+			notime  time.Time
+			visible bool
+		)
 		doc := NewDocument()
-		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher, &doc.Rating, &doc.timestamp, &doc.Size, &tags, &doc.comments, &series, &doc.seriesindex, &doc.TitleSort, &doc.authorSort, &formats, &languages, &doc.ISBN, &identifiers, &doc.path, &doc.lccn, &doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
+		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher,
+			&doc.Rating, &doc.timestamp, &doc.Size, &tags,
+			&doc.comments, &series, &doc.seriesindex,
+			&doc.TitleSort, &doc.authorSort, &formats, &languages,
+			&doc.ISBN, &identifiers, &doc.path, &doc.lccn,
+			&doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
 
-		//TODO check for (un)visible fields
+		// check for (un)visible fields:
+		if visible, _ = BookFieldVisible(`authors`); !visible {
+			visible, _ = BookFieldVisible(`author_sort`)
+		}
+		if visible {
+			doc.authors = prepAuthors(authors)
+		}
+		if visible, _ = BookFieldVisible(`comments`); !visible {
+			doc.comments = ""
+		}
+		if visible, _ = BookFieldVisible(`formats`); visible {
+			doc.formats = prepFormats(formats)
+		}
+		if visible, _ = BookFieldVisible(`identifiers`); visible {
+			doc.identifiers = prepIdentifiers(identifiers)
+		}
+		if visible, _ = BookFieldVisible(`languages`); visible {
+			doc.languages = prepLanguages(languages)
+		}
+		if visible, _ = BookFieldVisible(`#pages`); visible {
+			doc.Pages = prepPages(doc.path)
+		}
+		if visible, _ = BookFieldVisible(`path`); !visible {
+			doc.path = ""
+		}
+		if visible, _ = BookFieldVisible(`pubdate`); !visible {
+			doc.pubdate = notime
+		}
+		if visible, _ = BookFieldVisible(`publisher`); visible {
+			doc.publisher = prepPublisher(publisher)
+		}
+		if visible, _ = BookFieldVisible(`rating`); !visible {
+			doc.Rating = 0
+		}
+		if visible, _ = BookFieldVisible(`series`); visible {
+			doc.series = prepSeries(series)
+		}
+		if visible, _ = BookFieldVisible(`tags`); visible {
+			doc.tags = prepTags(tags)
+		}
+		if visible, _ = BookFieldVisible(`timestamp`); !visible {
+			doc.timestamp = notime
+		}
+		if visible, _ = BookFieldVisible(`title`); !visible {
+			visible, _ = BookFieldVisible(`sort`)
+		}
+		if !visible {
+			doc.Title = ""
+		}
+		if visible, _ = BookFieldVisible(`size`); !visible {
+			doc.Size = 0
+		}
+		if visible, _ = BookFieldVisible(`uuid`); !visible {
+			doc.uuid = ""
+		}
 
-		doc.authors = prepAuthors(authors)
-		doc.formats = prepFormats(formats)
-		doc.identifiers = prepIdentifiers(identifiers)
-		doc.languages = prepLanguages(languages)
-		doc.Pages = prepPages(doc.path)
-		doc.publisher = prepPublisher(publisher)
-		doc.series = prepSeries(series)
-		doc.tags = prepTags(tags)
 		result.Add(doc)
 	}
 
