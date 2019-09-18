@@ -1,6 +1,30 @@
 /* fonts (keep at bottom) */
 
 @font-face {
+	font-family: "Noto Sans";
+	font-weight: normal;
+	font-style: normal;
+	src: url(/fonts/NotoSans-Regular.ttf);
+}
+@font-face {
+	font-family: "Noto Sans Bold";
+	font-style: normal;
+	font-weight: bold;
+	src: url(/fonts/NotoSans-Bold.ttf);
+}
+@font-face {
+	font-family: "Noto Sans BoldItal";
+	font-weight: bold;
+	font-style: italic;
+	src: url(/fonts/NotoSans-BoldItalic.ttf);
+}
+@font-face {
+	font-family: "Noto Sans Ital";
+	font-weight: normal;
+	font-style: italic;
+	src: url(/fonts/NotoSans-Italic.ttf);
+}
+@font-face {
 	font-family: "Noto Serif";
 	font-weight: normal;
 	font-style: normal;
@@ -59,6 +83,9 @@ b, .bold, strong, .strong, .strong p {
 }
 code, .code, input, kbd, pre, textarea {
 	font-family: "Hack Mono", monospace;
+}
+div#search_box {
+	font-family: "Noto Sans", sans-serif;
 }
 em, .em, i, .italic {
 	font-family: "Noto Serif Ital", serif;
