@@ -10,6 +10,6 @@ require (
 	github.com/mwat56/passlist v1.1.4
 	github.com/mwat56/sessions v0.3.4
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	golang.org/x/crypto v0.0.0-20190909091759-094676da4a83
-	golang.org/x/sys v0.0.0-20190909082730-f460065e899a // indirect
+	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
+	golang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3 // indirect
 )
