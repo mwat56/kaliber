@@ -416,11 +416,15 @@ article.grid div.cover img.cover {
 article div.cover img.cover {
 	border: thick outset transparent;
 	border-radius: 1.5ex;
+	opacity: 0.8;
+	transition: opacity ease-in-out 0.25s;
 }
 article:hover div.cover img.cover,
 article div.cover:hover img.cover,
 article div.cover img.cover:hover {
 	border-style: inset;
+	opacity: 1;
+	transition: opacity ease-in-out 0.25s;
 }
 
 article.overview {
