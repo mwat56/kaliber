@@ -272,8 +272,7 @@ ul li ul li ul {
 }
 ul li {
 	display: list-item;
-	margin-left: 1ex;	/* */
-	/* list-style-position: outside;	/* */
+	margin-left: 1ex;
 }
 li p {
 	margin-top: 0;
@@ -282,7 +281,8 @@ li p {
 body, #body {
 	margin: 0 auto;
 	padding: 0;
-	max-width: 93ex;
+	width: 200mm;
+	max-width: 212mm;
 }
 #bodypage {
 	min-height: 3em;
@@ -308,20 +308,20 @@ img#logo {
 }
 div#search_box {
 	border-bottom: thin solid transparent;
-	font-size: 90%;
+	font-size: 84%;
 	/* we need this to allow for wrapping on smaller screens: */
 	line-height: 2.0;
-	padding: 0 0 1ex 0;
+	padding: 0 0 3pt 0;
 	text-align: center;
 }
 div#search_box div.gi {	/* grid item */
 	display: inline-block;
-	margin: 0.1ex 0.3ex;
-	padding: 0.1ex 0.3ex;
+	margin: 1pt;
+	padding: 1pt;
 }
 div.back p.back {
 	margin: 0 0 1ex 0;
-	padding: 0 0 0.3ex 1ex;
+	padding: 0 0 3pt 1ex;
 	text-align: left;
 }
 a.button {
@@ -416,7 +416,6 @@ article.grid div.cover img.cover {
 article div.cover img.cover {
 	border: thick outset transparent;
 	border-radius: 1.5ex;
-	/*max-width: 98%;	/*	*/
 }
 article:hover div.cover img.cover,
 article div.cover:hover img.cover,
@@ -427,7 +426,7 @@ article div.cover img.cover:hover {
 article.overview {
 	max-height: 40ex;
 	overflow: auto;
-	max-width: 104ex;
+	max-width: 200mm;
 }
 article.overview {
 	border-radius: 1ex;
@@ -493,16 +492,13 @@ div.naviline {
 p.naviline {
 	font-size: 94%;
 	letter-spacing: 0.2ex;
-	padding: 0 0 0.5ex 0;
 	text-align: center;
 }
 table.prevnext {
 	margin: 0 auto;
-	padding: 0 0 0.5ex 0;
-	width: 99%;
+	width: 98%;
 }
 table.prevnext tr td {
-	padding: 0 0 0.5ex 0;
 	text-align: center;
 	width: 24%;
 }
