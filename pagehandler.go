@@ -472,12 +472,12 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	BFirst := aOption.LimitStart + 1 // zero-based to one-based
 	BCount := aOption.QueryCount
 	BLast := aOption.LimitStart + aOption.LimitLength
-	if BLast > aOption.QueryCount {
-		BLast = aOption.QueryCount
+	if BLast > BCount {
+		BLast = BCount
 	}
 	hasFirst := 0 < aOption.LimitStart
-	hasLast := aOption.QueryCount > (aOption.LimitStart + aOption.LimitLength + 1)
-	hasNext := aOption.QueryCount >= (aOption.LimitStart + aOption.LimitLength)
+	hasLast := BLast < BCount
+	hasNext := BCount > BLast
 	hasPrev := aOption.LimitStart >= aOption.LimitLength
 	aOption.IncLimit()
 	pageData := ph.basicTemplateData(aOption).
