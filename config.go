@@ -214,11 +214,6 @@ func InitConfig() {
 	flag.StringVar(&realmStr, "realm", realmStr,
 		"<hostName> name of host/domain to secure by BasicAuth\n")
 
-	s, _ = AppArguments.Get("sessiondir")
-	sessionDir := absolute(dataDir, s)
-	flag.StringVar(&sessionDir, "sessiondir", sessionDir,
-		"<directory> the directory to store session files\n")
-
 	sessionTTL, _ := AppArguments.AsInt("sessionttl")
 	flag.IntVar(&sessionTTL, "sessionttl", sessionTTL,
 		"<seconds> Number of seconds an unused session keeps valid ")
@@ -333,11 +328,14 @@ func InitConfig() {
 
 	AppArguments.set("realm", realmStr)
 
-	if 0 < len(sessionDir) {
-		sessionDir = absolute(dataDir, sessionDir)
+	AppArguments.set("sessiondir", absolute(dataDir, "sessions"))
+	if 0 == len(sidName) {
+		sidName = "SID"
 	}
-	AppArguments.set("sessiondir", sessionDir)
 	sessions.SetSIDname(sidName)
+	if 0 >= sessionTTL {
+		sessionTTL = 1200
+	}
 	sessions.SetSessionTTL(sessionTTL)
 
 	if 0 < len(sqlTrace) {
