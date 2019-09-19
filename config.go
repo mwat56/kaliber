@@ -15,6 +15,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/mwat56/ini"
@@ -301,7 +302,7 @@ func InitConfig() {
 	if 0 == len(langStr) {
 		langStr = "en"
 	}
-	AppArguments.set("lang", langStr)
+	AppArguments.set("lang", strings.ToLower(langStr))
 
 	if 0 == len(libName) {
 		libName = time.Now().Format("2006:01:02:15:04:05")
@@ -344,7 +345,7 @@ func InitConfig() {
 	}
 	SetSQLtraceFile(sqlTrace)
 
-	AppArguments.set("theme", themeStr)
+	AppArguments.set("theme", strings.ToLower(themeStr))
 	AppArguments.set("ua", uaStr)
 	AppArguments.set("uc", ucStr)
 	AppArguments.set("ud", udStr)
