@@ -90,8 +90,6 @@ You can use `Go` to install this package for you:
 
     go get -u github.com/mwat56/kaliber
 
-	//TODO
-
 ## Usage
 
 After downloading this package you go to its directory and compile
@@ -169,7 +167,7 @@ which should produce an executable binary.
 	Most options can be set in an INI file to keep the command-line short ;-)
 	$ _
 
-As you can see there are quite a few options available, but almost all of them are optional since they come with reasonable default values most of which can be set in the accompanying INI-file.
+As you can see there are quite a few options available, but almost all of them are optional since they come with reasonable default values most of which can be set in the accompanying INI-file (in fact, the "default" values shown above are coming from the INI-file used).
 
 ### INI file
 
@@ -243,18 +241,17 @@ There's an INI file which can take all the options (apart from the user handling
 
 An INI-file as shown above is looked for at three different places
 
-1. in the your (i.e. the current user) directory (`./kaliber.ini`),
+1. in your (i.e. the current user) directory (`./kaliber.ini`),
 2. in the computer's main config directory (`/etc/kaliber.ini"`),
-3. in the current user's home directory (`$HOME/.kaliber.ini`).
+3. in the current user's home directory (`$HOME/.kaliber.ini`),
+4. in the current user's configuration directory (e.g. `$HOME/.config/kaliber.ini`).
 
-All these files (if they exist) are read in the given order at startup before finally parsing the commandline options shown earlier.
+All these files (_if they exist_) are read in the given order at startup before finally parsing the commandline options shown earlier.
 So each step overwrites the previous one, the commandline options having the highest priority.
-
-	//TODO
 
 ### Authentication
 
-But why, you may ask, would you need an username/password file anyway?
+Why, you may ask, would you need an username/password file anyway?
 Well, there may be several reasons one of which could be Copyright problems.
 If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically_ available.
 In that case you're most likely the only actual remote user allowed to access the books in your library.
@@ -268,7 +265,8 @@ _Note_ that the password file generated and used by this system resembles the `h
 #### User/password file & handling
 
 Only usable from the commandline are the `-uXX` options, most of which need an username and the name of the password file to use.
-_Note_ that whenever you're prompted to input a password this will _not_ be echoed to the console.
+
+> _Note_ that whenever you're prompted to input a password this will _not_ be echoed to the console.
 
     $ ./kaliber -ua testuser1 -uf pwaccess.db
 
@@ -277,9 +275,7 @@ _Note_ that whenever you're prompted to input a password this will _not_ be echo
         added 'testuser1' to list
     $ _
 
-The password input is not echoed to the console, therefor you don't see it.
-
-Since we have the `passfile` setting already in our INI file [(see below)](#ini-file) we can forget the `-uf` option for the next options.
+Since we have the `passfile` setting already in our INI file [(see above)](#ini-file) we can forget the `-uf` option for the next options.
 
 With `-uc` you can check a user's password:
 
@@ -289,7 +285,7 @@ With `-uc` you can check a user's password:
         'testuser1' password check successful
     $ _
 
-This `-uc` you'll probably never actually use, it was just easy to implement.
+This `-uc` you'll probably never actually use – it was just easy to implement.
 
 If you want to remove a user the `-ud` will do the trick:
 
@@ -335,6 +331,7 @@ Under the directory given with the `datadir =` entry in the INI file (or the `-d
 * `css`: containing the CSS files used,
 * `fonts`: containing the fonts used,
 * `img`: containing the images used,
+* `sessions`: containing the remote users' session data,
 * `views`: the Go templates used to generate the pages.
 
 All of this directories and files are part of the `Kaliber` package.
@@ -347,6 +344,7 @@ There are some `Calibre` features which are not available (yet) with `Kaliber` a
 
 * _custom columns_ defined by the respective `Calibre` user;
 * _different/multiple libraries_ for the user to switch between;
+* [_OPDS_](https://en.wikipedia.org/wiki/OPDS) formatted access;
 * _book uploads_ are not planned to be included.
 
 Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided I find actually time to do it).
