@@ -53,9 +53,9 @@ type (
 	// TStringMap is a map of strings indexed by string.
 	TStringMap map[string]string
 
-	// TPathList is a map of document formats holding the
+	// tPathMap is a map of document formats holding the
 	// respective library file.
-	TPathList = TStringMap
+	tPathMap = TStringMap
 
 	// A single publisher
 	tPublisher = TEntity
@@ -90,7 +90,7 @@ type (
 		tags        *tTagList
 		timestamp   time.Time // SQL: timestamp
 		Title       string
-		TitleSort   string
+		titleSort   string
 		uuid        string
 	}
 )
@@ -183,9 +183,9 @@ func (doc *TDocument) DocLink() string {
 	return fmt.Sprintf("/doc/%d/doc.html", doc.ID)
 } // DocLink()
 
-// Filename returns the path-/filename of `aFormat`.
+// Filename returns the path-/filename of the document's `aFormat`.
 func (doc *TDocument) Filename(aFormat string) string {
-	list := *doc.Filenames()
+	list := *doc.filenames()
 	if pName, ok := list[strings.ToUpper(aFormat)]; ok {
 		if fName, err := filepath.Rel(CalibreLibraryPath(), pName); nil == err {
 			return fName
@@ -195,13 +195,13 @@ func (doc *TDocument) Filename(aFormat string) string {
 	return ""
 } // Filename()
 
-// Filenames returns a list of path-/filename for this document
-func (doc *TDocument) Filenames() *TPathList {
-	result := make(TPathList, len(*doc.formats))
+// `filenames()` returns a list of path-/filenames for this document.
+func (doc *TDocument) filenames() *tPathMap {
+	result := make(tPathMap, len(*doc.formats))
 	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
-			continue // we ignore this file type
+			continue // we ignore this internal file type
 		}
 		ext := strings.ToLower(format.Name)
 		if filenames, err := filepath.Glob(dir + "/*." + ext); nil == err {
@@ -210,7 +210,7 @@ func (doc *TDocument) Filenames() *TPathList {
 	}
 
 	return &result
-} // Filenames()
+} // filenames()
 
 // Files returns a list of ID/Name/URL fields for doc format files.
 func (doc *TDocument) Files() *TEntityList {

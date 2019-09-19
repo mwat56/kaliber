@@ -227,7 +227,7 @@ func SetSQLtraceFile(aFilename string) {
 			if path, err := filepath.Abs(aFilename); nil == err {
 				quSQLTraceFile = path
 				// start the background writer:
-				go goWrite(quSQLTraceFile, quSQLTraceChannel)
+				go goWriteSQLtrace(quSQLTraceFile, quSQLTraceChannel)
 			}
 		})
 
@@ -347,7 +347,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher,
 			&doc.Rating, &doc.timestamp, &doc.Size, &tags,
 			&doc.comments, &series, &doc.seriesindex,
-			&doc.TitleSort, &doc.authorSort, &formats, &languages,
+			&doc.titleSort, &doc.authorSort, &formats, &languages,
 			&doc.ISBN, &identifiers, &doc.path, &doc.lccn,
 			&doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
 
@@ -495,14 +495,14 @@ func goSQLtrace(aQuery string, aTime time.Time) {
 		strings.ReplaceAll(aQuery, "  ", " ")
 } // goSQLtrace()
 
-// `goWrite()` performs the actual file write.
+// `goWriteSQLtrace()` performs the actual file write.
 //
 // This function is run only once, handling all write requests
 // in background.
 //
 //	`aLogfile` The name of the logfile to write to.
 //	`aSource` The source of the log messages to write.
-func goWrite(aLogfile string, aSource <-chan string) {
+func goWriteSQLtrace(aLogfile string, aSource <-chan string) {
 	var (
 		err  error
 		file *os.File
@@ -554,7 +554,7 @@ func goWrite(aLogfile string, aSource <-chan string) {
 			}
 		}
 	}
-} // goWrite()
+} // goWriteSQLtrace()
 
 // `having()` returns a string limiting the query to the given `aID`.
 func having(aEntity string, aID TID) string {

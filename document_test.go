@@ -142,7 +142,7 @@ func TestTDocument_Filename(t *testing.T) {
 	}
 } // TestTDocument_Filename
 
-func TestTDocument_Filenames(t *testing.T) {
+func TestTDocument_filenames(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
 	d1 := TDocument{
 		formats: &tFormatList{
@@ -152,7 +152,7 @@ func TestTDocument_Filenames(t *testing.T) {
 		},
 		path: "Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
-	w1 := &TPathList{
+	w1 := &tPathMap{
 		"PDF": "/var/opt/Calibre/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)/Der Spiegel (2019-06-01) 23_2019 - Spiegel.pdf",
 	}
 	d2 := TDocument{
@@ -169,7 +169,7 @@ func TestTDocument_Filenames(t *testing.T) {
 		},
 		path: "John Scalzi/Zoe's Tale (6730)",
 	}
-	w2 := &TPathList{
+	w2 := &tPathMap{
 		"AZW3": "/var/opt/Calibre/John Scalzi/Zoe's Tale (6730)/Zoe's Tale - John Scalzi.azw3",
 		"EPUB": "/var/opt/Calibre/John Scalzi/Zoe's Tale (6730)/Zoe's Tale - John Scalzi.epub",
 		"PDF":  "/var/opt/Calibre/John Scalzi/Zoe's Tale (6730)/Zoe's Tale - John Scalzi.pdf",
@@ -177,7 +177,7 @@ func TestTDocument_Filenames(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields TDocument
-		want   *TPathList
+		want   *tPathMap
 	}{
 		// TODO: Add test cases.
 		{" 1", d1, w1},
@@ -186,12 +186,12 @@ func TestTDocument_Filenames(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			doc := &tt.fields
-			if got := doc.Filenames(); !reflect.DeepEqual(got, tt.want) {
+			if got := doc.filenames(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("TDocument.Filenames() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}
-} // TestTDocument_Filenames()
+} // TestTDocument_filenames()
 
 func TestTDocument_Files(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre/")
