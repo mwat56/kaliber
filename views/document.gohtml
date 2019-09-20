@@ -29,7 +29,7 @@
 			{{- range $i, $file := $doc.Files -}}
 				{{- $name := $file.Name -}}
 				{{- $url := $file.URL -}}
-				<a class="button" title="download {{$name}}" href="{{$url}}#bodypage">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+				<a class="button" title="download {{$name}}" href="{{$url}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 			{{- end -}}
 			</td>
 		</tr>
@@ -76,7 +76,7 @@
 			{{- range $i, $ident := $doc.Identifiers -}}
 				{{- $name := $ident.Name -}}
 				{{- $url := $ident.URL -}}
-				<a class="button" href="{{$url}}#navigation" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+				<a class="button" href="{{$url}}" title="{{$name}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 			{{- end -}}
 			</td>
 		</tr>
