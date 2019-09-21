@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mwat56/apachelogger"
@@ -130,22 +131,6 @@ func newViewList(aDirectory string) (*TViewList, error) {
 } // newViewList()
 
 var (
-	phSplitTermRE = regexp.MustCompile(`(\d+)/(.+)$`)
-)
-
-// `splitIDterm()` splits `aTail` into an ID and a string term.
-// This function is a helper of `TPageHandler.handleGET()`.
-func splitIDterm(aTail string) (rID TID, rTerm string) {
-	matches := phSplitTermRE.FindStringSubmatch(aTail)
-	if (nil != matches) && (1 < len(matches)) {
-		rID, _ = strconv.Atoi(matches[1])
-		rTerm = matches[2]
-	}
-
-	return
-} // splitIDterm()
-
-var (
 	// RegEx to find path and possible added path components
 	phURLpartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
 )
@@ -240,11 +225,6 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-var (
-	// extract ID and file format from URL
-	phFileParseRE = regexp.MustCompile(`^(\d+)/([^/]+?)/(.*)`)
-)
-
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
 	qo := NewQueryOptions() // in `queryoptions.go`
@@ -254,13 +234,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	}
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
-	case "all", "authors", "format", "languages", "publisher", "series", "tags":
-		id, term := splitIDterm(tail)
+	case "authors", "format", "languages", "publisher", "series", "tags":
+		parts := strings.Split(tail, `/`)
 		qo.Entity = path
-		qo.ID = id
+		qo.ID, _ = strconv.Atoi(parts[0])
 		qo.LimitStart = 0 // it's the first page of a new selection
-		if 0 < id {
-			qo.Matching = path + `:"=` + term + `"`
+		if 0 < qo.ID {
+			qo.Matching = path + `:"=` + parts[1] + `"`
 		}
 		ph.handleQuery(qo, aWriter, so)
 
@@ -316,18 +296,14 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		http.Redirect(aWriter, aRequest, "/img/"+path, http.StatusMovedPermanently)
 
 	case "file":
-		matches := phFileParseRE.FindStringSubmatch(tail)
-		if (nil == matches) || (3 > len(matches)) {
-			http.NotFound(aWriter, aRequest)
-			return
-		}
-		qo.ID, _ = strconv.Atoi(matches[1])
+		parts := strings.Split(tail, `/`)
+		qo.ID, _ = strconv.Atoi(parts[0])
 		doc := QueryDocMini(qo.ID)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		file := doc.Filename(matches[2])
+		file := doc.Filename(parts[1])
 		if 0 == len(file) {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -436,8 +412,8 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			qo.Scan(qos)
 		}
 		qo.Update(aRequest)
-		// Since the query options hold the LimitStart of the _next_
-		// query we have to go back here one page:
+		// Since the query options hold the LimitStart of the
+		// _next_ query we have to go back here one page:
 		qo.DecLimit()
 		ph.handleQuery(qo, aWriter, so)
 
