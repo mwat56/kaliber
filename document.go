@@ -218,15 +218,17 @@ func (doc *TDocument) Files() *TEntityList {
 		return nil
 	}
 	result := make(TEntityList, 0, len(*doc.formats))
-	for _, file := range *doc.formats {
-		if "ORIGINAL_EPUB" == file.Name {
+	for _, format := range *doc.formats {
+		if "ORIGINAL_EPUB" == format.Name {
 			continue // we ignore this format
 		}
-		fName := url.PathEscape(strings.ReplaceAll(doc.Title, ` `, `_`)) + `.` + strings.ToLower(file.Name)
+
+		// Build the filename to download:
+		fName := url.PathEscape(strings.ReplaceAll(doc.AuthorList()+`_-_`+doc.Title, ` `, `_`)) + `.` + strings.ToLower(format.Name)
 		ent := TEntity{
-			ID:   file.ID,
-			Name: file.Name,
-			URL:  fmt.Sprintf("/file/%d/%s/%s", doc.ID, file.Name, fName),
+			ID:   format.ID,
+			Name: format.Name,
+			URL:  fmt.Sprintf("/file/%d/%s/%s", doc.ID, format.Name, fName),
 		}
 		result = append(result, ent)
 	}
