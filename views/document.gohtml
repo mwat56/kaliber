@@ -29,7 +29,7 @@
 			{{- range $i, $file := $doc.Files -}}
 				{{- $name := $file.Name -}}
 				{{- $url := $file.URL -}}
-				<a class="button" title="download {{$name}}" href="{{$url}}">{{$name}}</a> &shy;<!-- preserving the SPACE -->
+				<a class="button" title="download {{$name}}" href="{{$url}}" target="_extern">{{$name}}</a> &shy;<!-- preserving the SPACE -->
 			{{- end -}}
 			</td>
 		</tr>
