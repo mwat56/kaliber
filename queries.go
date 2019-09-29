@@ -755,7 +755,11 @@ var (
 
 // `prepPages()` prepares the document's `Pages` property.
 //
-//	`aPath` is the directory/path of the document to use.
+// This functions only returns a value `>0` if the respective `pages`
+// plugin is installed with `Calibre` and it uses internally a data
+// field called `#pages` stored in the documents's metadata file.
+//
+//	`aPath` is the directory/path of the document's data.
 func prepPages(aPath string) int {
 	fName := filepath.Join(quCalibreLibraryPath, aPath, "metadata.opf")
 	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
@@ -769,12 +773,13 @@ func prepPages(aPath string) int {
 	if (nil == match) || (1 > len(match)) {
 		return 0
 	}
-	num, err := strconv.Atoi(string(match[1]))
-	if nil != err {
-		return 0
+	if num, _ := strconv.Atoi(string(match[1])); 0 < num {
+		// Since the RegEx returns digits only we don't need
+		// to check for errors here.
+		return num
 	}
 
-	return num
+	return 0
 } // prepPages()
 
 // `prepPublisher()` returns a document's publisher.
