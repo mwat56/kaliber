@@ -26,7 +26,7 @@ import (
 	"github.com/mwat56/sessions"
 )
 
-// `userCmdline()` checks for and executes user handling functions.
+// `userCmdline()` checks for and executes user/password handling functions.
 func userCmdline() {
 	var (
 		err   error
@@ -35,7 +35,7 @@ func userCmdline() {
 	if fn, err = kaliber.AppArguments.Get("uf"); (nil != err) || (0 == len(fn)) {
 		return // without user file nothing to do
 	}
-	// All the following `xxxUser()` calls terminate the program
+	// All the following `kaliber.xxxUser()` calls terminate the program
 	if s, err = kaliber.AppArguments.Get("ua"); (nil == err) && (0 < len(s)) {
 		kaliber.AddUser(s, fn)
 	}
@@ -46,7 +46,7 @@ func userCmdline() {
 		kaliber.DeleteUser(s, fn)
 	}
 	if s, err = kaliber.AppArguments.Get("ul"); (nil == err) && (0 < len(s)) {
-		kaliber.ListUser(fn)
+		kaliber.ListUsers(fn)
 	}
 	if s, err = kaliber.AppArguments.Get("uu"); (nil == err) && (0 < len(s)) {
 		kaliber.UpdateUser(s, fn)
@@ -76,7 +76,6 @@ func setupSignals(aServer *http.Server) {
 } // setupSignals()
 
 func main() {
-	kaliber.InitConfig()
 	var (
 		err       error
 		handler   http.Handler
@@ -84,6 +83,8 @@ func main() {
 		ck, cp, s string
 	)
 	Me, _ := filepath.Abs(os.Args[0])
+	kaliber.InitConfig()
+
 	if err = kaliber.OpenDatabase(); nil != err {
 		kaliber.ShowHelp()
 		s = fmt.Sprintf("%s: %v", Me, err)
@@ -92,7 +93,7 @@ func main() {
 		log.Fatalln(s)
 	}
 
-	// handle commandline user maintenance:
+	// handle commandline user/password maintenance:
 	userCmdline()
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
@@ -116,7 +117,7 @@ func main() {
 		handler = apachelogger.Wrap(handler, s)
 	}
 
-	// We need a `server` reference to use it in `setupSinals()` below
+	// We need a `server` reference to use it in `setupSinals()`
 	// and to set some reasonable timeouts:
 	server := &http.Server{
 		Addr:              ph.Address(),
