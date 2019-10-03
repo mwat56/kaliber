@@ -1,5 +1,6 @@
 *~
 0replace
+access.read.mwat.de
 certs/*
 *.db
 .git/
