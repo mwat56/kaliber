@@ -224,7 +224,7 @@ func (doc *TDocument) Files() *TEntityList {
 		}
 
 		// Build the filename to download:
-		fName := url.PathEscape(strings.ReplaceAll(doc.AuthorList()+`_-_`+doc.Title, ` `, `_`)) + `.` + strings.ToLower(format.Name)
+		fName := url.PathEscape(strings.Replace(strings.Replace(doc.AuthorList()+`_-_`+doc.Title, ` `, `_`, -1), `/`, `-`, -1)) + `.` + strings.ToLower(format.Name)
 		ent := TEntity{
 			ID:   format.ID,
 			Name: format.Name,
