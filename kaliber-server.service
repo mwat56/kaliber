@@ -7,7 +7,7 @@ Type=idle
 User=matthias
 Group=matthias
 WorkingDirectory=/home/matthias/devel/Go/src/github.com/mwat56/kaliber/
-ExecStart=/home/matthias/devel/Go/src/github.com/mwat56/kaliber/bin/kaliber-linux-amd64 -listen=0 -log=access.read.mwat.de
+ExecStart=/home/matthias/devel/Go/src/github.com/mwat56/kaliber/bin/kaliber-linux-amd64 -certKey="" -certPem="" -listen=0 -log=access.read.mwat.de
 Restart=on-failure
 
 [Install]
