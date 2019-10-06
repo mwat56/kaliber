@@ -282,7 +282,7 @@ body, #body {
 	margin: 0 auto;
 	padding: 0;
 	width: 200mm;
-	max-width: 212mm;
+	max-width: 210mm;
 }
 #bodypage {
 	min-height: 3em;
@@ -306,6 +306,7 @@ img#logo {
 	max-height: 96px;
 	max-width: 96px;
 }
+
 div#search_box {
 	border-bottom: thin solid transparent;
 	font-size: 84%;
@@ -319,6 +320,7 @@ div#search_box div.gi {	/* grid item */
 	margin: 1pt;
 	padding: 1pt;
 }
+
 div.back p.back {
 	margin: 0 0 1ex 0;
 	padding: 0 0 3pt 1ex;
@@ -498,6 +500,7 @@ p.naviline {
 	letter-spacing: 0.2ex;
 	text-align: center;
 }
+
 table.prevnext {
 	margin: 0 auto;
 	width: 98%;
@@ -509,11 +512,15 @@ table.prevnext tr td {
 table.prevnext tr td a {
 	background: transparent;
 	border: thin outset transparent;
-	padding: 0;
+	padding: 1pt 4ex; /* we need padding for small screens */
 }
 table.prevnext tr td a:hover {
 	border-style: inset;
 }
+table.prevnext tr td a img {
+	margin: 1pt;
+}
+
 .right {
 	text-align: right;
 	margin-right: 1ex;
