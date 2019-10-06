@@ -72,7 +72,7 @@
 
 		{{- if $doc.Identifiers -}}
 		<tr>
-			<td class="label">{{if eq $lang "de"}}Kennzeichen{{else}}Identifiers{{end}}:</td><td>
+			<td class="label">{{if eq $lang "de"}}Kennzeichen{{else}}Identifiers{{end}}: &nbsp;</td><td>
 			{{- range $i, $ident := $doc.Identifiers -}}
 				{{- $name := $ident.Name -}}
 				{{- $url := $ident.URL -}}
