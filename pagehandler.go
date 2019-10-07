@@ -28,6 +28,7 @@ type (
 	// TPageHandler provides the handling of HTTP request/response.
 	TPageHandler struct {
 		addr     string              // listen address ("1.2.3.4:5678")
+		authAll  bool                // authenticate user for all pages and documents
 		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
 		dd       string              // datadir: base dir for data
 		docFS    http.Handler        // document file server
@@ -50,6 +51,10 @@ func NewPageHandler() (*TPageHandler, error) {
 	result := new(TPageHandler)
 
 	result.cacheFS = http.FileServer(http.Dir(CalibreCachePath()))
+
+	if s, err = AppArguments.Get("authAll"); (nil != err) && ("true" == s) {
+		result.authAll = true
+	}
 
 	if s, err = AppArguments.Get("datadir"); nil != err {
 		return nil, err
@@ -486,11 +491,22 @@ func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, a
 //
 //	`aRequest` is the request to check.
 func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
-	return (nil != ph.ul)
+	if nil != ph.ul {
+		if ph.authAll {
+			return true
+		}
+		path, _ := URLparts(aRequest.URL.Path)
+		switch path {
+		case "file":
+			return true
+		}
+	}
+
+	return false
 } // NeedAuthentication()
 
 // ServeHTTP handles the incoming HTTP requests.
-func (ph TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Request) {
+func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Request) {
 	if ph.NeedAuthentication(aRequest) {
 		if !ph.ul.IsAuthenticated(aRequest) {
 			passlist.Deny(ph.realm, aWriter)

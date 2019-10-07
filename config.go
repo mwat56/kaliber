@@ -155,6 +155,10 @@ func init() {
 func InitConfig() {
 	readIniData()
 
+	authBool := false
+	flag.BoolVar(&authBool, "authAll", authBool,
+		"<boolean> whether or not require authentication for all pages ")
+
 	bppInt, _ := AppArguments.AsInt("booksperpage")
 	flag.IntVar(&bppInt, "booksperpage", bppInt,
 		"<number> the default number of books shown per page ")
@@ -250,7 +254,7 @@ func InitConfig() {
 
 	ulBool := false
 	flag.BoolVar(&ulBool, "ul", ulBool,
-		"user list: show all users in the password file")
+		"<boolean> user list: show all users in the password file")
 
 	uuStr := ""
 	flag.StringVar(&uuStr, "uu", uuStr,
@@ -258,6 +262,13 @@ func InitConfig() {
 
 	flag.Usage = ShowHelp
 	flag.Parse() // // // // // // // // // // // // // // // // // // //
+
+	if authBool {
+		s = "true"
+	} else {
+		s = ""
+	}
+	AppArguments.set("authAll", s)
 
 	AppArguments.set("booksperpage", fmt.Sprintf("%d", bppInt))
 
