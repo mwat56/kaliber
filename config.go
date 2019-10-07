@@ -155,7 +155,7 @@ func init() {
 func InitConfig() {
 	readIniData()
 
-	authBool := false
+	authBool := true
 	flag.BoolVar(&authBool, "authAll", authBool,
 		"<boolean> whether or not require authentication for all pages ")
 
@@ -177,6 +177,10 @@ func InitConfig() {
 	certPem := absolute(dataDir, s)
 	flag.StringVar(&certPem, "certPem", certPem,
 		"<fileName> the name of the TLS certificate PEM\n")
+
+	gzipBool := true
+	flag.BoolVar(&gzipBool, "gzip", gzipBool,
+		"<boolean> use gzip compression for server responses")
 
 	/*
 		s, _ = AppArguments.Get("intl")
@@ -297,6 +301,13 @@ func InitConfig() {
 		}
 	}
 	AppArguments.set("certPem", certPem)
+
+	if gzipBool {
+		s = "true"
+	} else {
+		s = ""
+	}
+	AppArguments.set("gzip", s)
 
 	/*
 		if 0 <len(intlStr) {

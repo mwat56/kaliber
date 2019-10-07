@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/errorhandler"
 	"github.com/mwat56/kaliber"
@@ -103,15 +104,21 @@ func main() {
 		runtime.Gosched() // let the logger write
 		log.Fatalln(s)
 	}
+	// Setup the errorpage handler:
 	handler = errorhandler.Wrap(ph, ph)
 
-	// inspect `sessiondir` commandline argument and setup the session handler
+	// Inspect `sessiondir` commandline argument and setup the session handler
 	if s, err = kaliber.AppArguments.Get("sessiondir"); (nil == err) && (0 < len(s)) {
 		// we assume, an error means: no automatic session handling
 		handler = sessions.Wrap(handler, s)
 	}
 
-	// inspect `logfile` commandline argument and setup the `ApacheLogger`
+	// Inspect `gzip` commandline argument and setup the Gzip handler:
+	if s, err = kaliber.AppArguments.Get("gzip"); (nil == err) && ("true" == s) {
+		handler = gziphandler.GzipHandler(handler)
+	}
+
+	// Inspect `logfile` commandline argument and setup the `ApacheLogger`
 	if s, err = kaliber.AppArguments.Get("logfile"); (nil == err) && (0 < len(s)) {
 		// we assume, an error means: no logfile
 		handler = apachelogger.Wrap(handler, s)

@@ -101,71 +101,72 @@ which should produce an executable binary.
 
 ### Commandline options
 
-	$ ./kaliber -h
+    $ ./kaliber -h
 
-	Usage: ./kaliber [OPTIONS]
+    Usage: kaliber [OPTIONS]
 
-	-booksperpage int
-		<number> the default number of books shown per page  (default 24)
-	-certKey string
-		<fileName> the name of the TLS certificate key
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.key")
-	-certPem string
-		<fileName> the name of the TLS certificate PEM
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.pem")
-	-datadir string
-		<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
-	-ini string
-		<fileName> the path/filename of the INI file to use
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/kaliber.ini")
-	-lang string
-		(optional) the default language to use  (default "de")
-	-libraryname string
-		Name of this Library (shown on every page)
-		(default "MeiBucks")
-	-librarypath string
-		Path name of/to the Calibre library
-		(default "/var/opt/Calibre")
-	-listen string
-		the host's IP to listen at  (default "127.0.0.1")
-	-log string
-		(optional) name of the logfile to write to
-		(default "/dev/stdout")
-	-port int
-		<portNumber> the IP port to listen to  (default 8383)
-	-realm string
-		(optional) <hostName> name of host/domain to secure by BasicAuth
-		(default "This Host")
-	-sessiondir string
-		<directory> (optional) the directory to store session files
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions")
-	-sessionttl int
-		<seconds> Number of seconds an unused session keeps valid  (default 1200)
-	-sidname string
-		(optional) <name> the name of the session ID to use
-		(default "sid")
-	-sqltrace string
-		(optional) name of the SQL logfile to write to
-	-theme string
-		<name> the display theme to use ('light' or 'dark')
-		(default "light")
-	-ua string
-		<userName> (optional) user add: add a username to the password file
-	-uc string
-		<userName> (optional) user check: check a username in the password file
-	-ud string
-		<userName> (optional) user delete: remove a username from the password file
-	-uf string
-		<fileName> (optional) user passwords file storing user/passwords for BasicAuth
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/pwaccess.db")
-	-ul
-		(optional) user list: show all users in the password file
-	-uu string
-		<userName> (optional) user update: update a username in the password file
+    -authAll
+        <boolean> whether or not require authentication for all pages (default true)
+    -booksperpage int
+        <number> the default number of books shown per page  (default 24)
+    -certKey string
+        <fileName> the name of the TLS certificate key
+        (default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.key")
+    -certPem string
+        <fileName> the name of the TLS certificate PEM
+        (default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.pem")
+    -datadir string
+        <dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
+        (default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
+    -gzip
+        <boolean> use gzip compression for server responses (default true)
+    -ini string
+        <fileName> the path/filename of the INI file to use
+        (default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/kaliber.ini")
+    -lang string
+        the default language to use  (default "de")
+    -libraryname string
+        Name of this Library (shown on every page)
+        (default "MeiBucks")
+    -librarypath string
+        Path name of/to the Calibre library
+        (default "/var/opt/Calibre")
+    -listen string
+        the host's IP to listen at  (default "127.0.0.1")
+    -log string
+        name of the logfile to write to
+        (default "/dev/stdout")
+    -port int
+        <portNumber> the IP port to listen to  (default 8383)
+    -realm string
+        <hostName> name of host/domain to secure by BasicAuth
+        (default "eBooks Host")
+    -sessionttl int
+        <seconds> Number of seconds an unused session keeps valid  (default 1200)
+    -sidname string
+        <name> the name of the session ID to use
+        (default "sid")
+    -sqltrace string
+        name of the SQL logfile to write to
+    -theme string
+        <name> the display theme to use ('light' or 'dark')
+        (default "light")
+    -ua string
+        <userName> user add: add a username to the password file
+    -uc string
+        <userName> user check: check a username in the password file
+    -ud string
+        <userName> user delete: remove a username from the password file
+    -uf string
+        <fileName> user passwords file storing user/passwords for BasicAuth
+        (default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/pwaccess.db")
+    -ul
+        <boolean> user list: show all users in the password file
+    -uu string
+        <userName> user update: update a username in the password file
 
-	Most options can be set in an INI file to keep the command-line short ;-)
-	$ _
+    Most options can be set in an INI file to keep the command-line short ;-)
+    $ _
 
 As you can see there are quite a few options available, but almost all of them are optional since they come with reasonable default values most of which can be set in the accompanying INI-file (in fact, the "default" values shown above are coming from the INI-file used).
 
@@ -174,74 +175,79 @@ As you can see there are quite a few options available, but almost all of them a
 You don't have to give all those commandline options listed above every time you want to start `Kaliber`.
 There's an INI file which can take all the options (apart from the user handling options) all in one place:
 
-	$ cat kaliber.ini
-	# Default configuration file for the Kaliber server
+    $ cat kaliber.ini
+    # Default configuration file for the Kaliber server
 
-	[Default]
+    [Default]
 
-	# Number of books to show per page
-	booksperpage = 24
+    # Authenticate user for all pages and documents.
+    # If `false` only the download links need user authentication
+    # (see `passfile` below).
+    authAll = false
 
-	# Path-/filename of TLS certificate's private key to enable TLS/HTTPS
-	# (if empty standard HTTP is used)
-	# NOTE: a relative path/name will be combined with `datadir` (below).
-	certKey = ./certs/server.key
+    # Number of documents to show per page.
+    booksperpage = 24
 
-	# Path-/filename of TLS (server) certificate to enable TLS/HTTPS
-	# (if empty standard HTTP is used)
-	# NOTE: a relative path/name will be combined with `datadir` (below).
-	certPem = ./certs/server.pem
+    # Path-/filename of the TLS certificate's private key to enable
+    # TLS/HTTPS (if empty standard HTTP is used).
+    # NOTE: a relative path/name will be combined with `datadir` (below).
+    certKey = ./certs/server.key
 
-	# The directory root for CSS, FONTS, IMG, and VIEWS sub-directories.
-	# NOTE: this should be an _absolute_ path name.
-	datadir = ./
+    # Path-/filename of the TLS (server) certificate to enable TLS/HTTPS
+    # (if empty standard HTTP is used).
+    # NOTE: A relative path/name will be combined with `datadir` (below).
+    certPem = ./certs/server.pem
 
-	# The default language to use:
-	lang = de
+    # The directory root for the "css", "fonts", "img", "sessions",
+    # and "views" sub-directories.
+    # NOTE: This should be an _absolute_ path name!
+    datadir = ./
 
-	# Name of this library (shown on every page)
-	libraryname = "MeiBucks"
+    # Use gzip compression for server responses.
+    gzip = true
 
-	# Path of Calibre library.
-	# NOTE: this must be the absolute pathname of the Calibre library.
-	librarypath = "/var/opt/Calibre"
+    # The default UI language to use ("de" or "en").
+    lang = de
 
-	# The host's IP to listen at:
-	listen = 127.0.0.1
+    # Name of this library (shown on every page).
+    libraryname = "MeiBucks"
 
-	# The IP port to listen to:
-	port = 8383
+    # Path of Calibre library.
+    # NOTE: this must be the absolute pathname of the Calibre library.
+    librarypath = "/var/opt/Calibre"
 
-	# Name of the optional logfile to write to.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	logfile = /dev/stdout
+    # The host's IP number to listen at.
+    listen = 127.0.0.1
 
-	# Password file for HTTP Basic Authentication.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	passfile = ./pwaccess.db
+    # The host's IP port to listen to.
+    port = 8383
 
-	# Name of host/domain to secure by BasicAuth:
-	realm = "This Host"
+    # Name of the optional logfile to write to.
+    # NOTE: a relative path/name will be combined with `datadir` (above).
+    logfile = /dev/stdout
 
-	# Name of the directory to store session files.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	sessiondir = "./sessions"
+    # Password file for HTTP Basic Authentication.
+    # NOTE: a relative path/name will be combined with `datadir` (above).
+    passfile = ./pwaccess.db
 
-	# Number of seconds an unused session keeps valid:
-	sessionttl = 1200
+    # Name of host/domain to secure by BasicAuth.
+    realm = "eBooks Host"
 
-	# Name of the session ID field:
-	sidname = "sid"
+    # Number of seconds an unused session stays valid.
+    sessionttl = 1200
 
-	# Default web/display theme to use: `dark` or `light':
-	theme = light
+    # Name of the session ID field.
+    sidname = sid
 
-	# _EoF_
-	$ _
+    # Default web/display theme to use ("dark" or "light").
+    theme = light
 
-An INI-file as shown above is looked for at three different places
+    # _EoF_
+    $ _
 
-1. in your (i.e. the current user) directory (`./kaliber.ini`),
+An INI-file as shown above is looked for at four different places
+
+1. in your (i.e. the current user's) directory (`./kaliber.ini`),
 2. in the computer's main config directory (`/etc/kaliber.ini"`),
 3. in the current user's home directory (`$HOME/.kaliber.ini`),
 4. in the current user's configuration directory (e.g. `$HOME/.config/kaliber.ini`).
@@ -253,12 +259,15 @@ So each step overwrites the previous one, the commandline options having the hig
 
 Why, you may ask, would you need an username/password file anyway?
 Well, there may be several reasons one of which could be Copyright problems.
+
 If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically_ available.
 In that case you're most likely the only actual remote user allowed to access the books in your library.
-
-Whenever there's no password file given (either in the INI file or the command-line) all functionality requiring authentication will be _disabled_ which in turn means that everybody can access your library.
 Depending on your country's legislation you may or may not include your family members.
 If in doubt please consult a Copyright expert.
+
+The `authAll` commandline option (and INI setting) allows you to specify whether access to _all_ pages require user authentication; if that flag is `false` then only the download links require authentication, if `true` _any_ access requires a given username/password pair.
+
+Whenever there's no password file given (either in the INI file `passfile` or the command-line `-uf`) all functionality requiring authentication will be _disabled_ which in turn means that everybody can access your library.
 
 _Note_ that the password file generated and used by this system resembles the `htpasswd` used by the _Apache_ web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
 
@@ -365,6 +374,7 @@ The following external libraries were used building `Kaliber`:
 * [ApacheLogger](https://github.com/mwat56/apachelogger)
 * [Crypto](https://golang.org/x/crypto)
 * [ErrorHandler](https://github.com/mwat56/errorhandler)
+* [GzipHandler](https://github.com/NYTimes/gziphandler)
 * [INI](https://github.com/mwat56/ini)
 * [PassList](https://github.com/mwat56/passlist)
 * [Resize](https://github.com/nfnt/resize)
