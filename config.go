@@ -36,17 +36,6 @@ var (
 	AppArguments tAguments
 )
 
-// `set()` adds/sets another key-value pair.
-//
-// If `aValue` is empty gthen `aKey` gets removed.
-func (al *tAguments) set(aKey, aValue string) {
-	if 0 < len(aValue) {
-		al.AddKey(aKey, aValue)
-	} else {
-		al.RemoveKey(aKey)
-	}
-} // set()
-
 // Get returns the value associated with `aKey` and `nil` if found,
 // or an empty string and an error.
 //
@@ -59,6 +48,17 @@ func (al *tAguments) Get(aKey string) (string, error) {
 	//lint:ignore ST1005 – capitalisation wanted
 	return "", fmt.Errorf("Missing config value: %s", aKey)
 } // Get()
+
+// `set()` adds/sets another key-value pair.
+//
+// If `aValue` is empty then `aKey` gets removed.
+func (al *tAguments) set(aKey, aValue string) {
+	if 0 < len(aValue) {
+		al.AddKey(aKey, aValue)
+	} else {
+		al.RemoveKey(aKey)
+	}
+} // set()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -159,8 +159,8 @@ func InitConfig() {
 	flag.BoolVar(&authBool, "authAll", authBool,
 		"<boolean> whether or not require authentication for all pages ")
 
-	bppInt, _ := AppArguments.AsInt("booksperpage")
-	flag.IntVar(&bppInt, "booksperpage", bppInt,
+	bppInt, _ := AppArguments.AsInt("booksPerPage")
+	flag.IntVar(&bppInt, "booksPerPage", bppInt,
 		"<number> the default number of books shown per page ")
 
 	s, _ := AppArguments.Get("datadir")
@@ -197,12 +197,12 @@ func InitConfig() {
 	flag.StringVar(&langStr, "lang", langStr,
 		"the default language to use ")
 
-	libName, _ := AppArguments.Get("libraryname")
-	flag.StringVar(&libName, "libraryname", libName,
+	libName, _ := AppArguments.Get("libraryName")
+	flag.StringVar(&libName, "libraryName", libName,
 		"Name of this Library (shown on every page)\n")
 
-	libPath, _ := AppArguments.Get("librarypath")
-	flag.StringVar(&libPath, "librarypath", libPath,
+	libPath, _ := AppArguments.Get("libraryPath")
+	flag.StringVar(&libPath, "libraryPath", libPath,
 		"Path name of/to the Calibre library\n")
 
 	listenStr, _ := AppArguments.Get("listen")
@@ -274,7 +274,7 @@ func InitConfig() {
 	}
 	AppArguments.set("authAll", s)
 
-	AppArguments.set("booksperpage", fmt.Sprintf("%d", bppInt))
+	AppArguments.set("booksPerPage", fmt.Sprintf("%d", bppInt))
 
 	if 0 < len(dataDir) {
 		dataDir, _ = filepath.Abs(dataDir)
@@ -324,7 +324,7 @@ func InitConfig() {
 	if 0 == len(libName) {
 		libName = time.Now().Format("2006:01:02:15:04:05")
 	}
-	AppArguments.set("libraryname", libName)
+	AppArguments.set("libraryName", libName)
 
 	// To allow for use of multiple libraries we add the MD5
 	// of the libraryPath to our cache path.

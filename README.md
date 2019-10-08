@@ -107,7 +107,7 @@ which should produce an executable binary.
 
     -authAll
         <boolean> whether or not require authentication for all pages (default true)
-    -booksperpage int
+    -booksPerPage int
         <number> the default number of books shown per page  (default 24)
     -certKey string
         <fileName> the name of the TLS certificate key
@@ -125,10 +125,10 @@ which should produce an executable binary.
         (default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/kaliber.ini")
     -lang string
         the default language to use  (default "de")
-    -libraryname string
+    -libraryName string
         Name of this Library (shown on every page)
         (default "MeiBucks")
-    -librarypath string
+    -libraryPath string
         Path name of/to the Calibre library
         (default "/var/opt/Calibre")
     -listen string
@@ -186,7 +186,7 @@ There's an INI file which can take all the options (apart from the user handling
     authAll = false
 
     # Number of documents to show per page.
-    booksperpage = 24
+    booksPerPage = 24
 
     # Path-/filename of the TLS certificate's private key to enable
     # TLS/HTTPS (if empty standard HTTP is used).
@@ -210,11 +210,11 @@ There's an INI file which can take all the options (apart from the user handling
     lang = de
 
     # Name of this library (shown on every page).
-    libraryname = "MeiBucks"
+    libraryName = "MeiBucks"
 
     # Path of Calibre library.
-    # NOTE: this must be the absolute pathname of the Calibre library.
-    librarypath = "/var/opt/Calibre"
+    # NOTE: this must be the absolute pathname to the Calibre library.
+    libraryPath = "/var/opt/Calibre"
 
     # The host's IP number to listen at.
     listen = 127.0.0.1

@@ -67,7 +67,7 @@ func NewPageHandler() (*TPageHandler, error) {
 		result.lang = s
 	}
 
-	if s, err = AppArguments.Get("libraryname"); nil == err {
+	if s, err = AppArguments.Get("libraryName"); nil == err {
 		result.ln = s
 	}
 

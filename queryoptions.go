@@ -370,7 +370,7 @@ func NewQueryOptions() *TQueryOptions {
 		LimitLength: 24,
 		SortBy:      qoSortByAcquisition,
 	}
-	if s, _ := AppArguments.Get("booksperpage"); 0 < len(s) {
+	if s, _ := AppArguments.Get("booksPerPage"); 0 < len(s) {
 		if _, err := fmt.Sscanf(s, "%d", &result.LimitLength); nil != err {
 			result.LimitLength = 24
 		}
