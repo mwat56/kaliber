@@ -27,6 +27,13 @@ import (
 	"github.com/mwat56/sessions"
 )
 
+// `fatal()` logs `aMessage` and terminates the program.
+func fatal(aMessage string) {
+	apachelogger.Log("Kaliber/main", aMessage)
+	runtime.Gosched() // let the logger write
+	log.Fatalln(aMessage)
+} // fatal()
+
 // `userCmdline()` checks for and executes user/password handling functions.
 func userCmdline() {
 	var (
@@ -67,7 +74,7 @@ func setupSignals(aServer *http.Server) {
 		for signal := range c {
 			msg := fmt.Sprintf("%s captured '%v', stopping program and exiting ...", os.Args[0], signal)
 			log.Println(msg)
-			apachelogger.Log(`kaliber/catchSignals`, msg)
+			apachelogger.Log(`Kaliber/catchSignals`, msg)
 			runtime.Gosched() // let the logger write
 			if err := aServer.Shutdown(context.Background()); nil != err {
 				log.Fatalf("%s: %v\n", os.Args[0], err)
@@ -88,21 +95,15 @@ func main() {
 
 	if err = kaliber.OpenDatabase(); nil != err {
 		kaliber.ShowHelp()
-		s = fmt.Sprintf("%s: %v", Me, err)
-		apachelogger.Log("Kaliber/main", s)
-		runtime.Gosched() // let the logger write
-		log.Fatalln(s)
+		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}
 
-	// handle commandline user/password maintenance:
+	// Handle commandline user/password maintenance:
 	userCmdline()
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
 		kaliber.ShowHelp()
-		s = fmt.Sprintf("%s: %v", Me, err)
-		apachelogger.Log("Kaliber/main", s)
-		runtime.Gosched() // let the logger write
-		log.Fatalln(s)
+		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}
 	// Setup the errorpage handler:
 	handler = errorhandler.Wrap(ph, ph)
@@ -142,10 +143,7 @@ func main() {
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)
 		if err = server.ListenAndServeTLS(cp, ck); nil != err {
-			s = fmt.Sprintf("%s %v", Me, err)
-			apachelogger.Log("Kaliber/main", s)
-			runtime.Gosched() // let the logger write
-			log.Fatalln(s)
+			fatal(fmt.Sprintf("%s: %v", Me, err))
 		}
 		return
 	}
@@ -154,10 +152,7 @@ func main() {
 	log.Println(s)
 	apachelogger.Log("Kaliber/main", s)
 	if err = server.ListenAndServe(); nil != err {
-		s = fmt.Sprintf("%s %v", Me, err)
-		apachelogger.Log("Kaliber/main", s)
-		runtime.Gosched() // let the logger write
-		log.Fatalln(s)
+		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}
 } // main()
 
