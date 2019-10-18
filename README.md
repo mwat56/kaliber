@@ -376,6 +376,7 @@ The following external libraries were used building `Kaliber`:
 * [ErrorHandler](https://github.com/mwat56/errorhandler)
 * [GzipHandler](https://github.com/NYTimes/gziphandler)
 * [INI](https://github.com/mwat56/ini)
+* [Jffs](https://github.com/mwat56/jffs)
 * [PassList](https://github.com/mwat56/passlist)
 * [Resize](https://github.com/nfnt/resize)
 * [Sessions](https://github.com/mwat56/sessions)

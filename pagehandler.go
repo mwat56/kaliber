@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/mwat56/apachelogger"
+	"github.com/mwat56/jffs"
 	"github.com/mwat56/passlist"
 	"github.com/mwat56/sessions"
 )
@@ -50,10 +51,10 @@ func NewPageHandler() (*TPageHandler, error) {
 	)
 	result := new(TPageHandler)
 
-	result.cacheFS = http.FileServer(http.Dir(CalibreCachePath()))
+	result.cacheFS = jffs.FileServer(http.Dir(CalibreCachePath()))
 
-	if s, err = AppArguments.Get("authAll"); (nil != err) && ("true" == s) {
-		result.authAll = true
+	if s, err = AppArguments.Get("authAll"); nil == err {
+		result.authAll = ("true" == s)
 	}
 
 	if s, err = AppArguments.Get("datadir"); nil != err {
@@ -61,7 +62,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.dd = s
 
-	result.docFS = http.FileServer(http.Dir(CalibreLibraryPath()))
+	result.docFS = jffs.FileServer(http.Dir(CalibreLibraryPath()))
 
 	if s, err = AppArguments.Get("lang"); nil == err {
 		result.lang = s
@@ -79,7 +80,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.addr += ":" + s
 
-	result.staticFS = http.FileServer(http.Dir(result.dd))
+	result.staticFS = jffs.FileServer(http.Dir(result.dd))
 
 	if s, err = AppArguments.Get("uf"); nil != err {
 		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
@@ -514,6 +515,7 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 	}
 
+	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	switch aRequest.Method {
 	case "GET":
 		ph.handleGET(aWriter, aRequest)
