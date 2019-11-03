@@ -27,7 +27,7 @@ import (
 	"github.com/mwat56/sessions"
 )
 
-// `fatal()` logs `aMessage` and terminates the program.
+// `fatal()` Log `aMessage` and terminate the program.
 func fatal(aMessage string) {
 	apachelogger.Log("Kaliber/main", aMessage)
 	runtime.Gosched() // let the logger write
@@ -85,10 +85,9 @@ func setupSignals(aServer *http.Server) {
 
 func main() {
 	var (
-		err       error
-		handler   http.Handler
-		ph        *kaliber.TPageHandler
-		ck, cp, s string
+		err error
+		ph  *kaliber.TPageHandler
+		s   string
 	)
 	Me, _ := filepath.Abs(os.Args[0])
 	kaliber.InitConfig()
@@ -106,7 +105,7 @@ func main() {
 		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}
 	// Setup the errorpage handler:
-	handler = errorhandler.Wrap(ph, ph)
+	handler := errorhandler.Wrap(ph, ph)
 
 	// Inspect `sessiondir` commandline argument and setup the session handler
 	if s, err = kaliber.AppArguments.Get("sessiondir"); (nil == err) && (0 < len(s)) {
@@ -116,6 +115,7 @@ func main() {
 
 	// Inspect `gzip` commandline argument and setup the Gzip handler:
 	if s, err = kaliber.AppArguments.Get("gzip"); (nil == err) && ("true" == s) {
+		// we assume, an error means: no gzip compression
 		handler = gziphandler.GzipHandler(handler)
 	}
 
@@ -136,8 +136,8 @@ func main() {
 	}
 	setupSignals(server)
 
-	ck, _ = kaliber.AppArguments.Get("certKey")
-	cp, _ = kaliber.AppArguments.Get("certPem")
+	ck, _ := kaliber.AppArguments.Get("certKey")
+	cp, _ := kaliber.AppArguments.Get("certPem")
 	if (0 < len(ck)) && (0 < len(cp)) {
 		s = fmt.Sprintf("%s listening HTTPS at %s", Me, ph.Address())
 		log.Println(s)
