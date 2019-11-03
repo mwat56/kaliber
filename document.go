@@ -204,7 +204,7 @@ func (doc *TDocument) filenames() *tPathMap {
 			continue // we ignore this internal file type
 		}
 		ext := strings.ToLower(format.Name)
-		if filenames, err := filepath.Glob(dir + "/*." + ext); nil == err {
+		if filenames, err := filepath.Glob(dir + "/*." + ext); (nil == err) && (0 < len(filenames)) {
 			result[format.Name] = filenames[0]
 		}
 	}
