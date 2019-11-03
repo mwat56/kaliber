@@ -155,7 +155,7 @@ func init() {
 func InitConfig() {
 	readIniData()
 
-	authBool := true
+	authBool, _ := AppArguments.AsBool("authBool")
 	flag.BoolVar(&authBool, "authAll", authBool,
 		"<boolean> whether or not require authentication for all pages ")
 
@@ -178,7 +178,7 @@ func InitConfig() {
 	flag.StringVar(&certPem, "certPem", certPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
-	gzipBool := true
+	gzipBool, _ := AppArguments.AsBool("gzip")
 	flag.BoolVar(&gzipBool, "gzip", gzipBool,
 		"<boolean> use gzip compression for server responses")
 
@@ -203,7 +203,7 @@ func InitConfig() {
 
 	libPath, _ := AppArguments.Get("libraryPath")
 	flag.StringVar(&libPath, "libraryPath", libPath,
-		"Path name of/to the Calibre library\n")
+		"<pathname> Path name of/to the Calibre library\n")
 
 	listenStr, _ := AppArguments.Get("listen")
 	flag.StringVar(&listenStr, "listen", listenStr,
@@ -212,15 +212,19 @@ func InitConfig() {
 	s, _ = AppArguments.Get("logfile")
 	logFile := absolute(dataDir, s)
 	flag.StringVar(&logFile, "log", logFile,
-		"name of the logfile to write to\n")
+		"<filename> Name of the logfile to write to\n")
+
+	logStack, _ := AppArguments.AsBool("logStack")
+	flag.BoolVar(&logStack, "logStack", logStack,
+		"<boolean> Log a stack trace for recovered runtime errors ")
 
 	portInt, _ := AppArguments.AsInt("port")
 	flag.IntVar(&portInt, "port", portInt,
-		"<portNumber> the IP port to listen to ")
+		"<portNumber> The IP port to listen to ")
 
 	realmStr, _ := AppArguments.Get("realm")
 	flag.StringVar(&realmStr, "realm", realmStr,
-		"<hostName> name of host/domain to secure by BasicAuth\n")
+		"<hostName> Name of host/domain to secure by BasicAuth\n")
 
 	sessionTTL, _ := AppArguments.AsInt("sessionttl")
 	flag.IntVar(&sessionTTL, "sessionttl", sessionTTL,
@@ -228,41 +232,41 @@ func InitConfig() {
 
 	sidName, _ := AppArguments.Get("sidname")
 	flag.StringVar(&sidName, "sidname", sidName,
-		"<name> the name of the session ID to use\n")
+		"<name> The name of the session ID to use\n")
 
 	s, _ = AppArguments.Get("sqltrace")
 	sqlTrace := absolute(dataDir, s)
 	flag.StringVar(&sqlTrace, "sqltrace", sqlTrace,
-		"name of the SQL logfile to write to\n")
+		"<filename> Name of the SQL logfile to write to\n")
 
 	themeStr, _ := AppArguments.Get("theme")
 	flag.StringVar(&themeStr, "theme", themeStr,
-		"<name> the display theme to use ('light' or 'dark')\n")
+		"<name> The display theme to use ('light' or 'dark')\n")
 
 	uaStr := ""
 	flag.StringVar(&uaStr, "ua", uaStr,
-		"<userName> user add: add a username to the password file")
+		"<userName> User add: add a username to the password file")
 
 	ucStr := ""
 	flag.StringVar(&ucStr, "uc", ucStr,
-		"<userName> user check: check a username in the password file")
+		"<userName> User check: check a username in the password file")
 
 	udStr := ""
 	flag.StringVar(&udStr, "ud", udStr,
-		"<userName> user delete: remove a username from the password file")
+		"<userName> User delete: remove a username from the password file")
 
 	s, _ = AppArguments.Get("passfile")
 	ufStr := absolute(dataDir, s)
 	flag.StringVar(&ufStr, "uf", ufStr,
-		"<fileName> user passwords file storing user/passwords for BasicAuth\n")
+		"<fileName> Passwords file storing user/passwords for BasicAuth\n")
 
 	ulBool := false
 	flag.BoolVar(&ulBool, "ul", ulBool,
-		"<boolean> user list: show all users in the password file")
+		"<boolean> User list: show all users in the password file")
 
 	uuStr := ""
 	flag.StringVar(&uuStr, "uu", uuStr,
-		"<userName> user update: update a username in the password file")
+		"<userName> User update: update a username in the password file")
 
 	flag.Usage = ShowHelp
 	flag.Parse() // // // // // // // // // // // // // // // // // // //
@@ -346,15 +350,24 @@ func InitConfig() {
 	}
 	AppArguments.set("logfile", logFile)
 
+	if logStack {
+		s = "true"
+	} else {
+		s = ""
+	}
+	AppArguments.set("logStack", s)
+
 	AppArguments.set("port", fmt.Sprintf("%d", portInt))
 
 	AppArguments.set("realm", realmStr)
 
 	AppArguments.set("sessiondir", absolute(dataDir, "sessions"))
+
 	if 0 == len(sidName) {
 		sidName = "SID"
 	}
 	sessions.SetSIDname(sidName)
+
 	if 0 >= sessionTTL {
 		sessionTTL = 1200
 	}

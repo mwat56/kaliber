@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,7 @@ type (
 		docFS    http.Handler        // document file server
 		lang     string              // default GUI language
 		ln       string              // the library's name
+		logStack bool                // log stack trace
 		realm    string              // host/domain to secure by BasicAuth
 		staticFS http.Handler        // static file server
 		theme    string              // `dark` or `light` display theme
@@ -74,6 +76,10 @@ func NewPageHandler() (*TPageHandler, error) {
 
 	result.addr, _ = AppArguments.Get("listen")
 	// an empty value means: listen on all interfaces
+
+	if s, err = AppArguments.Get("logStack"); nil == err {
+		result.logStack = ("true" == s)
+	}
 
 	if s, err = AppArguments.Get("port"); nil != err {
 		return nil, err
@@ -508,6 +514,20 @@ func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
 
 // ServeHTTP handles the incoming HTTP requests.
 func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Request) {
+	defer func() {
+		// make sure a `panic` won't kill the program
+		if err := recover(); err != nil {
+			var msg string
+			if ph.logStack {
+				msg = fmt.Sprintf("caught panic: %v – %s", err, debug.Stack())
+			} else {
+				msg = fmt.Sprintf("caught panic: %v", err)
+			}
+			apachelogger.Log("TPageHandler.ServeHTTP()", msg)
+		}
+	}()
+
+	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	if ph.NeedAuthentication(aRequest) {
 		if !ph.ul.IsAuthenticated(aRequest) {
 			passlist.Deny(ph.realm, aWriter)
@@ -515,7 +535,6 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 	}
 
-	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	switch aRequest.Method {
 	case "GET":
 		ph.handleGET(aWriter, aRequest)
