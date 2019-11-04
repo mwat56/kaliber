@@ -13,5 +13,5 @@ require (
 	github.com/mwat56/sessions v0.3.5
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/crypto v0.0.0-20191029031824-8986dd9e96cf // indirect
-	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
+	golang.org/x/sys v0.0.0-20191104094858-e8c54fb511f6 // indirect
 )
