@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"path/filepath"
 	"reflect"
@@ -203,7 +205,6 @@ func TestTDocument_Files(t *testing.T) {
 				Name: "PDF",
 			},
 		},
-		path:  "Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 		Title: "this is the document's title",
 	}
 	w1 := &TEntityList{
@@ -213,6 +214,29 @@ func TestTDocument_Files(t *testing.T) {
 			URL:  "/file/1/PDF/this_is_the_document%27s_title.pdf",
 		},
 	}
+	d2 := TDocument{
+		authors: &tAuthorList{
+			TEntity{
+				ID:   3,
+				Name: "Spiegel",
+			},
+		},
+		ID: 7628,
+		formats: &tFormatList{
+			TEntity{
+				ID:   2,
+				Name: "PDF",
+			},
+		},
+		Title: "Der Spiegel (2019-06-01) 23/2019",
+	}
+	w2 := &TEntityList{
+		TEntity{
+			ID:   2,
+			Name: `PDF`,
+			URL:  `/file/7628/PDF/Spiegel_-_Der_Spiegel_%282019-06-01%29_23-2019.pdf`,
+		},
+	}
 	tests := []struct {
 		name   string
 		fields TDocument
@@ -220,6 +244,7 @@ func TestTDocument_Files(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{" 1", d1, w1},
+		{" 2", d2, w2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

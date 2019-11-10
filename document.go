@@ -19,9 +19,7 @@ import (
 )
 
 /*
-
-This file provides functions and methods to handle a single document.
-
+* This file provides functions and methods to handle a single document.
 */
 
 type (
@@ -165,8 +163,7 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	if !aRelative {
 		return filenames[0], nil
 	}
-	dir, err = filepath.Rel(CalibreLibraryPath(), filenames[0])
-	if nil != err {
+	if dir, err = filepath.Rel(CalibreLibraryPath(), filenames[0]); nil != err {
 		return "", err
 	}
 
@@ -217,6 +214,7 @@ func (doc *TDocument) Files() *TEntityList {
 	if nil == doc.formats {
 		return nil
 	}
+
 	result := make(TEntityList, 0, len(*doc.formats))
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
@@ -224,7 +222,13 @@ func (doc *TDocument) Files() *TEntityList {
 		}
 
 		// Build the filename to download:
-		fName := url.PathEscape(strings.Replace(strings.Replace(doc.AuthorList()+`_-_`+doc.Title, ` `, `_`, -1), `/`, `-`, -1)) + `.` + strings.ToLower(format.Name)
+		al := doc.AuthorList()
+		if 0 < len(al) {
+			al += `_-_`
+		}
+		fName := url.PathEscape(
+			strings.Replace(
+				strings.Replace(al+doc.Title, ` `, `_`, -1), `/`, `-`, -1)) + `.` + strings.ToLower(format.Name)
 		ent := TEntity{
 			ID:   format.ID,
 			Name: format.Name,
@@ -244,6 +248,7 @@ func (doc *TDocument) Formats() *TEntityList {
 	if nil == doc.formats {
 		return nil
 	}
+
 	result := make(TEntityList, 0, len(*doc.formats))
 	for _, format := range *doc.formats {
 		if "ORIGINAL_EPUB" == format.Name {
@@ -268,6 +273,7 @@ func (doc *TDocument) Identifiers() *TEntityList {
 	if nil == doc.identifiers {
 		return nil
 	}
+
 	result := make(TEntityList, 0, len(*doc.identifiers))
 	for _, ident := range *doc.identifiers {
 		ent := TEntity{
@@ -311,6 +317,7 @@ func (doc *TDocument) Languages() *TEntityList {
 	if nil == doc.languages {
 		return nil
 	}
+
 	result := make(TEntityList, 0, len(*doc.languages))
 	for _, language := range *doc.languages {
 		ent := TEntity{
@@ -339,6 +346,7 @@ func (doc *TDocument) Publisher() *TEntity {
 	if nil == doc.publisher {
 		return nil
 	}
+
 	result := TEntity{
 		ID:   doc.publisher.ID,
 		Name: doc.publisher.Name,
@@ -353,6 +361,7 @@ func (doc *TDocument) Series() *TEntity {
 	if nil == doc.series {
 		return nil
 	}
+
 	result := TEntity{
 		ID:   doc.series.ID,
 		Name: doc.series.Name,
@@ -378,6 +387,7 @@ func (doc *TDocument) Tags() *TEntityList {
 	if nil == doc.tags {
 		return nil
 	}
+
 	result := make(TEntityList, 0, len(*doc.tags))
 	for _, tag := range *doc.tags {
 		ent := TEntity{
@@ -419,18 +429,12 @@ func (dl *TDocList) Add(aDocument *TDocument) *TDocList {
 
 // NewDocument returns a new `TDocument` instance.
 func NewDocument() *TDocument {
-	result := &TDocument{
-		// authors:     &tAuthorList{},
-		// formats:     &tFormatList{},
-		// identifiers: &tIdentifierList{},
-		// languages:   &tLanguageList{},
-		// publisher:   &tPublisher{},
-		// series:      &tSeries{},
-		// tags:        &tTagList{},
-	}
+	result := &TDocument{}
 
 	return result
 } // NewDocument()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 type (
 	// TDocList is a list of `TDocument` instances.
@@ -439,7 +443,7 @@ type (
 
 // NewDocList returns a new `TDocList` instance.
 func NewDocList() *TDocList {
-	result := make(TDocList, 0, 32)
+	result := make(TDocList, 0, 63)
 
 	return &result
 } // NewDocList()
