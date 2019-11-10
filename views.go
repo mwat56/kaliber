@@ -6,6 +6,8 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 /*
  * This file provides some template/view related functions and methods.
  */
@@ -52,6 +54,8 @@ func selectOption(aMap *TStringMap, aValue string) template.HTML {
 } // selectOption()
 
 var (
+	// A list of functions to be used from within templates;
+	// see `NewView()`.
 	viewFunctionMap = template.FuncMap{
 		"htmlSafe":     htmlSafe,     // returns `aText` as template.HTML
 		"selectOption": selectOption, // returns a Select Option
@@ -62,17 +66,17 @@ var (
 
 // TView combines a template and its logical name.
 type TView struct {
-	// The view's symbolic name.
-	name string
+	name string // The view's symbolic name.
+
 	// The template as returned by a `NewView()` function call.
 	tpl *template.Template
 }
 
 // NewView returns a new `TView` with `aName`.
 //
-// `aBaseDir` is the path to the directory storing the template files.
+//	`aBaseDir` is the path to the directory storing the template files.
 //
-// `aName` is the name of the template file providing the page's main
+//	`aName` is the name of the template file providing the page's main
 // body without the filename extension (i.e. w/o ".gohtml"). `aName`
 // serves as both the main template's name as well as the view's name.
 func NewView(aBaseDir, aName string) (*TView, error) {
@@ -115,9 +119,9 @@ func (v *TView) render(aWriter io.Writer, aData *TemplateData) (rErr error) {
 
 // Render executes the template using the TView's properties.
 //
-// `aWriter` is a http.ResponseWriter, or e.g. `os.Stdout` in console apps.
+//	`aWriter` is a http.ResponseWriter, or e.g. `os.Stdout` in console apps.
 //
-// `aData` is a list of data to be injected into the template.
+//	`aData` is a list of data to be injected into the template.
 //
 // If an error occurs executing the template or writing its output,
 // execution stops, and the method returns without writing anything
@@ -129,12 +133,12 @@ func (v *TView) Render(aWriter http.ResponseWriter, aData *TemplateData) error {
 // RenderedPage returns the rendered template/page and a possible Error
 // executing the template.
 //
-// `aData` is a list of data to be injected into the template.
-func (v *TView) RenderedPage(aData *TemplateData) (rBytes []byte, rErr error) {
+//	`aData` is a list of data to be injected into the template.
+func (v *TView) RenderedPage(aData *TemplateData) ([]byte, error) {
 	buf := &bytes.Buffer{}
 
-	if rErr = v.tpl.ExecuteTemplate(buf, v.name, aData); nil != rErr {
-		return
+	if err := v.tpl.ExecuteTemplate(buf, v.name, aData); nil != err {
+		return nil, err
 	}
 
 	return buf.Bytes(), nil
@@ -158,7 +162,7 @@ func NewViewList() *TViewList {
 
 // Add appends `aView` to the list.
 //
-// `aView` is the view to add to this list.
+//	`aView` is the view to add to this list.
 //
 // The view's name (as specified in the `NewView()` function call)
 // is used as the view's key in this list.
@@ -170,7 +174,7 @@ func (vl *TViewList) Add(aView *TView) *TViewList {
 
 // Get returns the view with `aName`.
 //
-// `aName` is the name (key) of the `TView` object to retrieve.
+//	`aName` is the name (key) of the `TView` object to retrieve.
 //
 // If `aName` doesn't exist, the return value is `nil`.
 // The second value (ok) is a `bool` that is `true` if `aName`
@@ -195,11 +199,11 @@ func (vl *TViewList) render(aName string, aWriter io.Writer, aData *TemplateData
 
 // Render executes the template with the key `aName`.
 //
-// `aName` is the name of the template/view to use.
+//	`aName` is the name of the template/view to use.
 //
-// `aWriter` is a `http.ResponseWriter` to handle the executed template.
+//	`aWriter` is a `http.ResponseWriter` to handle the executed template.
 //
-// `aData` is a list of data to be injected into the template.
+//	`aData` is a list of data to be injected into the template.
 //
 // If an error occurs executing the template or writing its output,
 // execution stops, and the method returns without writing anything
@@ -210,16 +214,16 @@ func (vl *TViewList) Render(aName string, aWriter http.ResponseWriter, aData *Te
 
 // RenderedPage returns the rendered template/page with the key `aName`.
 //
-// `aName` is the name of the template/view to use.
+//	`aName` is the name of the template/view to use.
 //
-// `aData` is a list of data to be injected into the template.
-func (vl *TViewList) RenderedPage(aName string, aData *TemplateData) (rBytes []byte, rErr error) {
+//	`aData` is a list of data to be injected into the template.
+func (vl *TViewList) RenderedPage(aName string, aData *TemplateData) ([]byte, error) {
 
 	if view, ok := (*vl)[aName]; ok {
 		return view.RenderedPage(aData)
 	}
 
-	return rBytes, fmt.Errorf("template/view '%s' not found", aName)
+	return nil, fmt.Errorf("template/view '%s' not found", aName)
 } // RenderedPage()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -297,9 +301,11 @@ var (
 // RemoveWhiteSpace removes HTML comments and unnecessary whitespace.
 //
 // This function removes all unneeded/redundant whitespace
-// and HTML comments from the given <tt>aPage</tt>.
+// and HTML comments from the given `aPage`.
 // This can reduce significantly the amount of data to send to
 // the remote user agent thus saving bandwidth.
+//
+//	`aPage` The HTML document to process.
 func RemoveWhiteSpace(aPage []byte) []byte {
 	var repl, search string
 
@@ -336,7 +342,6 @@ func RemoveWhiteSpace(aPage []byte) []byte {
 			aPage = re.ReplaceAllLiteral(aPage, preMatches[cnt])
 		}
 	}
-	// fmt.Println("Page3:", string(aPage))
 
 	return aPage
 } // RemoveWhiteSpace()
