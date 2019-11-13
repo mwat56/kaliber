@@ -130,30 +130,30 @@ func main() {
 	server := &http.Server{
 		Addr:              ph.Address(),
 		Handler:           handler,
-		IdleTimeout:       120 * time.Second,
-		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       2 * time.Minute,
+		ReadHeaderTimeout: 20 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      20 * time.Minute, // enough time for book download
+	}
+	if (nil == err) && (0 < len(s)) { // values from "logfile" test
+		apachelogger.SetErrLog(server)
 	}
 	setupSignals(server)
 
 	ck, _ := kaliber.AppArguments.Get("certKey")
 	cp, _ := kaliber.AppArguments.Get("certPem")
 	if (0 < len(ck)) && (0 < len(cp)) {
-		s = fmt.Sprintf("%s listening HTTPS at %s", Me, ph.Address())
+		s = fmt.Sprintf("%s listening HTTPS at %s", Me, server.Addr)
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)
-		if err = server.ListenAndServeTLS(cp, ck); nil != err {
-			fatal(fmt.Sprintf("%s: %v", Me, err))
-		}
+		fatal(fmt.Sprintf("%s: %v", Me, server.ListenAndServeTLS(cp, ck)))
 		return
 	}
 
-	s = fmt.Sprintf("%s listening HTTP at %s", Me, ph.Address())
+	s = fmt.Sprintf("%s listening HTTP at %s", Me, server.Addr)
 	log.Println(s)
 	apachelogger.Log("Kaliber/main", s)
-	if err = server.ListenAndServe(); nil != err {
-		fatal(fmt.Sprintf("%s: %v", Me, err))
-	}
+	fatal(fmt.Sprintf("%s: %v", Me, server.ListenAndServe()))
 } // main()
 
 /* _EoF_ */
