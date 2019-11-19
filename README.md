@@ -103,56 +103,48 @@ which should produce an executable binary.
 
     $ ./kaliber -h
 
-	Usage: ./bin/kaliber-linux-amd64 [OPTIONS]
+	Usage: ./kaliber [OPTIONS]
 
+	-accesslog string
+			<filename> Name of the access logfile to write to
 	-authAll
-		<boolean> whether or not require authentication for all pages
+			<boolean> whether to require authentication for all pages  (default true)
 	-booksPerPage int
-		<number> the default number of books shown per page  (default 24)
-	-certKey string
-		<fileName> the name of the TLS certificate key
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.key")
-	-certPem string
-		<fileName> the name of the TLS certificate PEM
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/certs/server.pem")
+			<number> the default number of books shown per page  (default 24)
+	-certkey string
+			<fileName> the name of the TLS certificate key
+	-certpem string
+			<fileName> the name of the TLS certificate PEM
 	-datadir string
 		<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
+	-errorlog string
+		<filename> Name of the error logfile to write to
 	-gzip
 		<boolean> use gzip compression for server responses (default true)
 	-ini string
 		<fileName> the path/filename of the INI file to use
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/kaliber.ini")
 	-lang string
 		the default language to use  (default "de")
 	-libraryName string
 		Name of this Library (shown on every page)
-		(default "MeiBucks")
 	-libraryPath string
 		<pathname> Path name of/to the Calibre library
-		(default "/var/opt/Calibre")
 	-listen string
-		the host's IP to listen at  (default "127.0.0.1")
-	-log string
-		<filename> Name of the logfile to write to
-		(default "/dev/stdout")
-	-logStack
+		the host's IP to listen at  (default "0")
+	-logstack
 		<boolean> Log a stack trace for recovered runtime errors  (default true)
 	-port int
 		<portNumber> The IP port to listen to  (default 8383)
 	-realm string
 		<hostName> Name of host/domain to secure by BasicAuth
-		(default "eBooks Host")
 	-sessionttl int
 		<seconds> Number of seconds an unused session keeps valid  (default 1200)
 	-sidname string
 		<name> The name of the session ID to use
-		(default "sid")
 	-sqltrace string
 		<filename> Name of the SQL logfile to write to
 	-theme string
 		<name> The display theme to use ('light' or 'dark')
-		(default "dark")
 	-ua string
 		<userName> User add: add a username to the password file
 	-uc string
@@ -161,7 +153,6 @@ which should produce an executable binary.
 		<userName> User delete: remove a username from the password file
 	-uf string
 		<fileName> Passwords file storing user/passwords for BasicAuth
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/pwaccess.db")
 	-ul
 		<boolean> User list: show all users in the password file
 	-uu string
@@ -182,6 +173,10 @@ There's an INI file which can take all the options (apart from the user handling
 	# Default configuration file for the Kaliber server
 
 	[Default]
+
+	# Name of the optional access logfile to write to.
+	# NOTE: a relative path/name will be combined with `datadir` (below).
+	accessLog = /dev/stdout
 
 	# Authenticate user for all pages and documents.
 	# If `false` only the download links need user authentication
@@ -206,6 +201,10 @@ There's an INI file which can take all the options (apart from the user handling
 	# NOTE: This should be an _absolute_ path name!
 	datadir = ./
 
+	# Name of the optional error logfile to write to.
+	# NOTE: a relative path/name will be combined with `datadir` (above).
+	errorLog = /dev/stderr
+
 	# Use gzip compression for server responses.
 	gzip = true
 
@@ -229,10 +228,6 @@ There's an INI file which can take all the options (apart from the user handling
 	# The host's IP port to listen to.
 	port = 8383
 
-	# Name of the optional logfile to write to.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	logfile = /dev/stdout
-
 	# Password file for HTTP Basic Authentication.
 	# NOTE: a relative path/name will be combined with `datadir` (above).
 	passfile = ./pwaccess.db
@@ -254,7 +249,7 @@ There's an INI file which can take all the options (apart from the user handling
 
 An INI-file as shown above is looked for at five different places:
 
-1. in your (i.e. the current user's) directory (`./kaliber.ini`),
+1. in your (i.e. the current user's) current directory (`./kaliber.ini`),
 2. in the computer's main config directory (`/etc/kaliber.ini"`),
 3. in the current user's home directory (e.g. `$HOME/.kaliber.ini`),
 4. in the current user's configuration directory (e.g. `$HOME/.config/kaliber.ini`),

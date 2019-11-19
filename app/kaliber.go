@@ -61,8 +61,8 @@ func userCmdline() {
 	}
 } // userCmdline()
 
-// `setupSignals()` configures the capture of the interrupts `SIGINT`,
-// `SIGKILL`, and `SIGTERM` to terminate the program gracefully.
+// `setupSignals()` configures the capture of the interrupts `SIGINT`
+// and `SIGTERM` to terminate the program gracefully.
 //
 //	`aServer` The server instance to shutdown if a signal arrives.
 func setupSignals(aServer *http.Server) {
@@ -77,6 +77,7 @@ func setupSignals(aServer *http.Server) {
 			apachelogger.Log(`Kaliber/catchSignals`, msg)
 			runtime.Gosched() // let the logger write
 			if err := aServer.Shutdown(context.Background()); nil != err {
+				apachelogger.Close()
 				log.Fatalf("%s: %v\n", os.Args[0], err)
 			}
 		}
@@ -119,10 +120,16 @@ func main() {
 		handler = gziphandler.GzipHandler(handler)
 	}
 
-	// Inspect `logfile` commandline argument and setup the `ApacheLogger`
-	if s, err = kaliber.AppArguments.Get("logfile"); (nil == err) && (0 < len(s)) {
+	// Inspect logging commandline arguments and setup the `ApacheLogger`:
+	if s, err = kaliber.AppArguments.Get("accessLog"); (nil == err) && (0 < len(s)) {
 		// we assume, an error means: no logfile
-		handler = apachelogger.Wrap(handler, s)
+		if s2, err := kaliber.AppArguments.Get("errorLog"); (nil == err) && (0 < len(s2)) {
+			handler = apachelogger.Wrap(handler, s, s2)
+		} else {
+			handler = apachelogger.Wrap(handler, s, "")
+		}
+	} else if s, err = kaliber.AppArguments.Get("errorLog"); (nil == err) && (0 < len(s)) {
+		handler = apachelogger.Wrap(handler, "", s)
 	}
 
 	// We need a `server` reference to use it in `setupSinals()`
@@ -146,14 +153,20 @@ func main() {
 		s = fmt.Sprintf("%s listening HTTPS at %s", Me, server.Addr)
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)
-		fatal(fmt.Sprintf("%s: %v", Me, server.ListenAndServeTLS(cp, ck)))
+		if err = server.ListenAndServeTLS(cp, ck); nil != err {
+			apachelogger.Close()
+			fatal(fmt.Sprintf("%s: %v", Me, err))
+		}
 		return
 	}
 
 	s = fmt.Sprintf("%s listening HTTP at %s", Me, server.Addr)
 	log.Println(s)
 	apachelogger.Log("Kaliber/main", s)
-	fatal(fmt.Sprintf("%s: %v", Me, server.ListenAndServe()))
+	if err = server.ListenAndServe(); nil != err {
+		apachelogger.Close()
+		fatal(fmt.Sprintf("%s: %v", Me, err))
+	}
 } // main()
 
 /* _EoF_ */

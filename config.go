@@ -62,7 +62,7 @@ func (al *tAguments) set(aKey, aValue string) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// `absolute()` return `aDir` as an absolute path
+// `absolute()` returns `aDir` as an absolute path.
 func absolute(aBaseDir, aDir string) string {
 	if 0 == len(aDir) {
 		return aDir
@@ -168,15 +168,25 @@ func InitConfig() {
 	flag.StringVar(&dataDir, "datadir", dataDir,
 		"<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories\n")
 
+	s, _ = AppArguments.Get("accessLog")
+	accessLog := absolute(dataDir, s)
+	flag.StringVar(&accessLog, "accesslog", accessLog,
+		"<filename> Name of the access logfile to write to\n")
+
 	s, _ = AppArguments.Get("certKey")
 	certKey := absolute(dataDir, s)
-	flag.StringVar(&certKey, "certKey", certKey,
+	flag.StringVar(&certKey, "certkey", certKey,
 		"<fileName> the name of the TLS certificate key\n")
 
 	s, _ = AppArguments.Get("certPem")
 	certPem := absolute(dataDir, s)
-	flag.StringVar(&certPem, "certPem", certPem,
+	flag.StringVar(&certPem, "certpem", certPem,
 		"<fileName> the name of the TLS certificate PEM\n")
+
+	s, _ = AppArguments.Get("errorLog")
+	errorLog := absolute(dataDir, s)
+	flag.StringVar(&errorLog, "errorlog", errorLog,
+		"<filename> Name of the error logfile to write to\n")
 
 	gzipBool, _ := AppArguments.AsBool("gzip")
 	flag.BoolVar(&gzipBool, "gzip", gzipBool,
@@ -209,13 +219,8 @@ func InitConfig() {
 	flag.StringVar(&listenStr, "listen", listenStr,
 		"the host's IP to listen at ")
 
-	s, _ = AppArguments.Get("logfile")
-	logFile := absolute(dataDir, s)
-	flag.StringVar(&logFile, "log", logFile,
-		"<filename> Name of the logfile to write to\n")
-
 	logStack, _ := AppArguments.AsBool("logStack")
-	flag.BoolVar(&logStack, "logStack", logStack,
+	flag.BoolVar(&logStack, "logstack", logStack,
 		"<boolean> Log a stack trace for recovered runtime errors ")
 
 	portInt, _ := AppArguments.AsInt("port")
@@ -290,6 +295,11 @@ func InitConfig() {
 	}
 	AppArguments.set("datadir", dataDir)
 
+	if 0 < len(accessLog) {
+		accessLog = absolute(dataDir, accessLog)
+	}
+	AppArguments.set("accessLog", accessLog)
+
 	if 0 < len(certKey) {
 		certKey = absolute(dataDir, certKey)
 		if fi, err := os.Stat(certKey); (nil != err) || (0 >= fi.Size()) {
@@ -306,19 +316,17 @@ func InitConfig() {
 	}
 	AppArguments.set("certPem", certPem)
 
+	if 0 < len(errorLog) {
+		errorLog = absolute(dataDir, errorLog)
+	}
+	AppArguments.set("errorLog", errorLog)
+
 	if gzipBool {
 		s = "true"
 	} else {
 		s = ""
 	}
 	AppArguments.set("gzip", s)
-
-	/*
-		if 0 <len(intlStr) {
-			intlStr = absolute(dataStr, intlStr)
-		}
-		AppArguments.set("intl", intlStr)
-	*/
 
 	if 0 == len(langStr) {
 		langStr = "en"
@@ -344,11 +352,6 @@ func InitConfig() {
 		listenStr = ""
 	}
 	AppArguments.set("listen", listenStr)
-
-	if 0 < len(logFile) {
-		logFile = absolute(dataDir, logFile)
-	}
-	AppArguments.set("logfile", logFile)
 
 	if logStack {
 		s = "true"
