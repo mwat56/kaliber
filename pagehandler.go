@@ -450,7 +450,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 	}
 	if nil != err {
 		msg := fmt.Sprintf("QeueryBy/QuerySearch: %v", err)
-		apachelogger.Log("TPageHandler.handleQuery()", msg)
+		apachelogger.Err("TPageHandler.handleQuery()", msg)
 	}
 	if 0 < count {
 		aOption.QueryCount = uint(count)
@@ -489,7 +489,7 @@ func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, a
 	aSession.Set("QOS", aOption.String())
 	if err := ph.viewList.Render(aPage, aWriter, pageData); nil != err {
 		msg := fmt.Sprintf("viewList.Render(%s): %v", aPage, err)
-		apachelogger.Log("TPageHandler.handleReply()", msg)
+		apachelogger.Err("TPageHandler.handleReply()", msg)
 	}
 } // handleReply
 
@@ -498,18 +498,19 @@ func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, a
 //
 //	`aRequest` is the request to check.
 func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
-	if nil != ph.ul {
-		if ph.authAll {
-			return true
-		}
-		path, _ := URLparts(aRequest.URL.Path)
-		switch path {
-		case "file":
-			return true
-		}
+	if nil == ph.ul {
+		return false
 	}
-
-	return false
+	if ph.authAll {
+		return true
+	}
+	path, _ := URLparts(aRequest.URL.Path)
+	switch path {
+	case "file":
+		return true
+	default:
+		return false
+	}
 } // NeedAuthentication()
 
 // ServeHTTP handles the incoming HTTP requests.
@@ -523,7 +524,7 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 			} else {
 				msg = fmt.Sprintf("caught panic: %v", err)
 			}
-			apachelogger.Log("TPageHandler.ServeHTTP()", msg)
+			apachelogger.Err("TPageHandler.ServeHTTP()", msg)
 		}
 	}()
 

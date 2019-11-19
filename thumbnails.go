@@ -32,7 +32,7 @@ func goThumbCleanup() {
 	dirNames, err := filepath.Glob(bd + "/*")
 	if nil != err {
 		msg := fmt.Sprintf("filepath.Glob(%s): %v", bd, err)
-		apachelogger.Log("goThumbCleaup()", msg)
+		apachelogger.Err("goThumbCleaup()", msg)
 		return
 	}
 	for _, numDir := range dirNames {
@@ -48,7 +48,7 @@ func checkThumbBase(aDirectory string) {
 	subDirs, err := filepath.Glob(aDirectory + "/*")
 	if nil != err {
 		msg := fmt.Sprintf("filepath.Glob(%s): %v", aDirectory+"/*", err)
-		apachelogger.Log("checkThumbBase()", msg)
+		apachelogger.Err("checkThumbBase()", msg)
 		return
 	}
 	for _, subDir := range subDirs {
@@ -61,7 +61,7 @@ func checkThumbDir(aDirectory string) {
 	fileDirs, err := filepath.Glob(aDirectory + "/*.jpg")
 	if nil != err {
 		msg := fmt.Sprintf("filepath.Glob(%s): %v", aDirectory+"/*.jpg", err)
-		apachelogger.Log("checkThumbDir()", msg)
+		apachelogger.Err("checkThumbDir()", msg)
 		return
 	}
 	for _, fName := range fileDirs {
@@ -75,7 +75,7 @@ func checkThumbFile(aFilename string) {
 	docID, err := strconv.Atoi(baseName[:len(baseName)-4])
 	if nil != err {
 		msg := fmt.Sprintf("strconv.Atoi(%s): %v", baseName[:len(baseName)-4], err)
-		apachelogger.Log("checkThumbFile()", msg)
+		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
@@ -84,28 +84,28 @@ func checkThumbFile(aFilename string) {
 		// remove thumbnail for non-existing document
 		if err = os.Remove(aFilename); nil != err {
 			msg := fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
-			apachelogger.Log("checkThumbFile()", msg)
+			apachelogger.Err("checkThumbFile()", msg)
 		}
 		return
 	}
 	cFile, err := doc.CoverFile()
 	if nil != err {
 		msg := fmt.Sprintf("doc.CoverFile(%d): %v", docID, err)
-		apachelogger.Log("checkThumbFile()", msg)
+		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
 	tFI, err := os.Stat(aFilename)
 	if nil != err {
 		msg := fmt.Sprintf("os.Stat(%s): %v", aFilename, err)
-		apachelogger.Log("checkThumbFile()", msg)
+		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
 	cFI, err := os.Stat(cFile)
 	if nil != err {
 		msg := fmt.Sprintf("os.Stat(%s): %v", cFile, err)
-		apachelogger.Log("checkThumbFile()", msg)
+		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
@@ -113,11 +113,11 @@ func checkThumbFile(aFilename string) {
 		// remove outdated thumbnail
 		if err = os.Remove(aFilename); nil != err {
 			msg := fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
-			apachelogger.Log("checkThumbFile()", msg)
+			apachelogger.Err("checkThumbFile()", msg)
 		}
 		if err = makeThumbnail(cFile, aFilename); nil != err {
 			msg := fmt.Sprintf("makeThumbnail(%s): %v", aFilename, err)
-			apachelogger.Log("checkThumbFile()", msg)
+			apachelogger.Err("checkThumbFile()", msg)
 		}
 	}
 } // checkThumbFile()
@@ -259,10 +259,9 @@ func ThumbnailUpdate() {
 		return
 	}
 	for _, doc := range *docList {
-		// here we ignore all errors but hope for the best
 		if _, err = Thumbnail(&doc); nil != err {
 			msg := fmt.Sprintf("Thumbnail(%d): %v", doc.ID, err)
-			apachelogger.Log("ThumbnailUpdate()", msg)
+			apachelogger.Err("ThumbnailUpdate()", msg)
 		}
 	}
 

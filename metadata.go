@@ -71,7 +71,6 @@ func mdReadMetadataFile() error {
 	srcFile, err := os.OpenFile(fName, os.O_RDONLY, 0)
 	if nil != err {
 		msg := fmt.Sprintf("os.OpenFile(%s): %v", fName, err)
-		apachelogger.Log("mdReadMetadataFile", msg)
 		return errors.New(msg)
 	}
 	defer srcFile.Close()
@@ -80,7 +79,6 @@ func mdReadMetadataFile() error {
 	dec := json.NewDecoder(srcFile)
 	if err := dec.Decode(&jsdata); err != nil {
 		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
-		apachelogger.Log("mdReadMetadataFile", msg)
 		return errors.New(msg)
 	}
 
@@ -106,13 +104,11 @@ func mdReadBookDisplayFields() error {
 	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Log("mdReadBookDisplayFields", msg)
 		return errors.New(msg)
 	}
 	section, ok := (*mdMetadataDbPrefs)[mdBookDisplayFields]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdBookDisplayFields)
-		apachelogger.Log("mdReadBookDisplayFields", msg)
 		return errors.New(msg)
 	}
 
@@ -135,13 +131,11 @@ func mdReadFieldMetadata() error {
 	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Log("mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
 	section, ok := (*mdMetadataDbPrefs)[mdFieldMetadata]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdFieldMetadata)
-		apachelogger.Log("mdReadFieldMetadata", msg)
 		return errors.New(msg)
 	}
 	fmd := section.(map[string]interface{})
@@ -158,7 +152,6 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 	}
 	if err := mdReadFieldMetadata(); nil != err {
 		msg := fmt.Sprintf("mdReadFieldMetadata(): %v", err)
-		apachelogger.Log("mdGetFieldData", msg)
 		return nil, errors.New(msg)
 	}
 
@@ -166,7 +159,6 @@ func mdGetFieldData(aField string) (map[string]interface{}, error) {
 	fd, ok := fmd[aField]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", aField)
-		apachelogger.Log("mdGetFieldData", msg)
 		return nil, errors.New(msg)
 	}
 	result = fd.(map[string]interface{})
@@ -181,14 +173,14 @@ func mdReadHiddenVirtualLibraries() error {
 	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Log("mdReadHiddenVirtualLibraries", msg)
+		apachelogger.Err("mdReadHiddenVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 
 	section, ok := (*mdMetadataDbPrefs)[mdHiddenVirtualLibraries]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdHiddenVirtualLibraries)
-		apachelogger.Log("mdReadHiddenVirtualLibraries", msg)
+		apachelogger.Err("mdReadHiddenVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 
@@ -212,14 +204,14 @@ func mdReadVirtualLibraries() error {
 	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Log("mdReadVirtualLibraries", msg)
+		apachelogger.Err("mdReadVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 
 	section, ok := (*mdMetadataDbPrefs)[mdVirtualLibraries]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s", mdVirtualLibraries)
-		apachelogger.Log("mdReadVirtualLibraries", msg)
+		apachelogger.Err("mdReadVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 	vlr := section.(map[string]interface{})
@@ -232,12 +224,12 @@ func mdReadVirtualLibraries() error {
 func mdVirtLibDefinitions() (*TVirtLibList, error) {
 	if err := mdReadVirtualLibraries(); nil != err {
 		msg := fmt.Sprintf("mdReadVirtualLibraries(): %v", err)
-		apachelogger.Log("mdVirtualLibDefinitions", msg)
+		apachelogger.Err("mdVirtualLibDefinitions", msg)
 		return nil, errors.New(msg)
 	}
 	if err := mdReadHiddenVirtualLibraries(); nil != err {
 		msg := fmt.Sprintf("mdReadHiddenVirtualLibraries(): %v", err)
-		apachelogger.Log("mdVirtualLibDefinitions", msg)
+		apachelogger.Err("mdVirtualLibDefinitions", msg)
 		return nil, errors.New(msg)
 	}
 
@@ -253,7 +245,7 @@ func mdVirtLibDefinitions() (*TVirtLibList, error) {
 			result[key] = definition
 		} else {
 			msg := fmt.Sprintf("json.value.(string): wrong type %v", value)
-			apachelogger.Log("mdVirtualLibDefinitions", msg)
+			apachelogger.Err("mdVirtualLibDefinitions", msg)
 		}
 	}
 
@@ -268,11 +260,11 @@ func mdVirtLibDefinitions() (*TVirtLibList, error) {
 // otherwise the (boolean) `visible` value and `nil`.
 //
 //	`aFieldname` The name of the field/column to check.
-func BookFieldVisible(aFieldname string) (rVisible bool, rErr error) {
+func BookFieldVisible(aFieldname string) (bool, error) {
 	if nil == mdBookDisplayFieldsList {
 		if err := mdReadBookDisplayFields(); nil != err {
 			msg := fmt.Sprintf("mdReadBookDisplayFields(): %v", err)
-			apachelogger.Log("md.BookFieldVisible", msg)
+			apachelogger.Err("md.BookFieldVisible", msg)
 			return true, errors.New(msg)
 		}
 	}
@@ -281,7 +273,7 @@ func BookFieldVisible(aFieldname string) (rVisible bool, rErr error) {
 	}
 
 	msg := fmt.Sprintf("field name doesn't exist: %s", aFieldname)
-	apachelogger.Log("md.BookFieldVisible", msg)
+	apachelogger.Err("md.BookFieldVisible", msg)
 	return true, errors.New(msg)
 } // BookFieldVisible()
 
@@ -292,20 +284,21 @@ func BookFieldVisible(aFieldname string) (rVisible bool, rErr error) {
 func MetaFieldValue(aSection, aField string) (interface{}, error) {
 	if (0 == len(aSection)) || (0 == len(aField)) {
 		msg := fmt.Sprintf(`md.MetaFieldValue(): empty arguments ("%s". "%s")`, aSection, aField)
+		apachelogger.Err("md.MetaFieldValue", msg)
 		return nil, errors.New(msg)
 	}
 
 	fmd, err := mdGetFieldData(aSection)
 	if nil != err {
 		msg := fmt.Sprintf("mdGetFieldData(): %v", err)
-		apachelogger.Log("md.MetaFieldValue", msg)
+		apachelogger.Err("md.MetaFieldValue", msg)
 		return nil, errors.New(msg)
 	}
 
 	result, ok := fmd[aField]
 	if !ok {
 		msg := fmt.Sprintf("no such JSON section: %s[%s]", aSection, aField)
-		apachelogger.Log("md.MetaFieldValue", msg)
+		apachelogger.Err("md.MetaFieldValue", msg)
 		return nil, errors.New(msg)
 	}
 
@@ -319,7 +312,7 @@ func VirtLibOptions(aSelected string) string {
 	_, err := VirtualLibraryList()
 	if nil != err {
 		msg := fmt.Sprintf("md.VirtualLibraryList(): %v", err)
-		apachelogger.Log("md.VirtLibOptions", msg)
+		apachelogger.Err("md.VirtLibOptions", msg)
 		return ""
 	}
 
@@ -360,7 +353,7 @@ func VirtualLibraryList() (TVirtLibList, error) {
 	jsList, err := mdVirtLibDefinitions()
 	if nil != err {
 		msg := fmt.Sprintf("mdVirtLibDefinitions(): %v", err)
-		apachelogger.Log("md.VirtualLibraryList", msg)
+		apachelogger.Err("md.VirtualLibraryList", msg)
 		return nil, err
 	}
 
