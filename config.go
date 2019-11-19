@@ -155,9 +155,9 @@ func init() {
 func InitConfig() {
 	readIniData()
 
-	authBool, _ := AppArguments.AsBool("authBool")
+	authBool, _ := AppArguments.AsBool("authAll")
 	flag.BoolVar(&authBool, "authAll", authBool,
-		"<boolean> whether or not require authentication for all pages ")
+		"<boolean> whether to require authentication for all pages ")
 
 	bppInt, _ := AppArguments.AsInt("booksPerPage")
 	flag.IntVar(&bppInt, "booksPerPage", bppInt,
