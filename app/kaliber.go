@@ -128,6 +128,7 @@ func main() {
 		} else {
 			handler = apachelogger.Wrap(handler, s, "")
 		}
+		err = nil // for use by test for `apachelogger.SetErrLog()` (below)
 	} else if s, err = kaliber.AppArguments.Get("errorLog"); (nil == err) && (0 < len(s)) {
 		handler = apachelogger.Wrap(handler, "", s)
 	}
@@ -142,10 +143,10 @@ func main() {
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      20 * time.Minute, // enough time for book download
 	}
-	if (nil == err) && (0 < len(s)) { // values from "logfile" test
+	setupSignals(server)
+	if (nil == err) && (0 < len(s)) { // values from logfile test
 		apachelogger.SetErrLog(server)
 	}
-	setupSignals(server)
 
 	ck, _ := kaliber.AppArguments.Get("certKey")
 	cp, _ := kaliber.AppArguments.Get("certPem")
