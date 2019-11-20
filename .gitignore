@@ -4,6 +4,7 @@ access.read.mwat.de
 *.bak
 certs/*
 *.db
+error.read.mwat.de
 .git/
 img/*
 *.ini
