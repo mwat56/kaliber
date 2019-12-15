@@ -27,10 +27,11 @@ import (
 	"github.com/mwat56/sessions"
 )
 
-// `fatal()` Log `aMessage` and terminate the program.
+// `fatal()` logs `aMessage` and terminates the program.
 func fatal(aMessage string) {
-	apachelogger.Log("Kaliber/main", aMessage)
+	apachelogger.Err("Kaliber/main", aMessage)
 	runtime.Gosched() // let the logger write
+	apachelogger.Close()
 	log.Fatalln(aMessage)
 } // fatal()
 
@@ -66,19 +67,18 @@ func userCmdline() {
 //
 //	`aServer` The server instance to shutdown if a signal arrives.
 func setupSignals(aServer *http.Server) {
-	// handle `CTRL-C`, and `kill(15)`.
+	// handle `CTRL-C` and `kill(15)`.
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		for signal := range c {
 			msg := fmt.Sprintf("%s captured '%v', stopping program and exiting ...", os.Args[0], signal)
+			apachelogger.Err(`Kaliber/catchSignals`, msg)
 			log.Println(msg)
-			apachelogger.Log(`Kaliber/catchSignals`, msg)
 			runtime.Gosched() // let the logger write
 			if err := aServer.Shutdown(context.Background()); nil != err {
-				apachelogger.Close()
-				log.Fatalf("%s: %v\n", os.Args[0], err)
+				fatal(fmt.Sprintf("%s: %v", os.Args[0], err))
 			}
 		}
 	}()
@@ -155,7 +155,6 @@ func main() {
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)
 		if err = server.ListenAndServeTLS(cp, ck); nil != err {
-			apachelogger.Close()
 			fatal(fmt.Sprintf("%s: %v", Me, err))
 		}
 		return
@@ -165,7 +164,6 @@ func main() {
 	log.Println(s)
 	apachelogger.Log("Kaliber/main", s)
 	if err = server.ListenAndServe(); nil != err {
-		apachelogger.Close()
 		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}
 } // main()
