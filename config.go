@@ -88,14 +88,14 @@ func readIniData() {
 	fName, _ := filepath.Abs("./kaliber.ini")
 	ini1, err := ini.New(fName)
 	if nil == err {
-		ini1.AddSectionKey("", "inifile", fName)
+		ini1.AddSectionKey("", "iniFile", fName)
 	}
 
 	// (2) /etc/
 	fName = "/etc/kaliber.ini"
 	if ini2, err := ini.New(fName); nil == err {
 		ini1.Merge(ini2)
-		ini1.AddSectionKey("", "inifile", fName)
+		ini1.AddSectionKey("", "iniFile", fName)
 	}
 
 	// (3) ~user/
@@ -103,7 +103,7 @@ func readIniData() {
 		fName, _ = filepath.Abs(filepath.Join(fName, ".kaliber.ini"))
 		if ini2, err := ini.New(fName); nil == err {
 			ini1.Merge(ini2)
-			ini1.AddSectionKey("", "inifile", fName)
+			ini1.AddSectionKey("", "iniFile", fName)
 		}
 	}
 
@@ -112,7 +112,7 @@ func readIniData() {
 		fName, _ = filepath.Abs(filepath.Join(confDir, "kaliber.ini"))
 		if ini2, err := ini.New(fName); nil == err {
 			ini1.Merge(ini2)
-			ini1.AddSectionKey("", "inifile", fName)
+			ini1.AddSectionKey("", "iniFile", fName)
 		}
 	}
 
@@ -127,7 +127,7 @@ func readIniData() {
 				fName, _ = filepath.Abs(os.Args[i])
 				if ini2, _ := ini.New(fName); nil == err {
 					ini1.Merge(ini2)
-					ini1.AddSectionKey("", "inifile", fName)
+					ini1.AddSectionKey("", "iniFile", fName)
 				}
 			}
 			break
@@ -170,17 +170,17 @@ func InitConfig() {
 
 	s, _ = AppArguments.Get("accessLog")
 	accessLog := absolute(dataDir, s)
-	flag.StringVar(&accessLog, "accesslog", accessLog,
+	flag.StringVar(&accessLog, "accessLog", accessLog,
 		"<filename> Name of the access logfile to write to\n")
 
 	s, _ = AppArguments.Get("certKey")
 	certKey := absolute(dataDir, s)
-	flag.StringVar(&certKey, "certkey", certKey,
+	flag.StringVar(&certKey, "certKey", certKey,
 		"<fileName> the name of the TLS certificate key\n")
 
 	s, _ = AppArguments.Get("certPem")
 	certPem := absolute(dataDir, s)
-	flag.StringVar(&certPem, "certpem", certPem,
+	flag.StringVar(&certPem, "certPem", certPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
 	s, _ = AppArguments.Get("errorLog")
@@ -199,7 +199,7 @@ func InitConfig() {
 			"<fileName> the path/filename of the localisation file\n")
 	*/
 
-	iniFile, _ := AppArguments.Get("inifile")
+	iniFile, _ := AppArguments.Get("iniFile")
 	flag.StringVar(&iniFile, "ini", iniFile,
 		"<fileName> the path/filename of the INI file to use\n")
 
@@ -220,7 +220,7 @@ func InitConfig() {
 		"the host's IP to listen at ")
 
 	logStack, _ := AppArguments.AsBool("logStack")
-	flag.BoolVar(&logStack, "logstack", logStack,
+	flag.BoolVar(&logStack, "logStack", logStack,
 		"<boolean> Log a stack trace for recovered runtime errors ")
 
 	portInt, _ := AppArguments.AsInt("port")
