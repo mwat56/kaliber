@@ -105,46 +105,56 @@ which should produce an executable binary.
 
 	Usage: ./kaliber [OPTIONS]
 
-	-accesslog string
-			<filename> Name of the access logfile to write to
+	-accessLog string
+		<filename> Name of the access logfile to write to
+		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/access.log")
 	-authAll
-			<boolean> whether to require authentication for all pages  (default true)
+		<boolean> whether to require authentication for all pages  (default true)
 	-booksPerPage int
-			<number> the default number of books shown per page  (default 24)
-	-certkey string
-			<fileName> the name of the TLS certificate key
-	-certpem string
-			<fileName> the name of the TLS certificate PEM
-	-datadir string
+		<number> the default number of books shown per page  (default 24)
+	-certKey string
+		<fileName> the name of the TLS certificate key
+	-certPem string
+		<fileName> the name of the TLS certificate PEM
+	-dataDir string
 		<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
+		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
 	-errorlog string
 		<filename> Name of the error logfile to write to
+		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/error.log")
 	-gzip
 		<boolean> use gzip compression for server responses (default true)
 	-ini string
 		<fileName> the path/filename of the INI file to use
+		(default "/home/matthias/.kaliber.ini")
 	-lang string
 		the default language to use  (default "de")
 	-libraryName string
 		Name of this Library (shown on every page)
+		(default "MeiBucks")
 	-libraryPath string
 		<pathname> Path name of/to the Calibre library
+		(default "/var/opt/Calibre")
 	-listen string
 		the host's IP to listen at  (default "0")
-	-logstack
+	-logStack
 		<boolean> Log a stack trace for recovered runtime errors  (default true)
 	-port int
 		<portNumber> The IP port to listen to  (default 8383)
 	-realm string
 		<hostName> Name of host/domain to secure by BasicAuth
-	-sessionttl int
+		(default "eBooks Host")
+	-sessionTTL int
 		<seconds> Number of seconds an unused session keeps valid  (default 1200)
-	-sidname string
+	-sidName string
 		<name> The name of the session ID to use
-	-sqltrace string
+		(default "sid")
+	-sqlTrace string
 		<filename> Name of the SQL logfile to write to
+		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sqlTrace.sql")
 	-theme string
 		<name> The display theme to use ('light' or 'dark')
+		(default "dark")
 	-ua string
 		<userName> User add: add a username to the password file
 	-uc string
@@ -153,6 +163,7 @@ which should produce an executable binary.
 		<userName> User delete: remove a username from the password file
 	-uf string
 		<fileName> Passwords file storing user/passwords for BasicAuth
+		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/pwaccess.db")
 	-ul
 		<boolean> User list: show all users in the password file
 	-uu string
@@ -175,12 +186,12 @@ There's an INI file which can take all the options (apart from the user handling
 	[Default]
 
 	# Name of the optional access logfile to write to.
-	# NOTE: a relative path/name will be combined with `datadir` (below).
-	accessLog = /dev/stdout
+	# NOTE: a relative path/name will be combined with `dataDir` (below).
+	accessLog = ./access.log
 
 	# Authenticate user for all pages and documents.
 	# If `false` only the download links need user authentication
-	# (see `passfile` below).
+	# (see `passFile` below).
 	authAll = false
 
 	# Number of documents to show per page.
@@ -188,22 +199,22 @@ There's an INI file which can take all the options (apart from the user handling
 
 	# Path-/filename of the TLS certificate's private key to enable
 	# TLS/HTTPS (if empty standard HTTP is used).
-	# NOTE: a relative path/name will be combined with `datadir` (below).
+	# NOTE: a relative path/name will be combined with `dataDir` (below).
 	certKey = ./certs/server.key
 
 	# Path-/filename of the TLS (server) certificate to enable TLS/HTTPS
 	# (if empty standard HTTP is used).
-	# NOTE: A relative path/name will be combined with `datadir` (below).
+	# NOTE: A relative path/name will be combined with `dataDir` (below).
 	certPem = ./certs/server.pem
 
 	# The directory root for the "css", "fonts", "img", "sessions",
 	# and "views" sub-directories.
 	# NOTE: This should be an _absolute_ path name!
-	datadir = ./
+	dataDir = ./
 
 	# Name of the optional error logfile to write to.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	errorLog = /dev/stderr
+	# NOTE: a relative path/name will be combined with `dataDir` (above).
+	errorLog = ./error.log
 
 	# Use gzip compression for server responses.
 	gzip = true
@@ -229,17 +240,21 @@ There's an INI file which can take all the options (apart from the user handling
 	port = 8383
 
 	# Password file for HTTP Basic Authentication.
-	# NOTE: a relative path/name will be combined with `datadir` (above).
-	passfile = ./pwaccess.db
+	# NOTE: a relative path/name will be combined with `dataDir` (above).
+	passFile = ./pwaccess.db
 
 	# Name of host/domain to secure by BasicAuth.
 	realm = "eBooks Host"
 
 	# Number of seconds an unused session stays valid.
-	sessionttl = 1200
+	sessionTTL = 1200
 
 	# Name of the session ID field.
-	sidname = sid
+	sidName = sid
+
+	# Optional (debugging) SQL trace file.
+	# NOTE: a relative path/name will be combined with `dataDir` (above).
+	sqlTrace = ./sqlTrace.sql
 
 	# Default web/display theme to use ("dark" or "light").
 	theme = dark
