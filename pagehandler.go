@@ -32,15 +32,15 @@ type (
 		addr     string              // listen address ("1.2.3.4:5678")
 		authAll  bool                // authenticate user for all pages and documents
 		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
-		dd       string              // datadir: base dir for data
+		dataDir  string              // base dir for data
 		docFS    http.Handler        // document file server
 		lang     string              // default GUI language
-		ln       string              // the library's name
+		libName  string              // the library's name
 		logStack bool                // log stack trace
 		realm    string              // host/domain to secure by BasicAuth
 		staticFS http.Handler        // static file server
 		theme    string              // `dark` or `light` display theme
-		ul       *passlist.TPassList // user/password list
+		usrList  *passlist.TPassList // user/password list
 		viewList *TViewList          // list of template/views
 	}
 )
@@ -59,10 +59,10 @@ func NewPageHandler() (*TPageHandler, error) {
 		result.authAll = ("true" == s)
 	}
 
-	if s, err = AppArguments.Get("datadir"); nil != err {
+	if s, err = AppArguments.Get("dataDir"); nil != err {
 		return nil, err
 	}
-	result.dd = s
+	result.dataDir = s
 
 	result.docFS = jffs.FileServer(http.Dir(CalibreLibraryPath()))
 
@@ -71,7 +71,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 
 	if s, err = AppArguments.Get("libraryName"); nil == err {
-		result.ln = s
+		result.libName = s
 	}
 
 	result.addr, _ = AppArguments.Get("listen")
@@ -86,15 +86,15 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.addr += ":" + s
 
-	result.staticFS = jffs.FileServer(http.Dir(result.dd))
+	result.staticFS = jffs.FileServer(http.Dir(result.dataDir))
 
 	if s, err = AppArguments.Get("uf"); nil != err {
 		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
-		apachelogger.Log("NewPageHandler()", s)
-	} else if result.ul, err = passlist.LoadPasswords(s); nil != err {
+		apachelogger.Err("NewPageHandler()", s)
+	} else if result.usrList, err = passlist.LoadPasswords(s); nil != err {
 		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
-		apachelogger.Log("NewPageHandler()", s)
-		result.ul = nil
+		apachelogger.Err("NewPageHandler()", s)
+		result.usrList = nil
 	}
 
 	if s, err = AppArguments.Get("realm"); nil == err {
@@ -107,14 +107,14 @@ func NewPageHandler() (*TPageHandler, error) {
 		result.theme = s
 	}
 
-	if result.viewList, err = newViewList(filepath.Join(result.dd, "views")); nil != err {
+	if result.viewList, err = newViewList(filepath.Join(result.dataDir, "views")); nil != err {
 		return nil, err
 	}
 
 	// update the thumbnails cache:
 	go ThumbnailUpdate()
 
-	// avoid sessions fpr certain requests:
+	// avoid sessions for certain requests:
 	sessions.ExcludePaths("/certs", "/css/", "/favicon", "/file/", "/fonts", "/img/", "/robots")
 
 	return result, nil
@@ -144,7 +144,9 @@ func newViewList(aDirectory string) (*TViewList, error) {
 
 var (
 	// RegEx to find path and possible added path components
-	phURLpartsRE = regexp.MustCompile(`(?i)^/?([\w._-]+)?/?(.*)?`)
+	phURLpartsRE = regexp.MustCompile(
+		`(?i)^/?([\p{L}\d_.-]+)?/?([\p{L}\d_§.?!=:;/,@# -]*)?`)
+	//           1111111111111     222222222222222222222222
 )
 
 // URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
@@ -158,7 +160,7 @@ func URLparts(aURL string) (rDir, rPath string) {
 	}
 	matches := phURLpartsRE.FindStringSubmatch(aURL)
 	if 2 < len(matches) {
-		return matches[1], matches[2]
+		return matches[1], strings.TrimSpace(matches[2])
 	}
 
 	return aURL, ""
@@ -224,7 +226,7 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 		Set("HasPrev", false).
 		Set("IsGrid", qoLayoutGrid == aOptions.Layout).
 		Set("Lang", lang).
-		Set("LibraryName", ph.ln).
+		Set("LibraryName", ph.libName).
 		Set("Robots", "noindex,nofollow").
 		Set("SLO", aOptions.SelectLayoutOptions()).
 		Set("SLL", aOptions.SelectLimitOptions()).
@@ -498,7 +500,7 @@ func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, a
 //
 //	`aRequest` is the request to check.
 func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
-	if nil == ph.ul {
+	if nil == ph.usrList {
 		return false
 	}
 	if ph.authAll {
@@ -530,7 +532,7 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 
 	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	if ph.NeedAuthentication(aRequest) {
-		if !ph.ul.IsAuthenticated(aRequest) {
+		if !ph.usrList.IsAuthenticated(aRequest) {
 			passlist.Deny(ph.realm, aWriter)
 			return
 		}
@@ -545,7 +547,7 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 
 	default:
 		msg := fmt.Sprintf("unsupported request method: %v", aRequest.Method)
-		apachelogger.Log("TPageHandler.ServeHTTP()", msg)
+		apachelogger.Err("TPageHandler.ServeHTTP()", msg)
 
 		http.Error(aWriter, msg, http.StatusMethodNotAllowed)
 	}

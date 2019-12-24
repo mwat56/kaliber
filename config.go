@@ -23,24 +23,18 @@ import (
 )
 
 type (
-	// tAguments is the list structure for the cmdline argument values
+	// tArguments is the list structure for the cmdline argument values
 	// merged with the key-value pairs from the INI file.
-	tAguments struct {
+	tArguments struct {
 		ini.TSection // embedded INI section
 	}
-)
-
-var (
-	// AppArguments is the merged list for the cmdline arguments
-	// and INI values for the application.
-	AppArguments tAguments
 )
 
 // Get returns the value associated with `aKey` and `nil` if found,
 // or an empty string and an error.
 //
 //	`aKey` The requested value's key to lookup.
-func (al *tAguments) Get(aKey string) (string, error) {
+func (al *tArguments) Get(aKey string) (string, error) {
 	if result, ok := al.AsString(aKey); ok {
 		return result, nil
 	}
@@ -52,7 +46,7 @@ func (al *tAguments) Get(aKey string) (string, error) {
 // `set()` adds/sets another key-value pair.
 //
 // If `aValue` is empty then `aKey` gets removed.
-func (al *tAguments) set(aKey, aValue string) {
+func (al *tArguments) set(aKey, aValue string) {
 	if 0 < len(aValue) {
 		al.AddKey(aKey, aValue)
 	} else {
@@ -74,6 +68,12 @@ func absolute(aBaseDir, aDir string) string {
 
 	return filepath.Join(aBaseDir, aDir)
 } // absolute()
+
+var (
+	// AppArguments is the merged list for the cmdline arguments
+	// and INI values for the application.
+	AppArguments tArguments
+)
 
 // `readIniData()` returns the config values read from INI file(s).
 //
@@ -134,7 +134,7 @@ func readIniData() {
 		}
 	}
 
-	AppArguments = tAguments{*ini1.GetSection("")}
+	AppArguments = tArguments{*ini1.GetSection("")}
 } // readIniData()
 
 /*
@@ -163,9 +163,9 @@ func InitConfig() {
 	flag.IntVar(&bppInt, "booksPerPage", bppInt,
 		"<number> the default number of books shown per page ")
 
-	s, _ := AppArguments.Get("datadir")
+	s, _ := AppArguments.Get("dataDir")
 	dataDir, _ := filepath.Abs(s)
-	flag.StringVar(&dataDir, "datadir", dataDir,
+	flag.StringVar(&dataDir, "dataDir", dataDir,
 		"<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories\n")
 
 	s, _ = AppArguments.Get("accessLog")
@@ -231,17 +231,17 @@ func InitConfig() {
 	flag.StringVar(&realmStr, "realm", realmStr,
 		"<hostName> Name of host/domain to secure by BasicAuth\n")
 
-	sessionTTL, _ := AppArguments.AsInt("sessionttl")
-	flag.IntVar(&sessionTTL, "sessionttl", sessionTTL,
+	sessionTTL, _ := AppArguments.AsInt("sessionTTL")
+	flag.IntVar(&sessionTTL, "sessionTTL", sessionTTL,
 		"<seconds> Number of seconds an unused session keeps valid ")
 
-	sidName, _ := AppArguments.Get("sidname")
-	flag.StringVar(&sidName, "sidname", sidName,
+	sidName, _ := AppArguments.Get("sidName")
+	flag.StringVar(&sidName, "sidName", sidName,
 		"<name> The name of the session ID to use\n")
 
-	s, _ = AppArguments.Get("sqltrace")
+	s, _ = AppArguments.Get("sqlTrace")
 	sqlTrace := absolute(dataDir, s)
-	flag.StringVar(&sqlTrace, "sqltrace", sqlTrace,
+	flag.StringVar(&sqlTrace, "sqlTrace", sqlTrace,
 		"<filename> Name of the SQL logfile to write to\n")
 
 	themeStr, _ := AppArguments.Get("theme")
@@ -260,7 +260,7 @@ func InitConfig() {
 	flag.StringVar(&udStr, "ud", udStr,
 		"<userName> User delete: remove a username from the password file")
 
-	s, _ = AppArguments.Get("passfile")
+	s, _ = AppArguments.Get("passFile")
 	ufStr := absolute(dataDir, s)
 	flag.StringVar(&ufStr, "uf", ufStr,
 		"<fileName> Passwords file storing user/passwords for BasicAuth\n")
@@ -289,11 +289,11 @@ func InitConfig() {
 		dataDir, _ = filepath.Abs(dataDir)
 	}
 	if f, err := os.Stat(dataDir); nil != err {
-		log.Fatalf("datadir == %s` problem: %v", dataDir, err)
+		log.Fatalf("dataDir == %s` problem: %v", dataDir, err)
 	} else if !f.IsDir() {
 		log.Fatalf("Error: Not a directory `%s`", dataDir)
 	}
-	AppArguments.set("datadir", dataDir)
+	AppArguments.set("dataDir", dataDir)
 
 	if 0 < len(accessLog) {
 		accessLog = absolute(dataDir, accessLog)
