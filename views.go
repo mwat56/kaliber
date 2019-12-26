@@ -22,19 +22,19 @@ import (
 	"regexp"
 )
 
-var (
-	// RegEx to HREF= tag attributes
-	externalURLHrefRE = regexp.MustCompile(` (href="http)`)
+const (
+	// replacement text for `reHrefRE`
+	reHrefReplace = ` target="_extern" $1`
 )
 
-const (
-	// replacement text for `hrefRE`
-	externalURLHrefReplace = ` target="_extern" $1`
+var (
+	// RegEx to HREF= tag attributes
+	reHrefRE = regexp.MustCompile(` (href="http)`)
 )
 
 // `addExternURLtagets()` adds a TARGET attribute to HREFs.
 func addExternURLtagets(aPage []byte) []byte {
-	return externalURLHrefRE.ReplaceAll(aPage, []byte(externalURLHrefReplace))
+	return reHrefRE.ReplaceAll(aPage, []byte(reHrefReplace))
 } // addExternURLtagets()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -66,10 +66,11 @@ var (
 
 // TView combines a template and its logical name.
 type TView struct {
-	name string // The view's symbolic name.
+	// The view's symbolic name.
+	tvName string
 
 	// The template as returned by a `NewView()` function call.
-	tpl *template.Template
+	tvTpl *template.Template
 }
 
 // NewView returns a new `TView` with `aName`.
@@ -98,8 +99,8 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 	}
 
 	return &TView{
-		name: aName,
-		tpl:  templ,
+		tvName: aName,
+		tvTpl:  templ,
 	}, nil
 } // NewView()
 
@@ -112,7 +113,6 @@ func (v *TView) render(aWriter io.Writer, aData *TemplateData) (rErr error) {
 		return
 	}
 	_, rErr = aWriter.Write(addExternURLtagets(RemoveWhiteSpace(page)))
-	// _, rErr = aWriter.Write(addExternURLtagets(page))
 
 	return
 } // render()
@@ -137,7 +137,7 @@ func (v *TView) Render(aWriter http.ResponseWriter, aData *TemplateData) error {
 func (v *TView) RenderedPage(aData *TemplateData) ([]byte, error) {
 	buf := &bytes.Buffer{}
 
-	if err := v.tpl.ExecuteTemplate(buf, v.name, aData); nil != err {
+	if err := v.tvTpl.ExecuteTemplate(buf, v.tvName, aData); nil != err {
 		return nil, err
 	}
 
@@ -167,7 +167,7 @@ func NewViewList() *TViewList {
 // The view's name (as specified in the `NewView()` function call)
 // is used as the view's key in this list.
 func (vl *TViewList) Add(aView *TView) *TViewList {
-	(*vl)[aView.name] = aView
+	(*vl)[aView.tvName] = aView
 
 	return vl
 } // Add()
@@ -218,7 +218,6 @@ func (vl *TViewList) Render(aName string, aWriter http.ResponseWriter, aData *Te
 //
 //	`aData` is a list of data to be injected into the template.
 func (vl *TViewList) RenderedPage(aName string, aData *TemplateData) ([]byte, error) {
-
 	if view, ok := (*vl)[aName]; ok {
 		return view.RenderedPage(aData)
 	}
@@ -227,21 +226,6 @@ func (vl *TViewList) RenderedPage(aName string, aData *TemplateData) ([]byte, er
 } // RenderedPage()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-func init() {
-	initWSre()
-} // init()
-
-// Initialise the `whitespaceREs` list.
-func initWSre() int {
-	result := 0
-	for idx, re := range whitespaceREs {
-		whitespaceREs[idx].regEx = regexp.MustCompile(re.search)
-		result++
-	}
-
-	return result
-} // initWSre()
 
 // `trimPREmatches()` removes leading/trailing whitespace from list entries.
 func trimPREmatches(aList [][]byte) [][]byte {
@@ -256,45 +240,42 @@ func trimPREmatches(aList [][]byte) [][]byte {
 // the `RemoveWhiteSpace()` function.
 type (
 	tReItem struct {
-		search  string
 		replace string
 		regEx   *regexp.Regexp
 	}
-	tReList []tReItem
 )
 
 var (
 	// RegEx to find PREformatted parts in an HTML page.
-	preRE = regexp.MustCompile(`(?si)\s*<pre[^>]*>.*?</pre>\s*`)
+	wsPreRE = regexp.MustCompile(`(?si)\s*<pre[^>]*>.*?</pre>\s*`)
 
-	// List of regular expressions matching different sets of HTML whitespace.
-	whitespaceREs = tReList{
-		// comments
-		{`(?s)<!--.*?-->`, ``, nil},
+	wsREs = []tReItem{
+		// comments:
+		{``, regexp.MustCompile(`(?s)<!--.*?-->`)},
 		// HTML and HEAD elements:
-		{`(?si)\s*(</?(body|\!DOCTYPE|head|html|link|meta|script|style|title)[^>]*>)\s*`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?si)\s*(</?(body|\!DOCTYPE|head|html|link|meta|script|style|title)[^>]*>)\s*`)},
 		// block elements:
-		{`(?si)\s+(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)`, `$1`, nil},
-		{`(?si)(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)\s+`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?si)\s+(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)`)},
+		{`$1`, regexp.MustCompile(`(?si)(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)\s+`)},
 		// lists:
-		{`(?si)\s+(</?([dou]l|li|d[dt])[^>]*>)`, `$1`, nil},
-		{`(?si)(</?([dou]l|li|d[dt])[^>]*>)\s+`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?si)\s+(</?([dou]l|li|d[dt])[^>]*>)`)},
+		{`$1`, regexp.MustCompile(`(?si)(</?([dou]l|li|d[dt])[^>]*>)\s+`)},
 		// table elements:
-		{`(?si)\s+(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)`, `$1`, nil},
-		{`(?si)(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)\s+`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?si)\s+(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)`)},
+		{`$1`, regexp.MustCompile(`(?si)(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)\s+`)},
 		// form elements:
-		{`(?si)\s+(</?(form|fieldset|legend|opt(group|ion))[^>]*>)`, `$1`, nil},
-		{`(?si)(</?(form|fieldset|legend|opt(group|ion))[^>]*>)\s+`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?si)\s+(</?(form|fieldset|legend|opt(group|ion))[^>]*>)`)},
+		{`$1`, regexp.MustCompile(`(?si)(</?(form|fieldset|legend|opt(group|ion))[^>]*>)\s+`)},
 		// BR / HR:
-		{`(?i)\s*(<[bh]r[^>]*>)\s*`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?i)\s*(<[bh]r[^>]*>)\s*`)},
 		// whitespace after opened anchor:
-		{`(?si)(<a\s+[^>]*>)\s+`, `$1`, nil},
+		{`$1`, regexp.MustCompile(`(?si)(<a\s+[^>]*>)\s+`)},
 		// preserve empty table cells:
-		{`(?i)(<td(\s+[^>]*)?>)\s+(</td>)`, `$1&#160;$3`, nil},
+		{`$1&#160;$3`, regexp.MustCompile(`(?i)(<td(\s+[^>]*)?>)\s+(</td>)`)},
 		// remove empty paragraphs:
-		{`(?i)<(p)(\s+[^>]*)?>\s*</$1>`, ``, nil},
+		{``, regexp.MustCompile(`(?i)<(p)(\s+[^>]*)?>\s*</$1>`)},
 		// whitespace before closing GT:
-		{`\s+>`, `>`, nil},
+		{`>`, regexp.MustCompile(`\s+>`)},
 	}
 )
 
@@ -303,17 +284,17 @@ var (
 // This function removes all unneeded/redundant whitespace
 // and HTML comments from the given `aPage`.
 // This can reduce significantly the amount of data to send to
-// the remote user agent thus saving bandwidth.
+// the remote user agent thus saving bandwidth and time.
 //
 //	`aPage` The HTML document to process.
 func RemoveWhiteSpace(aPage []byte) []byte {
 	var repl, search string
 
 	// (0) Check whether there are PREformatted parts:
-	preMatches := preRE.FindAll(aPage, -1)
-	if (nil == preMatches) || (0 >= len(preMatches)) {
+	preMatches := wsPreRE.FindAll(aPage, -1)
+	if (nil == preMatches) || (0 == len(preMatches)) {
 		// no PRE hence only the other REs to perform
-		for _, reEntry := range whitespaceREs {
+		for _, reEntry := range wsREs {
 			aPage = reEntry.regEx.ReplaceAll(aPage, []byte(reEntry.replace))
 		}
 		return aPage
@@ -331,7 +312,7 @@ func RemoveWhiteSpace(aPage []byte) []byte {
 	}
 
 	// (2) traverse through all the whitespace REs:
-	for _, re := range whitespaceREs {
+	for _, re := range wsREs {
 		aPage = re.regEx.ReplaceAll(aPage, []byte(re.replace))
 	}
 
