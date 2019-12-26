@@ -254,9 +254,10 @@ func (db *tDataBase) dbReopen() error {
 		}
 		// "cache=shared" is essential to avoid running out of file
 		// handles since each query seems to hold its own file handle.
+		// "loc=auto" gets time.Time with current locale.
 		// "mode=ro" is self-explanatory since we don't change the
 		// DB in any way.
-		dsn := `file:` + db.dbFileName + `?cache=shared&mode=ro&case_sensitive_like=1&immutable=0&query_only=1`
+		dsn := `file:` + db.dbFileName + `?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
 		if db.DB, err = sql.Open("sqlite3", dsn); nil != err {
 			return err
 		}

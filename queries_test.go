@@ -420,7 +420,7 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 5527, 1000, false},
+		{" 0", args{o0}, 5529, 1000, false},
 		{" 1", args{o1}, 14, 14, false},
 		{" 2", args{o2}, 4617, 50, false},
 		{" 3", args{o3}, 42, 42, false},
@@ -493,7 +493,7 @@ func TestQuerySearch(t *testing.T) {
 		// TODO: Add test cases.
 		{" 1", args{qo1}, 34, 24, false},
 		{" 2", args{qo2}, 4617, 24, false},
-		{" 3", args{qo3}, 898, 24, false},
+		{" 3", args{qo3}, 900, 24, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
