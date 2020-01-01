@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
@@ -93,10 +93,10 @@ b.uuid,
 b.has_cover
 FROM books b `
 
-	// see `QueryBy()`. `QuerySearch()`
+	// see `QueryBy()`, `QuerySearch()`
 	quCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
-	// see `()`
+	// see `QueryCustomColumns()`
 	quCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
 
 	// see `QueryIDs()`
@@ -113,13 +113,13 @@ WHERE b.id = %d`
 
 var (
 	quHaving = map[string]string{
-		"all":       ``,
-		"authors":   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
-		"format":    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
-		"languages": `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
-		"publisher": `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
-		"series":    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
-		"tags":      `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
+		`all`:       ``,
+		`authors`:   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
+		`format`:    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
+		`languages`: `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
+		`publisher`: `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
+		`series`:    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
+		`tags`:      `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
 	}
 )
 
@@ -127,10 +127,10 @@ var (
 
 const (
 	// Name of the `Calibre` database
-	quCalibreDatabaseFilename = "metadata.db"
+	quCalibreDatabaseFilename = `metadata.db`
 
 	// Calibre's metadata/preferences store
-	quCalibrePreferencesFile = "metadata_db_prefs_backup.json"
+	quCalibrePreferencesFile = `metadata_db_prefs_backup.json`
 )
 
 type (
@@ -147,16 +147,16 @@ type (
 
 var (
 	// Pathname to the cached `Calibre` database
-	quCalibreCachePath = ""
+	quCalibreCachePath = ``
 
 	// Pathname to the original `Calibre` database
-	quCalibreLibraryPath = ""
+	quCalibreLibraryPath = ``
 
 	// The active `tDatabase` instance initialised by `DBopen()`.
 	quSqliteDB tDataBase
 
 	// Optional file to log all SQL queries.
-	quSQLTraceFile = ""
+	quSQLTraceFile = ``
 )
 
 // CalibreCachePath returns the directory of the copied `Calibre` databse.
@@ -199,16 +199,18 @@ func SetCalibreLibraryPath(aPath string) string {
 	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
 		quCalibreLibraryPath = aPath
 	} else {
-		quCalibreLibraryPath = ""
+		quCalibreLibraryPath = ``
 	}
 
 	return quCalibreLibraryPath
 } // CalibreLibraryPath()
 
+/*
 // CalibreDatabaseFile returns the complete path-/filename of the `Calibre` library.
 func CalibreDatabaseFile() string {
 	return filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
 } // CalibreDatabaseFile()
+*/
 
 // SQLtraceFile returns the optional file used for logging all SQL queries.
 func SQLtraceFile() string {
@@ -234,7 +236,7 @@ func SetSQLtraceFile(aFilename string) {
 		return
 	}
 
-	quSQLTraceFile = ""
+	quSQLTraceFile = ``
 } // SetSQLtraceFile()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -252,16 +254,16 @@ func (db *tDataBase) dbReopen() error {
 		if !more {
 			return err // channel closed
 		}
-		// "cache=shared" is essential to avoid running out of file
+		// `cache=shared` is essential to avoid running out of file
 		// handles since each query seems to hold its own file handle.
-		// "loc=auto" gets time.Time with current locale.
-		// "mode=ro" is self-explanatory since we don't change the
+		// `loc=auto` gets time.Time with current locale.
+		// `mode=ro` is self-explanatory since we don't change the
 		// DB in any way.
 		dsn := `file:` + db.dbFileName + `?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-		if db.DB, err = sql.Open("sqlite3", dsn); nil != err {
+		if db.DB, err = sql.Open(`sqlite3`, dsn); nil != err {
 			return err
 		}
-		go goSQLtrace("-- reOpened "+dsn, time.Now())
+		go goSQLtrace(`-- reOpened `+dsn, time.Now())
 		return db.DB.Ping()
 
 	default:
@@ -323,7 +325,7 @@ func copyDatabaseFile() (bool, error) {
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return false, err
 	}
-	go goSQLtrace("-- copied "+sName+" to "+dName, time.Now())
+	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
 
 	return true, os.Rename(tName, dName)
 } // copyDatabaseFile()
@@ -360,7 +362,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			doc.authors = prepAuthors(authors)
 		}
 		if visible, _ = BookFieldVisible(`comments`); !visible {
-			doc.comments = ""
+			doc.comments = ``
 		}
 		if visible, _ = BookFieldVisible(`formats`); visible {
 			doc.formats = prepFormats(formats)
@@ -375,7 +377,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			doc.Pages = prepPages(doc.path)
 		}
 		if visible, _ = BookFieldVisible(`path`); !visible {
-			doc.path = ""
+			doc.path = ``
 		}
 		if visible, _ = BookFieldVisible(`pubdate`); !visible {
 			doc.pubdate = notime
@@ -399,13 +401,13 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			visible, _ = BookFieldVisible(`sort`)
 		}
 		if !visible {
-			doc.Title = ""
+			doc.Title = ``
 		}
 		if visible, _ = BookFieldVisible(`size`); !visible {
 			doc.Size = 0
 		}
 		if visible, _ = BookFieldVisible(`uuid`); !visible {
-			doc.uuid = ""
+			doc.uuid = ``
 		}
 
 		result.Add(doc)
@@ -420,7 +422,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 func escapeQuery(aSource string) string {
 	sLen := len(aSource)
 	if 0 == sLen {
-		return ""
+		return ``
 	}
 	var (
 		character byte
@@ -485,25 +487,28 @@ var (
 )
 
 // `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
+//
+//	`aQuery` The SQL query to log.
+//	`aTime` The time at which the query was run.
 func goSQLtrace(aQuery string, aTime time.Time) {
 	if 0 == len(quSQLTraceFile) {
 		return
 	}
-	aQuery = strings.ReplaceAll(aQuery, "\t", " ")
-	aQuery = strings.ReplaceAll(aQuery, "\n", " ")
+	aQuery = strings.ReplaceAll(aQuery, "\t", ` `)
+	aQuery = strings.ReplaceAll(aQuery, "\n", ` `)
 
-	quSQLTraceChannel <- aTime.Format("2006-01-02 15:04:05 ") +
-		strings.ReplaceAll(aQuery, "  ", " ")
+	quSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
+		strings.ReplaceAll(aQuery, `  `, ` `)
 } // goSQLtrace()
 
-// `goWriteSQLtrace()` performs the actual file write.
+// `goWriteSQLtrace()` performs the actual file writes.
 //
-// This function is run only once, handling all write requests
+// This function is called only once, handling all write requests
 // in background.
 //
-//	`aLogfile` The name of the logfile to write to.
+//	`aTraceLog` The name of the logfile to write to.
 //	`aSource` The source of the log messages to write.
-func goWriteSQLtrace(aLogfile string, aSource <-chan string) {
+func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
 	var (
 		err  error
 		file *os.File
@@ -523,26 +528,27 @@ func goWriteSQLtrace(aLogfile string, aSource <-chan string) {
 		select {
 		case txt, more = <-aSource:
 			if !more { // channel closed
-				log.Println("queries.goWrite(): message channel closed")
+				log.Println(`queries.goWrite(): message channel closed`)
 				return
 			}
 			if nil == file {
-				if file, err = os.OpenFile(aLogfile,
+				if file, err = os.OpenFile(aTraceLog,
 					os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640); /* #nosec G302 */ nil != err {
 					file = os.Stderr // a last resort
 				}
 			}
 			fmt.Fprintln(file, txt)
-
-			// let's handle waiting messages
-			cCap := cap(aSource)
-			for txt = range aSource {
-				fmt.Fprintln(file, txt)
-				cCap--
-				if 0 == cCap {
-					break // give a chance to close the file
+			/*
+				// let's handle waiting messages
+				cCap := cap(aSource)
+				for txt = range aSource {
+					fmt.Fprintln(file, txt)
+					cCap--
+					if 0 == cCap {
+						break // give a chance to close the file
+					}
 				}
-			}
+			*/
 
 		default:
 			if nil == file {
@@ -559,8 +565,8 @@ func goWriteSQLtrace(aLogfile string, aSource <-chan string) {
 
 // `having()` returns a string limiting the query to the given `aID`.
 func having(aEntity string, aID TID) string {
-	if (0 == len(aEntity)) || ("all" == aEntity) || (0 == aID) {
-		return ""
+	if (0 == len(aEntity)) || (`all` == aEntity) || (0 == aID) {
+		return ``
 	}
 
 	return fmt.Sprintf(quHaving[aEntity], aID)
@@ -568,7 +574,9 @@ func having(aEntity string, aID TID) string {
 
 // `limit()` returns a LIMIT clause defined by `aStart` and `aLength`.
 func limit(aStart, aLength uint) string {
-	return fmt.Sprintf("LIMIT %d, %d ", aStart, aLength)
+	return `LIMIT ` + strconv.FormatInt(int64(aStart), 10) +
+		`,` + strconv.FormatInt(int64(aLength), 10)
+	// return fmt.Sprintf(`LIMIT %d, %d `, aStart, aLength)
 } // limit()
 
 // OpenDatabase establishes a new database connection.
@@ -607,51 +615,51 @@ func OpenDatabase() error {
 //
 //	`aDescending` if `true` the query result is sorted in DESCending order.
 func orderBy(aOrder TSortType, aDescending bool) string {
-	desc := "" // " ASC " is default
+	desc := `` // ` ASC ` is default
 	if aDescending {
-		desc = " DESC"
+		desc = ` DESC`
 	}
-	result := ""
+	result := ``
 	switch aOrder { // constants defined in `queryoptions.go`
 	case qoSortByAcquisition:
-		result = "b.timestamp" + desc + ", b.pubdate" + desc + ", b.author_sort"
+		result = `b.timestamp` + desc + `, b.pubdate` + desc + `, b.author_sort`
 	case qoSortByAuthor:
-		result = "b.author_sort" + desc + ", b.pubdate"
+		result = `b.author_sort` + desc + `, b.pubdate`
 	case qoSortByLanguage:
-		result = "languages" + desc + ", b.author_sort" + desc + ", b.sort"
+		result = `languages` + desc + `, b.author_sort` + desc + `, b.sort`
 	case qoSortByPublisher:
-		result = "publisher" + desc + ", b.author_sort" + desc + ", b.sort"
+		result = `publisher` + desc + `, b.author_sort` + desc + `, b.sort`
 	case qoSortByRating:
-		result = "rating" + desc + ", b.author_sort" + desc + ", b.sort"
+		result = `rating` + desc + `, b.author_sort` + desc + `, b.sort`
 	case qoSortBySeries:
-		result = "series" + desc + ", b.series_index" + desc + ", b.sort"
+		result = `series` + desc + `, b.series_index` + desc + `, b.sort`
 	case qoSortBySize:
-		result = "size" + desc + ", b.author_sort"
+		result = `size` + desc + `, b.author_sort`
 	case qoSortByTags:
-		result = "tags" + desc + ", b.author_sort"
+		result = `tags` + desc + `, b.author_sort`
 	case qoSortByTime:
-		result = "b.pubdate" + desc + ", b.timestamp" + desc + ", b.author_sort"
+		result = `b.pubdate` + desc + `, b.timestamp` + desc + `, b.author_sort`
 	case qoSortByTitle:
-		result = "b.sort" + desc + ", b.author_sort"
+		result = `b.sort` + desc + `, b.author_sort`
 	default:
-		return ""
+		return ``
 	}
 
-	return " ORDER BY " + result + desc + " "
+	return ` ORDER BY ` + result + desc + ` `
 } // orderBy()
 
 // `prepAuthors()` returns a sorted list of document authors.
 //
 //	`aAuthor`
 func prepAuthors(aAuthor tPSVstring) *tAuthorList {
-	alist := strings.Split(aAuthor, ", ")
+	alist := strings.Split(aAuthor, `, `)
 	result := make(tAuthorList, 0, len(alist))
 	for _, val := range alist {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
-		a := append(strings.SplitN(val, "|", 2), "")
+		a := append(strings.SplitN(val, `|`, 2), ``)
 		num, _ := strconv.Atoi(a[1])
 		result = append(result, TEntity{
 			ID:   num,
@@ -671,14 +679,14 @@ func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 //
 //	`aFormat`
 func prepFormats(aFormat tPSVstring) *tFormatList {
-	list := strings.Split(aFormat, ", ")
+	list := strings.Split(aFormat, `, `)
 	result := make(tFormatList, 0, len(list))
 	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
-		a := append(strings.SplitN(val, "|", 2), "")
+		a := append(strings.SplitN(val, `|`, 2), ``)
 		num, _ := strconv.Atoi(a[1])
 		result = append(result, TEntity{
 			ID:   num,
@@ -698,14 +706,14 @@ func prepFormats(aFormat tPSVstring) *tFormatList {
 //
 //	`aIdentifier`
 func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
-	list := strings.Split(aIdentifier, ", ")
+	list := strings.Split(aIdentifier, `, `)
 	result := make(tIdentifierList, 0, len(list))
 	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least three indices:
-		a := append(strings.SplitN(val, "|", 3), "")
+		a := append(strings.SplitN(val, `|`, 3), ``)
 		num, _ := strconv.Atoi(a[1])
 		result = append(result, TEntity{
 			ID:   num,
@@ -726,14 +734,14 @@ func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 //
 //	`aLanguage`
 func prepLanguages(aLanguage tPSVstring) *tLanguageList {
-	llist := strings.Split(aLanguage, ", ")
+	llist := strings.Split(aLanguage, `, `)
 	result := make(tLanguageList, 0, len(llist))
 	for _, val := range llist {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
-		a := append(strings.SplitN(val, "|", 2), "")
+		a := append(strings.SplitN(val, `|`, 2), ``)
 		num, _ := strconv.Atoi(a[1])
 		result = append(result, TEntity{
 			ID:   num,
@@ -757,12 +765,12 @@ var (
 // `prepPages()` prepares the document's `Pages` property.
 //
 // This functions only returns a value `>0` if the respective `pages`
-// plugin is installed with `Calibre` and it uses internally a data
+// plugin is installed with `Calibre` _and_ it uses internally a data
 // field called `#pages` stored in the documents's metadata file.
 //
 //	`aPath` is the directory/path of the document's data.
 func prepPages(aPath string) int {
-	fName := filepath.Join(quCalibreLibraryPath, aPath, "metadata.opf")
+	fName := filepath.Join(quCalibreLibraryPath, aPath, `metadata.opf`)
 	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
 		return 0
 	}
@@ -787,13 +795,13 @@ func prepPages(aPath string) int {
 //
 //	`aPublisher`
 func prepPublisher(aPublisher tPSVstring) *tPublisher {
-	list := strings.Split(aPublisher, ", ")
+	list := strings.Split(aPublisher, `, `)
 	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
-		a := append(strings.SplitN(val, "|", 2), "")
+		a := append(strings.SplitN(val, `|`, 2), ``)
 		num, _ := strconv.Atoi(a[1])
 		return &tPublisher{
 			ID:   num,
@@ -808,13 +816,13 @@ func prepPublisher(aPublisher tPSVstring) *tPublisher {
 //
 //	`aSeries`
 func prepSeries(aSeries tPSVstring) *tSeries {
-	list := strings.Split(aSeries, ", ")
+	list := strings.Split(aSeries, `, `)
 	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
-		a := append(strings.SplitN(val, "|", 2), "")
+		a := append(strings.SplitN(val, `|`, 2), ``)
 		num, _ := strconv.Atoi(a[1])
 		return &tSeries{
 			ID:   num,
@@ -829,14 +837,14 @@ func prepSeries(aSeries tPSVstring) *tSeries {
 //
 //	`aTag`
 func prepTags(aTag tPSVstring) *tTagList {
-	list := strings.Split(aTag, ", ")
+	list := strings.Split(aTag, `, `)
 	result := make(tTagList, 0, len(list))
 	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
 		// make sure we have at least two indices:
-		a := append(strings.SplitN(val, "|", 2), "")
+		a := append(strings.SplitN(val, `|`, 2), ``)
 		num, _ := strconv.Atoi(a[1])
 		result = append(result, TEntity{
 			ID:   num,
@@ -937,7 +945,8 @@ func QueryDocMini(aID TID) *TDocument {
 //
 //	`aID` The document ID to lookup.
 func QueryDocument(aID TID) *TDocument {
-	list, _ := doQueryAll(quCalibreBaseQuery + fmt.Sprintf("WHERE b.id=%d ", aID))
+	list, _ := doQueryAll(quCalibreBaseQuery +
+		`WHERE b.id=` + strconv.FormatInt(int64(aID), 10) + ` `)
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
