@@ -36,11 +36,11 @@ I _love_ books.
 Always have.
 Since I was a kid.
 Over the years several thousand books gathered in my flat; so many that I sort of ran out of space.
-Relunctantly I started to investigate and then use eBooks, first on my main desktop computer, later with a dedicated eBook reader.
+Reluctantly I started to investigate and then use eBooks, first on my main desktop computer, later with a dedicated eBook reader.
 
 Soon – and again – there were so many that I started looking for some convenient way to handle, store, and retrieve them for reading.
 That's when I became acquainted with [Calibre](https://calibre-ebook.com/), a great software for working with eBooks.
-Of course, there were some problems but since the software is actively maintained and extended all the time those problems either went away on their own with the next update or I found some way around them.
+Of course, there were some problems but since that software is actively maintained and extended all the time those problems either went away on their own with the next update or I found some way around them.
 And sure, it took some work to get all the eBooks into that library system, and since there are always coming new titles the work kind of never ends.
 
 Another question soon became urgent: How to access my books when I'm not at home?
@@ -278,7 +278,7 @@ So each step overwrites the previous one, the commandline options having the hig
 Why, you may ask, would you need an username/password file anyway?
 Well, there may be several reasons one of which could be Copyright problems.
 
-If not all your books are in the public domain and Copyright-free in most countries you may _not make them publically available_.
+If not all your books are in the public domain and Copyright-free in most countries you may _not make them publicly available_.
 In that case you're most likely the only actual remote user allowed to access the books in your library.
 Depending on your country's legislation you may or may not include your family members.
 If in doubt please consult a Copyright expert.
@@ -383,7 +383,7 @@ Like almost every other web-server `Kaliber` writes all access data to a logfile
 As _**privacy**_ becomes a serious concern for a growing number of people (including law makers) – the IP address is definitely to be considered as _personal data_ – the [logging facility](https://github.com/mwat56/apachelogger) _anonymises_ the requesting users by setting the host-part of the respective remote address to zero (`0`).
 This option takes care of e.g. European servers who may _not without explicit consent_ of the users store personal data; this includes IP addresses in logfiles and elsewhere (eg. statistical data gathered from logfiles).
 
-Since the generated logfile resembles that of the popular `Apache` server you can use all tools written for `Apache` logfiles to anylyse the access data.
+Since the generated logfile resembles that of the popular `Apache` server you can use all tools written for `Apache` logfiles to analyse the access data.
 
 ## Libraries
 
@@ -391,6 +391,7 @@ The following external libraries were used building `Kaliber`:
 
 * [ApacheLogger](https://github.com/mwat56/apachelogger)
 * [Crypto](https://golang.org/x/crypto)
+* [CSSfs](https://github.com/mwat56/cssfs)
 * [ErrorHandler](https://github.com/mwat56/errorhandler)
 * [GzipHandler](https://github.com/NYTimes/gziphandler)
 * [INI](https://github.com/mwat56/ini)
@@ -402,7 +403,7 @@ The following external libraries were used building `Kaliber`:
 
 ## Licence
 
-        Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+        Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                         All rights reserved
                     EMail : <support@mwat.de>
 

@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/mwat56/apachelogger"
+	"github.com/mwat56/cssfs"
 	"github.com/mwat56/jffs"
 	"github.com/mwat56/passlist"
 	"github.com/mwat56/sessions"
@@ -32,6 +33,7 @@ type (
 		addr     string              // listen address ("1.2.3.4:5678")
 		authAll  bool                // authenticate user for all pages and documents
 		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
+		cssFh    http.Handler        // CSS file server (i.e. thumbnails)
 		dataDir  string              // base dir for data
 		docFS    http.Handler        // document file server
 		lang     string              // default GUI language
@@ -64,6 +66,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.dataDir = s
 
+	result.cssFh = cssfs.FileServer(http.Dir(s + `/`))
 	result.docFS = jffs.FileServer(http.Dir(CalibreLibraryPath()))
 
 	if s, err = AppArguments.Get("lang"); nil == err {
@@ -285,7 +288,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "css":
-		ph.staticFS.ServeHTTP(aWriter, aRequest)
+		ph.cssFh.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
 		var (
