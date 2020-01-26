@@ -33,7 +33,7 @@ type (
 		addr     string              // listen address ("1.2.3.4:5678")
 		authAll  bool                // authenticate user for all pages and documents
 		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
-		cssFh    http.Handler        // CSS file server (i.e. thumbnails)
+		cssFS    http.Handler        // CSS file server
 		dataDir  string              // base dir for data
 		docFS    http.Handler        // document file server
 		lang     string              // default GUI language
@@ -65,8 +65,7 @@ func NewPageHandler() (*TPageHandler, error) {
 		return nil, err
 	}
 	result.dataDir = s
-
-	result.cssFh = cssfs.FileServer(http.Dir(s + `/`))
+	result.cssFS = cssfs.FileServer(s + `/`)
 	result.docFS = jffs.FileServer(http.Dir(CalibreLibraryPath()))
 
 	if s, err = AppArguments.Get("lang"); nil == err {
@@ -288,7 +287,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
 	case "css":
-		ph.cssFh.ServeHTTP(aWriter, aRequest)
+		ph.cssFS.ServeHTTP(aWriter, aRequest)
 
 	case "doc":
 		var (
@@ -454,7 +453,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 		count, doclist, err = QueryBy(aOption)
 	}
 	if nil != err {
-		msg := fmt.Sprintf("QeueryBy/QuerySearch: %v", err)
+		msg := fmt.Sprintf("QueryBy/QuerySearch: %v", err)
 		apachelogger.Err("TPageHandler.handleQuery()", msg)
 	}
 	if 0 < count {
