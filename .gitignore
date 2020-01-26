@@ -11,6 +11,7 @@ img/*
 kaliber*
 *.log
 metadata*
+*.min.css
 sessions/
 *.sql
 TODO*
