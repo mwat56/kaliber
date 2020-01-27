@@ -151,6 +151,20 @@ var (
 	//           1111111111111     222222222222222222222222
 )
 
+// `recoverPanic()` is called by `TPageHandler.ServeHTTP()` to
+// recover from a panic.
+func recoverPanic(doLogStack bool) {
+	if err := recover(); err != nil {
+		var msg string
+		if doLogStack {
+			msg = fmt.Sprintf("caught panic: %v – %s", err, debug.Stack())
+		} else {
+			msg = fmt.Sprintf("caught panic: %v", err)
+		}
+		apachelogger.Err("TPageHandler.ServeHTTP()", msg)
+	}
+} // recoverPanic()
+
 // URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
 // `rPath` holds the remaining part of `aURL`.
 //
@@ -509,28 +523,18 @@ func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
 		return true
 	}
 	path, _ := URLparts(aRequest.URL.Path)
-	switch path {
-	case "file":
-		return true
-	default:
-		return false
-	}
+	// switch path {
+	// case "file":
+	// 	return true
+	// default:
+	// 	return false
+	// }
+	return (`file` == path)
 } // NeedAuthentication()
 
 // ServeHTTP handles the incoming HTTP requests.
 func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Request) {
-	defer func() {
-		// make sure a `panic` won't kill the program
-		if err := recover(); err != nil {
-			var msg string
-			if ph.logStack {
-				msg = fmt.Sprintf("caught panic: %v – %s", err, debug.Stack())
-			} else {
-				msg = fmt.Sprintf("caught panic: %v", err)
-			}
-			apachelogger.Err("TPageHandler.ServeHTTP()", msg)
-		}
-	}()
+	defer recoverPanic(ph.logStack)
 
 	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	if ph.NeedAuthentication(aRequest) {
