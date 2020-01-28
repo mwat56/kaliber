@@ -4,15 +4,15 @@ go 1.13
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/mattn/go-sqlite3 v2.0.2+incompatible
-	github.com/mwat56/apachelogger v1.4.4
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/mwat56/apachelogger v1.4.5
 	github.com/mwat56/cssfs v0.1.2
-	github.com/mwat56/errorhandler v1.1.4
-	github.com/mwat56/ini v1.3.7
+	github.com/mwat56/errorhandler v1.1.5
+	github.com/mwat56/ini v1.3.8
 	github.com/mwat56/jffs v0.0.5
 	github.com/mwat56/passlist v1.2.1
 	github.com/mwat56/sessions v0.3.7
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
+	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d // indirect
 	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
 )

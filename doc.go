@@ -2,7 +2,7 @@
 
 Package kaliber implements a server for the `Calibre` library software.
 
-    Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+    Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                     All rights reserved
                 EMail : <support@mwat.de>
 
