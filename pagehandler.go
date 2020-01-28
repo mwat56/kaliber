@@ -144,13 +144,6 @@ func newViewList(aDirectory string) (*TViewList, error) {
 	return result, nil
 } // newViewList()
 
-var (
-	// RegEx to find path and possible added path components
-	phURLpartsRE = regexp.MustCompile(
-		`(?i)^/?([\p{L}\d_.-]+)?/?([\p{L}\d_§.?!=:;/,@# -]*)?`)
-	//           1111111111111     222222222222222222222222
-)
-
 // `recoverPanic()` is called by `TPageHandler.ServeHTTP()` to
 // recover from a panic.
 func recoverPanic(doLogStack bool) {
@@ -164,6 +157,13 @@ func recoverPanic(doLogStack bool) {
 		apachelogger.Err("TPageHandler.ServeHTTP()", msg)
 	}
 } // recoverPanic()
+
+var (
+	// RegEx to find path and possible added path components
+	phURLpartsRE = regexp.MustCompile(
+		`(?i)^/*([\p{L}\d_.-]+)?/*([\p{L}\d_§.?!=:;/,@# -]*)?`)
+	//           1111111111111     222222222222222222222222
+)
 
 // URLparts returns two parts: `rDir` holds the base-directory of `aURL`,
 // `rPath` holds the remaining part of `aURL`.
