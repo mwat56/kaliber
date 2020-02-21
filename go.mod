@@ -11,8 +11,8 @@ require (
 	github.com/mwat56/ini v1.3.8
 	github.com/mwat56/jffs v0.0.5
 	github.com/mwat56/passlist v1.2.1
-	github.com/mwat56/sessions v0.3.7
+	github.com/mwat56/sessions v0.3.8
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	golang.org/x/crypto v0.0.0-20200208060501-ecb85df21340 // indirect
-	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
+	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975 // indirect
+	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
 )

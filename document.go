@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
@@ -19,7 +19,7 @@ import (
 )
 
 /*
-* This file provides functions and methods to handle a single document.
+* This file provides methods to handle a single document.
 */
 
 type (
@@ -416,17 +416,6 @@ func (doc *TDocument) Timestamp() string {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// Add appends a document to the list of documents.
-//
-//	`aDocument` The document to add to the list.
-func (dl *TDocList) Add(aDocument *TDocument) *TDocList {
-	*dl = append(*dl, *aDocument)
-
-	return dl
-} // Add()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 // NewDocument returns a new `TDocument` instance.
 func NewDocument() *TDocument {
 	result := &TDocument{}
@@ -440,6 +429,17 @@ type (
 	// TDocList is a list of `TDocument` instances.
 	TDocList []TDocument
 )
+
+// Add appends a document to the list of documents.
+//
+//	`aDocument` The document to add to the list.
+func (dl *TDocList) Add(aDocument *TDocument) *TDocList {
+	*dl = append(*dl, *aDocument)
+
+	return dl
+} // Add()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // NewDocList returns a new `TDocList` instance.
 func NewDocList() *TDocList {
