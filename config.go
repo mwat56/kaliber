@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
@@ -93,7 +93,7 @@ func readIniData() {
 
 	// (2) /etc/
 	fName = "/etc/kaliber.ini"
-	if ini2, err := ini.New(fName); nil == err {
+	if ini2, err2 := ini.New(fName); nil == err2 {
 		ini1.Merge(ini2)
 		ini1.AddSectionKey("", "iniFile", fName)
 	}
@@ -101,16 +101,16 @@ func readIniData() {
 	// (3) ~user/
 	if fName, _ = os.UserHomeDir(); 0 < len(fName) {
 		fName, _ = filepath.Abs(filepath.Join(fName, ".kaliber.ini"))
-		if ini2, err := ini.New(fName); nil == err {
+		if ini2, err2 := ini.New(fName); nil == err2 {
 			ini1.Merge(ini2)
 			ini1.AddSectionKey("", "iniFile", fName)
 		}
 	}
 
 	// (4) ~/.config/
-	if confDir, err := os.UserConfigDir(); nil == err {
+	if confDir, err3 := os.UserConfigDir(); nil == err3 {
 		fName, _ = filepath.Abs(filepath.Join(confDir, "kaliber.ini"))
-		if ini2, err := ini.New(fName); nil == err {
+		if ini2, err2 := ini.New(fName); nil == err2 {
 			ini1.Merge(ini2)
 			ini1.AddSectionKey("", "iniFile", fName)
 		}

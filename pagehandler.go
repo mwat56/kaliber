@@ -134,7 +134,7 @@ func newViewList(aDirectory string) (*TViewList, error) {
 	}
 
 	for _, fName := range files {
-		fName := filepath.Base(fName[:len(fName)-7]) // remove extension
+		fName = filepath.Base(fName[:len(fName)-7]) // remove extension
 		if v, err = NewView(aDirectory, fName); nil != err {
 			return nil, err
 		}
