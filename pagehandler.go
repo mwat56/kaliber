@@ -538,7 +538,7 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 
 	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	if ph.NeedAuthentication(aRequest) {
-		if !ph.usrList.IsAuthenticated(aRequest) {
+		if err := ph.usrList.IsAuthenticated(aRequest); nil != err {
 			passlist.Deny(ph.realm, aWriter)
 			return
 		}
