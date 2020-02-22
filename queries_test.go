@@ -493,7 +493,7 @@ func TestQuerySearch(t *testing.T) {
 		// TODO: Add test cases.
 		{" 1", args{qo1}, 35, 24, false},
 		{" 2", args{qo2}, 4618, 24, false},
-		{" 3", args{qo3}, 923, 24, false},
+		{" 3", args{qo3}, 924, 24, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
