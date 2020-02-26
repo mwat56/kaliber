@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
               All rights reserved
           EMail : <support@mwat.de>
 */
@@ -7,7 +7,7 @@
 package kaliber
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec
 	"fmt"
 	"os"
 	"path/filepath"
@@ -56,7 +56,7 @@ func TestThumbnail(t *testing.T) {
 		path: "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
 	w1 := `/home/matthias/.cache/kaliber/abb302a1831a12171af82e2cd612b4e9/0076/007628.jpg`
-	thumbnailRemove(d1)
+	_ = thumbnailRemove(d1)
 	type args struct {
 		aDoc *TDocument
 	}
@@ -90,7 +90,7 @@ func TestThumbnailName(t *testing.T) {
 		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
 	}
 	w1 := `/home/matthias/.cache/kaliber/abb302a1831a12171af82e2cd612b4e9/0076/007628.jpg`
-	thumbnailRemove(d1)
+	_ = thumbnailRemove(d1)
 	type args struct {
 		aDoc *TDocument
 	}

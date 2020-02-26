@@ -159,7 +159,7 @@ var (
 	quSQLTraceFile = ``
 )
 
-// CalibreCachePath returns the directory of the copied `Calibre` databse.
+// CalibreCachePath returns the directory of the copied `Calibre` database.
 func CalibreCachePath() string {
 	return quCalibreCachePath
 } // CalibreCachePath()
@@ -619,7 +619,7 @@ func orderBy(aOrder TSortType, aDescending bool) string {
 	if aDescending {
 		desc = ` DESC`
 	}
-	result := ``
+	var result string
 	switch aOrder { // constants defined in `queryoptions.go`
 	case qoSortByAcquisition:
 		result = `b.timestamp` + desc + `, b.pubdate` + desc + `, b.author_sort`
@@ -652,9 +652,9 @@ func orderBy(aOrder TSortType, aDescending bool) string {
 //
 //	`aAuthor`
 func prepAuthors(aAuthor tPSVstring) *tAuthorList {
-	alist := strings.Split(aAuthor, `, `)
-	result := make(tAuthorList, 0, len(alist))
-	for _, val := range alist {
+	list := strings.Split(aAuthor, `, `)
+	result := make(tAuthorList, 0, len(list))
+	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
@@ -734,9 +734,9 @@ func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 //
 //	`aLanguage`
 func prepLanguages(aLanguage tPSVstring) *tLanguageList {
-	llist := strings.Split(aLanguage, `, `)
-	result := make(tLanguageList, 0, len(llist))
-	for _, val := range llist {
+	list := strings.Split(aLanguage, `, `)
+	result := make(tLanguageList, 0, len(list))
+	for _, val := range list {
 		if 0 == len(val) {
 			continue
 		}
@@ -766,7 +766,7 @@ var (
 //
 // This functions only returns a value `>0` if the respective `pages`
 // plugin is installed with `Calibre` _and_ it uses internally a data
-// field called `#pages` stored in the documents's metadata file.
+// field called `#pages` stored in the document's metadata file.
 //
 //	`aPath` is the directory/path of the document's data.
 func prepPages(aPath string) int {
