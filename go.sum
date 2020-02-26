@@ -6,8 +6,8 @@ github.com/mattn/go-sqlite3 v2.0.3+incompatible h1:gXHsfypPkaMZrKbD5209QV9jbUTJK
 github.com/mattn/go-sqlite3 v2.0.3+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mwat56/apachelogger v1.4.5 h1:Qps7TisnaxENRYtjTWDV9/0WL7CDKh+haIuAnOI5ucQ=
 github.com/mwat56/apachelogger v1.4.5/go.mod h1:NEYoDPAq3BIg796c4ff/CSAj8iKCpdnS52CA32MVPM4=
-github.com/mwat56/cssfs v0.1.2 h1:AqPzBg7aZE9IsIqzrjJYcFNFYQEgy6xzZqWFlfJ1szY=
-github.com/mwat56/cssfs v0.1.2/go.mod h1:OcKO4yBZz8/EnUiwHfD3PxF+tN6brQIk3OGMcFW8dMM=
+github.com/mwat56/cssfs v0.2.1 h1:vAa44Nx5Kqh2Aj8vCWxwbeXbUg9sSc8dC/IBsIHo0FE=
+github.com/mwat56/cssfs v0.2.1/go.mod h1:5+bUfTWjvDTI2hDKRPlANGUuNAdd4FC6ndTvarF+bY4=
 github.com/mwat56/errorhandler v1.1.5 h1:31ZQSgYroncQOOHET0qCOotf7V+EfpKxRCRmNRl554o=
 github.com/mwat56/errorhandler v1.1.5/go.mod h1:Cm2shh7ECbjtxv68hb2QZ1XIRpVSW0Pkr4QzFyRVqfY=
 github.com/mwat56/ini v1.3.8 h1:QmmHmE4tFJ07nzO8To/OCoAgyolxmTz2vyP3+8tFlDQ=
@@ -34,4 +34,6 @@ golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5h
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c h1:jceGD5YNJGgGMkJz79agzOln1K9TaZUjv5ird16qniQ=
 golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae h1:/WDfKMnPU+m5M4xB+6x4kaepxRw6jWvR5iDRdvjHgy8=
+golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
