@@ -424,10 +424,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
-		// if nothing matched (above) reply to the request
-		// with an HTTP 404 not found error.
-		http.NotFound(aWriter, aRequest)
+		// // if nothing matched (above) reply to the request
+		// // with an HTTP 404 not found error.
+		//http.NotFound(aWriter, aRequest)
 
+		// Redirect all invalid URLs to the NSA:
+		http.Redirect(aWriter, aRequest, "https://www.nsa.gov/", http.StatusMovedPermanently)
 	} // switch
 } // handleGET()
 
@@ -448,9 +450,12 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		ph.handleQuery(qo, aWriter, so)
 
 	default:
-		// if nothing matched (above) reply to the request
-		// with an HTTP 404 "not found" error.
-		http.NotFound(aWriter, aRequest)
+		// // if nothing matched (above) reply to the request
+		// // with an HTTP 404 "not found" error.
+		//http.NotFound(aWriter, aRequest)
+
+		// Redirect all invalid URLs to the NSA:
+		http.Redirect(aWriter, aRequest, "https://www.nsa.gov/", http.StatusMovedPermanently)
 	}
 } // handlePOST()
 
