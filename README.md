@@ -400,6 +400,7 @@ The following external libraries were used building `Kaliber`:
 * [Resize](https://github.com/nfnt/resize)
 * [Sessions](https://github.com/mwat56/sessions)
 * [SQLite3](https://github.com/mattn/go-sqlite3)
+* [WhiteSpace](https://github.com/mwat56/whitespace)
 
 ## Licence
 
