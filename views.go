@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+
+	"github.com/mwat56/whitespace"
 )
 
 const (
@@ -32,10 +34,10 @@ var (
 	reHrefRE = regexp.MustCompile(` (href="http)`)
 )
 
-// `addExternURLtagets()` adds a TARGET attribute to HREFs.
-func addExternURLtagets(aPage []byte) []byte {
+// `addExternURLtargets()` adds a TARGET attribute to HREFs.
+func addExternURLtargets(aPage []byte) []byte {
 	return reHrefRE.ReplaceAll(aPage, []byte(reHrefReplace))
-} // addExternURLtagets()
+} // addExternURLtargets()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -91,7 +93,7 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 	}
 	files = append(files, bd+"/"+aName+".gohtml")
 
-	templ, err := template.New(aName).
+	tpl, err := template.New(aName).
 		Funcs(viewFunctionMap).
 		ParseFiles(files...)
 	if nil != err {
@@ -100,7 +102,7 @@ func NewView(aBaseDir, aName string) (*TView, error) {
 
 	return &TView{
 		tvName: aName,
-		tvTpl:  templ,
+		tvTpl:  tpl,
 	}, nil
 } // NewView()
 
@@ -112,7 +114,7 @@ func (v *TView) render(aWriter io.Writer, aData *TemplateData) (rErr error) {
 	if page, rErr = v.RenderedPage(aData); nil != rErr {
 		return
 	}
-	_, rErr = aWriter.Write(addExternURLtagets(RemoveWhiteSpace(page)))
+	_, rErr = aWriter.Write(addExternURLtargets(whitespace.Remove(page)))
 
 	return
 } // render()
@@ -224,107 +226,5 @@ func (vl *TViewList) RenderedPage(aName string, aData *TemplateData) ([]byte, er
 
 	return nil, fmt.Errorf("template/view '%s' not found", aName)
 } // RenderedPage()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// `trimPREmatches()` removes leading/trailing whitespace from list entries.
-func trimPREmatches(aList [][]byte) [][]byte {
-	for idx, hit := range aList {
-		aList[idx] = bytes.TrimSpace(hit)
-	}
-
-	return aList
-} // trimPREmatches()
-
-// Internal list of regular expressions used by
-// the `RemoveWhiteSpace()` function.
-type (
-	tReItem struct {
-		replace string
-		regEx   *regexp.Regexp
-	}
-)
-
-var (
-	// RegEx to find PREformatted parts in an HTML page.
-	wsPreRE = regexp.MustCompile(`(?si)\s*<pre[^>]*>.*?</pre>\s*`)
-
-	wsREs = []tReItem{
-		// comments:
-		{``, regexp.MustCompile(`(?s)<!--.*?-->`)},
-		// HTML and HEAD elements:
-		{`$1`, regexp.MustCompile(`(?si)\s*(</?(body|\!DOCTYPE|head|html|link|meta|script|style|title)[^>]*>)\s*`)},
-		// block elements:
-		{`$1`, regexp.MustCompile(`(?si)\s+(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)`)},
-		{`$1`, regexp.MustCompile(`(?si)(</?(article|blockquote|div|footer|h[1-6]|header|nav|p|section)[^>]*>)\s+`)},
-		// lists:
-		{`$1`, regexp.MustCompile(`(?si)\s+(</?([dou]l|li|d[dt])[^>]*>)`)},
-		{`$1`, regexp.MustCompile(`(?si)(</?([dou]l|li|d[dt])[^>]*>)\s+`)},
-		// table elements:
-		{`$1`, regexp.MustCompile(`(?si)\s+(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)`)},
-		{`$1`, regexp.MustCompile(`(?si)(</?(col|t(able|body|foot|head|[dhr]))[^>]*>)\s+`)},
-		// form elements:
-		{`$1`, regexp.MustCompile(`(?si)\s+(</?(form|fieldset|legend|opt(group|ion))[^>]*>)`)},
-		{`$1`, regexp.MustCompile(`(?si)(</?(form|fieldset|legend|opt(group|ion))[^>]*>)\s+`)},
-		// BR / HR:
-		{`$1`, regexp.MustCompile(`(?i)\s*(<[bh]r[^>]*>)\s*`)},
-		// whitespace after opened anchor:
-		{`$1`, regexp.MustCompile(`(?si)(<a\s+[^>]*>)\s+`)},
-		// preserve empty table cells:
-		{`$1&#160;$3`, regexp.MustCompile(`(?i)(<td(\s+[^>]*)?>)\s+(</td>)`)},
-		// remove empty paragraphs:
-		{``, regexp.MustCompile(`(?i)<(p)(\s+[^>]*)?>\s*</$1>`)},
-		// whitespace before closing GT:
-		{`>`, regexp.MustCompile(`\s+>`)},
-	}
-)
-
-// RemoveWhiteSpace removes HTML comments and unnecessary whitespace.
-//
-// This function removes all unneeded/redundant whitespace
-// and HTML comments from the given `aPage`.
-// This can reduce significantly the amount of data to send to
-// the remote user agent thus saving bandwidth and time.
-//
-//	`aPage` The HTML document to process.
-func RemoveWhiteSpace(aPage []byte) []byte {
-	var repl, search string
-
-	// (0) Check whether there are PREformatted parts:
-	preMatches := wsPreRE.FindAll(aPage, -1)
-	if (nil == preMatches) || (0 == len(preMatches)) {
-		// no PRE hence only the other REs to perform
-		for _, reEntry := range wsREs {
-			aPage = reEntry.regEx.ReplaceAll(aPage, []byte(reEntry.replace))
-		}
-		return aPage
-	}
-	preMatches = trimPREmatches(preMatches)
-
-	// Make sure PREformatted parts remain as-is.
-	// (1) replace the PRE parts with a dummy text:
-	for l, cnt := len(preMatches), 0; cnt < l; cnt++ {
-		search = fmt.Sprintf(`\s*%s\s*`, regexp.QuoteMeta(string(preMatches[cnt])))
-		if re, err := regexp.Compile(search); nil == err {
-			repl = fmt.Sprintf(`</-%d-%d-%d-%d-/>`, cnt, cnt, cnt, cnt)
-			aPage = re.ReplaceAllLiteral(aPage, []byte(repl))
-		}
-	}
-
-	// (2) traverse through all the whitespace REs:
-	for _, re := range wsREs {
-		aPage = re.regEx.ReplaceAll(aPage, []byte(re.replace))
-	}
-
-	// (3) replace the PRE dummies with the real markup:
-	for l, cnt := len(preMatches), 0; cnt < l; cnt++ {
-		search = fmt.Sprintf(`\s*</-%d-%d-%d-%d-/>\s*`, cnt, cnt, cnt, cnt)
-		if re, err := regexp.Compile(search); nil == err {
-			aPage = re.ReplaceAllLiteral(aPage, preMatches[cnt])
-		}
-	}
-
-	return aPage
-} // RemoveWhiteSpace()
 
 /* _EoF_ */

@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
               All rights reserved
           EMail : <support@mwat.de>
 */
@@ -62,8 +62,8 @@ func TestNewViewList(t *testing.T) {
 } // TestNewViewList()
 
 func TestTViewList_Add(t *testing.T) {
-	vname1 := "index"
-	vw1, _ := NewView("./views/", vname1)
+	vName1 := "index"
+	vw1, _ := NewView("./views/", vName1)
 	vl1 := NewViewList()
 	rl1 := NewViewList().Add(vw1)
 	type args struct {
@@ -77,7 +77,7 @@ func TestTViewList_Add(t *testing.T) {
 		want *TViewList
 	}{
 		// TODO: Add test cases.
-		{" 1", vl1, args{vname1, vw1}, rl1},
+		{" 1", vl1, args{vName1, vw1}, rl1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -87,41 +87,3 @@ func TestTViewList_Add(t *testing.T) {
 		})
 	}
 } // TestTViewList_Add()
-
-func TestRemoveWhiteSpace(t *testing.T) {
-	txtIn1 := []byte(`<hr />
-
-	<p>Here is an example of AppleScript:</p>
-
-	<pre>
-	tell application &quot;Foo&quot;
-	  beep
-	end tell
-	</pre>
-
-	<hr />
-	`)
-	txtOut1 := []byte(`<hr /><p>Here is an example of AppleScript:</p><pre>
-	tell application &quot;Foo&quot;
-	  beep
-	end tell
-	</pre><hr />`)
-	type args struct {
-		aPage []byte
-	}
-	tests := []struct {
-		name string
-		args args
-		want []byte
-	}{
-		// TODO: Add test cases.
-		{" 1", args{txtIn1}, txtOut1},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := RemoveWhiteSpace(tt.args.aPage); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RemoveWhiteSpace() = [%s],\nwant [%s]", got, tt.want)
-			}
-		})
-	}
-} // TestRemoveWhiteSpace()
