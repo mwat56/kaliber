@@ -55,7 +55,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	)
 	result := new(TPageHandler)
 
-	result.cacheFS = jffs.FileServer(http.Dir(CalibreCachePath()))
+	result.cacheFS = jffs.FileServer(CalibreCachePath())
 
 	if s, err = AppArguments.Get("authAll"); nil == err {
 		result.authAll = ("true" == s)
@@ -66,7 +66,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.dataDir = s
 	result.cssFS = cssfs.FileServer(s + `/`)
-	result.docFS = jffs.FileServer(http.Dir(CalibreLibraryPath()))
+	result.docFS = jffs.FileServer(CalibreLibraryPath())
 
 	if s, err = AppArguments.Get("lang"); nil == err {
 		result.lang = s
@@ -88,7 +88,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.addr += ":" + s
 
-	result.staticFS = jffs.FileServer(http.Dir(result.dataDir))
+	result.staticFS = jffs.FileServer(result.dataDir)
 
 	if s, err = AppArguments.Get("uf"); nil != err {
 		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
