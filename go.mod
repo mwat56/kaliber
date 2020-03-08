@@ -9,10 +9,10 @@ require (
 	github.com/mwat56/cssfs v0.2.1
 	github.com/mwat56/errorhandler v1.1.5
 	github.com/mwat56/ini v1.3.8
-	github.com/mwat56/jffs v0.0.5
+	github.com/mwat56/jffs v0.1.0
 	github.com/mwat56/passlist v1.3.1
 	github.com/mwat56/sessions v0.3.8
-	github.com/mwat56/whitespace v0.1.1
+	github.com/mwat56/whitespace v0.1.2
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
 	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
