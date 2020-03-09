@@ -146,7 +146,7 @@ func (doc *TDocument) Cover() string {
 // cover's complete path/filename.
 //
 //	`aRelative` Flag indicating a complete or relative path/filename
-// of he document's cover is requested.
+// of the document's cover.
 func (doc *TDocument) CoverAbs(aRelative bool) (string, error) {
 	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	if 0 <= strings.Index(dir, `[`) {
