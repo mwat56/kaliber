@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/mwat56/ini"
+	"github.com/mwat56/kaliber/db"
 	"github.com/mwat56/sessions"
 )
 
@@ -342,11 +343,11 @@ func InitConfig() {
 	// of the libraryPath to our cache path.
 	s = fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
 	if ucd, err := os.UserCacheDir(); (nil != err) || (0 == len(ucd)) {
-		SetCalibreCachePath(filepath.Join(dataDir, "img", s))
+		db.SetCalibreCachePath(filepath.Join(dataDir, "img", s))
 	} else {
-		SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+		db.SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
 	}
-	SetCalibreLibraryPath(libPath)
+	db.SetCalibreLibraryPath(libPath)
 
 	if "0" == listenStr {
 		listenStr = ""
@@ -379,7 +380,7 @@ func InitConfig() {
 	if 0 < len(sqlTrace) {
 		sqlTrace = absolute(dataDir, sqlTrace)
 	}
-	SetSQLtraceFile(sqlTrace)
+	db.SetSQLtraceFile(sqlTrace)
 
 	AppArguments.set("theme", strings.ToLower(themeStr))
 	AppArguments.set("ua", uaStr)

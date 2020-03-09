@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
               All rights reserved
           EMail : <support@mwat.de>
 */
@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/mwat56/kaliber/db"
 	"github.com/mwat56/whitespace"
 )
 
@@ -47,7 +48,7 @@ func htmlSafe(aText string) template.HTML {
 } // htmlSafe()
 
 // `selectOption()` returns the OPTION markup for `aValue`.
-func selectOption(aMap *TStringMap, aValue string) template.HTML {
+func selectOption(aMap *db.TStringMap, aValue string) template.HTML {
 	if result, ok := (*aMap)[aValue]; ok {
 		return template.HTML(result) // #nosec G203
 	}

@@ -9,27 +9,31 @@ package kaliber
 import (
 	"crypto/md5" // #nosec
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/mwat56/kaliber/db"
 )
 
 func setup4Testing() {
 	libPath := `/var/opt/Calibre`
 	s := fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
 	ucd, _ := os.UserCacheDir()
-	SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
-	SetCalibreLibraryPath(libPath)
+	db.SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+	db.SetCalibreLibraryPath(libPath)
 } // setup4Testing
 
 func Test_makeThumbDir(t *testing.T) {
 	setup4Testing()
-	d1 := &TDocument{
-		ID:   7628,
-		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+	d1 := &db.TDocument{
+		ID: 7628,
 	}
+	d1.SetPath(db.CalibreLibraryPath() + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)")
+
 	type args struct {
-		aDoc *TDocument
+		aDoc *db.TDocument
 	}
 	tests := []struct {
 		name    string
@@ -51,14 +55,14 @@ func Test_makeThumbDir(t *testing.T) {
 
 func TestThumbnail(t *testing.T) {
 	setup4Testing()
-	d1 := &TDocument{
-		ID:   7628,
-		path: "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+	d1 := &db.TDocument{
+		ID: 7628,
 	}
+	d1.SetPath("/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)")
 	w1 := `/home/matthias/.cache/kaliber/abb302a1831a12171af82e2cd612b4e9/0076/007628.jpg`
 	_ = thumbnailRemove(d1)
 	type args struct {
-		aDoc *TDocument
+		aDoc *db.TDocument
 	}
 	tests := []struct {
 		name    string
@@ -85,14 +89,14 @@ func TestThumbnail(t *testing.T) {
 
 func TestThumbnailName(t *testing.T) {
 	setup4Testing()
-	d1 := &TDocument{
-		ID:   7628,
-		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+	d1 := &db.TDocument{
+		ID: 7628,
 	}
+	d1.SetPath(db.CalibreLibraryPath() + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)")
 	w1 := `/home/matthias/.cache/kaliber/abb302a1831a12171af82e2cd612b4e9/0076/007628.jpg`
 	_ = thumbnailRemove(d1)
 	type args struct {
-		aDoc *TDocument
+		aDoc *db.TDocument
 	}
 	tests := []struct {
 		name string
@@ -113,13 +117,13 @@ func TestThumbnailName(t *testing.T) {
 
 func TestThumbnailRemove(t *testing.T) {
 	setup4Testing()
-	d1 := &TDocument{
-		ID:   7628,
-		path: quCalibreLibraryPath + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)",
+	d1 := &db.TDocument{
+		ID: 7628,
 	}
-	d2 := NewDocument()
+	d1.SetPath(db.CalibreLibraryPath() + "/Spiegel/Der Spiegel (2019-06-01) 23_2019 (7628)")
+	d2 := db.NewDocument()
 	type args struct {
-		aDoc *TDocument
+		aDoc *db.TDocument
 	}
 	tests := []struct {
 		name    string
@@ -141,7 +145,10 @@ func TestThumbnailRemove(t *testing.T) {
 
 func Test_goThumbCleanup(t *testing.T) {
 	setup4Testing()
-	openDBforTesting()
+	if err := db.OpenDatabase(); nil != err {
+		log.Fatalf("OpenDatabase(): %v", err)
+	}
+	db.SetSQLtraceFile("./SQLtrace.sql")
 	tests := []struct {
 		name string
 	}{

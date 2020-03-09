@@ -19,6 +19,7 @@ import (
 	"syscall"
 
 	"github.com/mwat56/apachelogger"
+	"github.com/mwat56/kaliber/db"
 	"github.com/nfnt/resize"
 )
 
@@ -26,13 +27,13 @@ import (
  * This file provides functions for thumbnail generation.
  */
 
-// `goThumbCleaup()` removes orphaned thumbnails.
+// `goThumbCleanup()` removes orphaned thumbnails.
 func goThumbCleanup() {
-	bd := CalibreCachePath()
+	bd := db.CalibreCachePath()
 	dirNames, err := filepath.Glob(bd + "/*")
 	if nil != err {
 		msg := fmt.Sprintf("filepath.Glob(%s): %v", bd, err)
-		apachelogger.Err("goThumbCleaup()", msg)
+		apachelogger.Err("goThumbCleanup()", msg)
 		return
 	}
 	for _, numDir := range dirNames {
@@ -40,7 +41,7 @@ func goThumbCleanup() {
 	}
 
 	// just mark that function as `used`:
-	_ = thumbnailRemove(NewDocument())
+	_ = thumbnailRemove(db.NewDocument())
 } // goThumbCleanup()
 
 // `checkThumbBase()`
@@ -79,7 +80,7 @@ func checkThumbFile(aFilename string) {
 		return
 	}
 
-	doc := QueryDocument(docID)
+	doc := db.QueryDocument(docID)
 	if nil == doc {
 		// remove thumbnail for non-existing document
 		if err = os.Remove(aFilename); nil != err {
@@ -125,12 +126,12 @@ func checkThumbFile(aFilename string) {
 // `makeThumbDir()` creates the directory for the document's thumbnail.
 //
 // The directory is created with filemode `0775` (`drwxrwxr-x`).
-func makeThumbDir(aDoc *TDocument) error {
-	fmode := os.ModeDir | 0775
+func makeThumbDir(aDoc *db.TDocument) error {
+	fMode := os.ModeDir | 0775
 	fName := thumbnailName(aDoc)
 	dName := filepath.Dir(fName)
 
-	return os.MkdirAll(filepath.FromSlash(dName), fmode)
+	return os.MkdirAll(filepath.FromSlash(dName), fMode)
 } // makeThumbDir()
 
 // `makeThumbnail()` generates a thumbnail for `aSrcName` and stores it
@@ -195,7 +196,7 @@ func makeThumbPrim(img image.Image) image.Image {
 } // makeThumbPrim()
 
 // Thumbnail generates a thumbnail of the document's cover.
-func Thumbnail(aDoc *TDocument) (string, error) {
+func Thumbnail(aDoc *db.TDocument) (string, error) {
 	var (
 		err      error
 		sName    string
@@ -231,14 +232,14 @@ func Thumbnail(aDoc *TDocument) (string, error) {
 } // Thumbnail()
 
 // `thumbnailName()` returns the name of thumbnail file of `aDoc`.
-func thumbnailName(aDoc *TDocument) string {
+func thumbnailName(aDoc *db.TDocument) string {
 	name := fmt.Sprintf("%06d", aDoc.ID)
 
-	return filepath.Join(CalibreCachePath(), name[:4], name+`.jpg`)
+	return filepath.Join(db.CalibreCachePath(), name[:4], name+`.jpg`)
 } // thumbnailName()
 
 // `thumbnailRemove()` deletes the thumbnail of `aDoc`.
-func thumbnailRemove(aDoc *TDocument) error {
+func thumbnailRemove(aDoc *db.TDocument) error {
 	//XXX This function is only needed for during testing.
 	fName := thumbnailName(aDoc)
 	err := os.Remove(fName)
@@ -254,7 +255,7 @@ func thumbnailRemove(aDoc *TDocument) error {
 
 // ThumbnailUpdate creates thumbnails for all existing documents
 func ThumbnailUpdate() {
-	docList, err := QueryIDs()
+	docList, err := db.QueryIDs()
 	if nil != err {
 		return
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/cssfs"
 	"github.com/mwat56/jffs"
+	"github.com/mwat56/kaliber/db"
 	"github.com/mwat56/passlist"
 	"github.com/mwat56/sessions"
 )
@@ -30,20 +31,21 @@ import (
 type (
 	// TPageHandler provides the handling of HTTP request/response.
 	TPageHandler struct {
-		addr     string              // listen address ("1.2.3.4:5678")
-		authAll  bool                // authenticate user for all pages and documents
-		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
-		cssFS    http.Handler        // CSS file server
-		dataDir  string              // base dir for data
-		docFS    http.Handler        // document file server
-		lang     string              // default GUI language
-		libName  string              // the library's name
-		logStack bool                // log stack trace
-		realm    string              // host/domain to secure by BasicAuth
-		staticFS http.Handler        // static file server
-		theme    string              // `dark` or `light` display theme
-		usrList  *passlist.TPassList // user/password list
-		viewList *TViewList          // list of template/views
+		addr        string              // listen address ("1.2.3.4:5678")
+		authAll     bool                // authenticate user for all pages and documents
+		cacheFS     http.Handler        // cache file server (i.e. thumbnails)
+		cssFS       http.Handler        // CSS file server
+		dataDir     string              // base dir for data
+		docFS       http.Handler        // document file server
+		docsPerPage int                 // number of documents shown per web-page
+		lang        string              // default GUI language
+		libName     string              // the library's name
+		logStack    bool                // log stack trace
+		realm       string              // host/domain to secure by BasicAuth
+		staticFS    http.Handler        // static file server
+		theme       string              // `dark` or `light` display theme
+		usrList     *passlist.TPassList // user/password list
+		viewList    *TViewList          // list of template/views
 	}
 )
 
@@ -55,10 +57,17 @@ func NewPageHandler() (*TPageHandler, error) {
 	)
 	result := new(TPageHandler)
 
-	result.cacheFS = jffs.FileServer(CalibreCachePath())
+	result.cacheFS = jffs.FileServer(db.CalibreCachePath())
 
 	if s, err = AppArguments.Get("authAll"); nil == err {
 		result.authAll = ("true" == s)
+	}
+
+	result.docsPerPage = 24
+	if s, _ = AppArguments.Get("booksPerPage"); 0 < len(s) {
+		if bpp, er2 := strconv.Atoi(s); nil == er2 {
+			result.docsPerPage = bpp
+		}
 	}
 
 	if s, err = AppArguments.Get("dataDir"); nil != err {
@@ -66,7 +75,7 @@ func NewPageHandler() (*TPageHandler, error) {
 	}
 	result.dataDir = s
 	result.cssFS = cssfs.FileServer(s + `/`)
-	result.docFS = jffs.FileServer(CalibreLibraryPath())
+	result.docFS = jffs.FileServer(db.CalibreLibraryPath())
 
 	if s, err = AppArguments.Get("lang"); nil == err {
 		result.lang = s
@@ -188,7 +197,7 @@ func URLparts(aURL string) (rDir, rPath string) {
 // implementing the `TErrorPager` interface.
 func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 	var empty []byte
-	qo := NewQueryOptions()
+	qo := db.NewQueryOptions(ph.docsPerPage)
 	pageData := ph.basicTemplateData(qo).
 		Set("ShowForm", false)
 
@@ -216,22 +225,22 @@ func (ph *TPageHandler) Address() string {
 } // Address()
 
 // `basicTemplateData()` returns a list of common template values.
-func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData {
+func (ph *TPageHandler) basicTemplateData(aOptions *db.TQueryOptions) *TemplateData {
 	y, m, d := time.Now().Date()
 
 	lang := ph.lang
 	switch aOptions.GuiLang {
-	case qoLangEnglish:
+	case db.QoLangEnglish:
 		lang = "en"
-	case qoLangGerman:
+	case db.QoLangGerman:
 		lang = "de"
 	}
 
 	theme := ph.theme
 	switch aOptions.Theme {
-	case qoThemeDark:
+	case db.QoThemeDark:
 		theme = "dark"
-	case qoThemeLight:
+	case db.QoThemeLight:
 		theme = "light"
 	}
 	return NewTemplateData().
@@ -240,7 +249,7 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 		Set("HasLast", false).
 		Set("HasNext", false).
 		Set("HasPrev", false).
-		Set("IsGrid", qoLayoutGrid == aOptions.Layout).
+		Set("IsGrid", db.QoLayoutGrid == aOptions.Layout).
 		Set("Lang", lang).
 		Set("LibraryName", ph.libName).
 		Set("Robots", "noindex,nofollow").
@@ -257,7 +266,7 @@ func (ph *TPageHandler) basicTemplateData(aOptions *TQueryOptions) *TemplateData
 
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
-	qo := NewQueryOptions() // in `queryoptions.go`
+	qo := db.NewQueryOptions(ph.docsPerPage) // in `queryoptions.go`
 	so := sessions.GetSession(aRequest)
 	if qos, ok := so.GetString("QOS"); ok {
 		qo.Scan(qos)
@@ -283,16 +292,16 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "cover":
 		var (
-			id    TID
+			id    db.TID
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		doc := QueryDocMini(id)
+		doc := db.QueryDocMini(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		file, err := doc.coverAbs(true)
+		file, err := doc.CoverAbs(true)
 		if (nil != err) || (0 >= len(file)) {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -305,12 +314,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "doc":
 		var (
-			id    TID
+			id    db.TID
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
-		doc := QueryDocument(id)
+		doc := db.QueryDocument(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -328,7 +337,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "file":
 		parts := strings.Split(tail, `/`)
 		qo.ID, _ = strconv.Atoi(parts[0])
-		doc := QueryDocMini(qo.ID)
+		doc := db.QueryDocMini(qo.ID)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -391,11 +400,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "thumb":
 		var (
-			id    TID
+			id    db.TID
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		doc := QueryDocMini(id)
+		doc := db.QueryDocMini(id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -405,7 +414,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
-		file, err := filepath.Rel(CalibreCachePath(), tName)
+		file, err := filepath.Rel(db.CalibreCachePath(), tName)
 		if nil != err {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -438,7 +447,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
 	case "qo": // the only valid POST destination
-		qo := NewQueryOptions()
+		qo := db.NewQueryOptions(ph.docsPerPage)
 		so := sessions.GetSession(aRequest)
 		if qos, ok := so.GetString("QOS"); ok {
 			qo.Scan(qos)
@@ -460,16 +469,16 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleQuery()` serves the logical web-root directory.
-func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.ResponseWriter, aSession *sessions.TSession) {
+func (ph *TPageHandler) handleQuery(aOption *db.TQueryOptions, aWriter http.ResponseWriter, aSession *sessions.TSession) {
 	var (
 		count   int
-		doclist *TDocList
+		doclist *db.TDocList
 		err     error
 	)
 	if 0 < len(aOption.Matching) {
-		count, doclist, err = QuerySearch(aOption)
+		count, doclist, err = db.QuerySearch(aOption)
 	} else {
-		count, doclist, err = QueryBy(aOption)
+		count, doclist, err = db.QueryBy(aOption)
 	}
 	if nil != err {
 		msg := fmt.Sprintf("QueryBy/QuerySearch: %v", err)
@@ -508,7 +517,7 @@ func (ph *TPageHandler) handleQuery(aOption *TQueryOptions, aWriter http.Respons
 } // handleQuery()
 
 // `handleReply()` sends the resulting page back to the remote user.
-func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, aSession *sessions.TSession, aOption *TQueryOptions, pageData *TemplateData) {
+func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, aSession *sessions.TSession, aOption *db.TQueryOptions, pageData *TemplateData) {
 	aSession.Set("QOS", aOption.String())
 	if err := ph.viewList.Render(aPage, aWriter, pageData); nil != err {
 		msg := fmt.Sprintf("viewList.Render(%s): %v", aPage, err)

@@ -24,6 +24,7 @@ import (
 	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/errorhandler"
 	"github.com/mwat56/kaliber"
+	"github.com/mwat56/kaliber/db"
 	"github.com/mwat56/sessions"
 )
 
@@ -93,7 +94,7 @@ func main() {
 	Me, _ := filepath.Abs(os.Args[0])
 	kaliber.InitConfig()
 
-	if err = kaliber.OpenDatabase(); nil != err {
+	if err = db.OpenDatabase(); nil != err {
 		kaliber.ShowHelp()
 		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}
@@ -143,10 +144,10 @@ func main() {
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      20 * time.Minute, // enough time for book download
 	}
-	setupSignals(server)
 	if (nil == err) && (0 < len(s)) { // values from logfile test
 		apachelogger.SetErrLog(server)
 	}
+	setupSignals(server)
 
 	ck, _ := kaliber.AppArguments.Get("certKey")
 	cp, _ := kaliber.AppArguments.Get("certPem")
