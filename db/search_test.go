@@ -1,10 +1,10 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
               All rights reserved
           EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 import (
 	"reflect"
@@ -12,6 +12,7 @@ import (
 )
 
 func Test_tExpression_buildSQL(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	ex1 := tExpression{
 		entity:  "author",
 		matcher: "~",
@@ -57,6 +58,7 @@ func Test_tExpression_buildSQL(t *testing.T) {
 } // Test_tExpression_buildSQL()
 
 func TestTSearch_Clause(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	o0 := NewSearch(``)
 	o1 := NewSearch(`tags:"="`)
 	w1 := ` WHERE (b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "")))`
@@ -92,6 +94,7 @@ func TestTSearch_Clause(t *testing.T) {
 } // TestTSearch_Clause()
 
 func TestTSearch_p1(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	o1 := NewSearch(`tags:"=Golang"`)
 	w1 := &TSearch{
 		where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "Golang")))`,
@@ -150,6 +153,7 @@ func TestTSearch_p1(t *testing.T) {
 } // TestTSearch_p1()
 
 func TestTSearch_Parse(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	o1 := NewSearch(`tags:"="`)
 	w1 := &TSearch{where: `(b.id IN (SELECT bt.book FROM books_tags_link bt JOIN tags t ON(bt.tag = t.id) WHERE (t.name = "")))`}
 	o2 := NewSearch(`AUTHORS:"=Spiegel"`)
@@ -206,11 +210,7 @@ func TestTSearch_Parse(t *testing.T) {
 } // TestTSearch_Parse()
 
 func TestTSearch_String(t *testing.T) {
-	// type fields struct {
-	// 	raw   string
-	// 	where string
-	// 	next  string
-	// }
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	s1 := NewSearch("")
 	w1 := `raw: '' | where: '' | next: ''`
 	s2 := NewSearch("search term")

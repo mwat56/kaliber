@@ -4,7 +4,7 @@
               EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -420,11 +420,11 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 5558, 1000, false},
+		{" 0", args{o0}, 5559, 1000, false},
 		{" 1", args{o1}, 14, 14, false},
 		{" 2", args{o2}, 4618, 50, false},
 		{" 3", args{o3}, 42, 42, false},
-		{" 4", args{o4}, 389, 50, false},
+		{" 4", args{o4}, 390, 50, false},
 		{" 5", args{o5}, 447, 50, false},
 	}
 	for _, tt := range tests {
@@ -474,11 +474,11 @@ func TestQueryCustomColumns(t *testing.T) {
 
 func TestQuerySearch(t *testing.T) {
 	openDBforTesting()
-	qo1 := NewQueryOptions()
+	qo1 := NewQueryOptions(0)
 	qo1.Matching = `Golang`
-	qo2 := NewQueryOptions()
+	qo2 := NewQueryOptions(0)
 	qo2.Matching = `languages:"=eng"`
-	qo3 := NewQueryOptions()
+	qo3 := NewQueryOptions(0)
 	qo3.Matching = `languages:"=deu"`
 	type args struct {
 		aOption *TQueryOptions
@@ -493,7 +493,7 @@ func TestQuerySearch(t *testing.T) {
 		// TODO: Add test cases.
 		{" 1", args{qo1}, 35, 24, false},
 		{" 2", args{qo2}, 4618, 24, false},
-		{" 3", args{qo3}, 928, 24, false},
+		{" 3", args{qo3}, 929, 24, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

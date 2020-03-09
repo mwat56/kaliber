@@ -1,10 +1,12 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
+
+//lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
 	"reflect"
@@ -12,50 +14,50 @@ import (
 )
 
 func TestTQueryOptions_Scan(t *testing.T) {
-	o1 := NewQueryOptions()
+	o1 := NewQueryOptions(0)
 	s1 := `|3524|true|"authors"|0|0|25|0|""|100|2|0|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
 		Entity:      "authors",
-		GuiLang:     qoLangGerman,
-		Layout:      qoLayoutList,
+		GuiLang:     QoLangGerman,
+		Layout:      QoLayoutList,
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
 		QueryCount:  100,
 		SortBy:      qoSortByAuthor,
-		Theme:       qoThemeLight,
+		Theme:       QoThemeLight,
 	}
-	o2 := NewQueryOptions()
+	o2 := NewQueryOptions(0)
 	s2 := `|1|false|"lang"|1|1|50|0|""|200|3|1|`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
-		GuiLang:     qoLangEnglish,
-		Layout:      qoLayoutGrid,
+		GuiLang:     QoLangEnglish,
+		Layout:      QoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
 		QueryCount:  200,
 		SortBy:      qoSortByLanguage,
-		Theme:       qoThemeDark,
+		Theme:       QoThemeDark,
 	}
-	o3 := NewQueryOptions()
+	o3 := NewQueryOptions(0)
 	s3 := `|7607|true|"tags"|0|0|25|25|" "|6|1|0|"-"|`
 	w3 := &TQueryOptions{
 		ID:          7607,
 		Descending:  true,
 		Entity:      "tags",
-		GuiLang:     qoLangGerman,
-		Layout:      qoLayoutList,
+		GuiLang:     QoLangGerman,
+		Layout:      QoLayoutList,
 		LimitLength: 25,
 		LimitStart:  25,
 		Matching:    "",
 		QueryCount:  6,
 		SortBy:      qoSortByAcquisition,
-		Theme:       qoThemeLight,
+		Theme:       QoThemeLight,
 		VirtLib:     "",
 	}
 	type args struct {
@@ -137,28 +139,28 @@ func TestTQueryOptions_String(t *testing.T) {
 		ID:          3524,
 		Descending:  true,
 		Entity:      "authors",
-		GuiLang:     qoLangEnglish,
-		Layout:      qoLayoutList,
+		GuiLang:     QoLangEnglish,
+		Layout:      QoLayoutList,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
 		QueryCount:  100,
 		SortBy:      qoSortByAuthor,
-		Theme:       qoThemeDark,
+		Theme:       QoThemeDark,
 	}
 	w1 := `|3524|true|"authors"|1|0|50|0|""|100|2|1|""|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "lang",
-		GuiLang:     qoLangGerman,
-		Layout:      qoLayoutGrid,
+		GuiLang:     QoLangGerman,
+		Layout:      QoLayoutGrid,
 		LimitLength: 25,
 		LimitStart:  0,
 		Matching:    "",
 		QueryCount:  200,
 		SortBy:      qoSortByLanguage,
-		Theme:       qoThemeLight,
+		Theme:       QoThemeLight,
 	}
 	w2 := `|1|false|"lang"|0|1|25|0|""|200|3|0|""|`
 	tests := []struct {
@@ -181,7 +183,7 @@ func TestTQueryOptions_String(t *testing.T) {
 } // TestTQueryOptions_String()
 
 func TestTQueryOptions_SelectLimitOptions(t *testing.T) {
-	qo1 := NewQueryOptions()
+	qo1 := NewQueryOptions(0)
 	w1 := `<option value="9">9</option>\n<option SELECTED value="24">24</option>\n<option value="48">48</option>\n<option value="99">99</option>\n<option value="249">249</option>\n<option value="498">498</option>`
 	tests := []struct {
 		name   string

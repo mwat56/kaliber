@@ -4,14 +4,12 @@
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
-	"database/sql"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -20,16 +18,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3" // anonymous import
 )
 
 const (
-	// `quCalibreBaseQuery` is the default query to get document data.
+	// `dbCalibreBaseQuery` is the default query to get document data.
 	// By appending `WHERE` and `LIMIT` clauses the resultset gets stinted.
-	quCalibreBaseQuery = `SELECT b.id,
+	dbCalibreBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
 	FROM authors a
@@ -94,21 +89,27 @@ b.has_cover
 FROM books b `
 
 	// see `QueryBy()`, `QuerySearch()`
-	quCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
+	dbCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
 	// see `QueryCustomColumns()`
-	quCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
+	dbCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
 
 	// see `QueryIDs()`
-	quCalibreIDQuery = `SELECT id, path FROM books `
+	dbCalibreIDQuery = `SELECT id, path FROM books `
 
 	// see `QueryDoc()`
-	quCalibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
+	dbCalibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
 FROM data d WHERE d.book = b.id), "") formats,
 b.path,
 b.title
 FROM books b
 WHERE b.id = %d`
+)
+
+type (
+
+	// A comma separated value string
+	tPSVstring = string
 )
 
 var (
@@ -125,214 +126,9 @@ var (
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-const (
-	// Name of the `Calibre` database
-	quCalibreDatabaseFilename = `metadata.db`
-
-	// Calibre's metadata/preferences store
-	quCalibrePreferencesFile = `metadata_db_prefs_backup.json`
-)
-
-type (
-	tDataBase struct {
-		*sql.DB           // the embedded database connection
-		dbFileName string // the SQLite database file
-		doCheck    chan struct{}
-		wasCopied  chan struct{}
-	}
-
-	// A comma separated value string
-	tPSVstring = string
-)
-
-var (
-	// Pathname to the cached `Calibre` database
-	quCalibreCachePath = ``
-
-	// Pathname to the original `Calibre` database
-	quCalibreLibraryPath = ``
-
-	// The active `tDatabase` instance initialised by `DBopen()`.
-	quSqliteDB tDataBase
-
-	// Optional file to log all SQL queries.
-	quSQLTraceFile = ``
-)
-
-// CalibreCachePath returns the directory of the copied `Calibre` database.
-func CalibreCachePath() string {
-	return quCalibreCachePath
-} // CalibreCachePath()
-
-// CalibreLibraryPath returns the base directory of the `Calibre` library.
-func CalibreLibraryPath() string {
-	return quCalibreLibraryPath
-} // CalibreLibraryPath()
-
-// CalibrePreferencesFile returns the complete path-/filename of the
-// `Calibre` library's preferences file.
-func CalibrePreferencesFile() string {
-	return filepath.Join(quCalibreLibraryPath, quCalibrePreferencesFile)
-} // CalibrePreferencesFile()
-
-// SetCalibreCachePath sets the directory of the `Calibre` database copy.
-//
-//	`aPath` is the directory path to use for caching the Calibre library.
-func SetCalibreCachePath(aPath string) {
-	if path, err := filepath.Abs(aPath); nil == err {
-		aPath = path
-	}
-	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
-		quCalibreCachePath = aPath
-	} else if err := os.MkdirAll(aPath, os.ModeDir|0775); nil == err {
-		quCalibreCachePath = aPath
-	}
-} // SetCalibreCachePath()
-
-// SetCalibreLibraryPath sets the base directory of the `Calibre` library.
-//
-//	`aPath` is the directory path where the Calibre library resides.
-func SetCalibreLibraryPath(aPath string) string {
-	if path, err := filepath.Abs(aPath); nil == err {
-		aPath = path
-	}
-	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
-		quCalibreLibraryPath = aPath
-	} else {
-		quCalibreLibraryPath = ``
-	}
-
-	return quCalibreLibraryPath
-} // CalibreLibraryPath()
-
-/*
-// CalibreDatabaseFile returns the complete path-/filename of the `Calibre` library.
-func CalibreDatabaseFile() string {
-	return filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
-} // CalibreDatabaseFile()
-*/
-
-// SQLtraceFile returns the optional file used for logging all SQL queries.
-func SQLtraceFile() string {
-	return quSQLTraceFile
-} // SQLtraceFile()
-
-// SetSQLtraceFile sets the filename to use for logging SQL queries.
-//
-// If the provided `aFilename` is empty the SQL logging gets disabled.
-//
-//	`aFilename` the tracefile to use; if empty tracing is disabled.
-func SetSQLtraceFile(aFilename string) {
-	if 0 < len(aFilename) {
-		var doOnce sync.Once
-		doOnce.Do(func() {
-			if path, err := filepath.Abs(aFilename); nil == err {
-				quSQLTraceFile = path
-				// start the background writer:
-				go goWriteSQLtrace(quSQLTraceFile, quSQLTraceChannel)
-			}
-		})
-
-		return
-	}
-
-	quSQLTraceFile = ``
-} // SetSQLtraceFile()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// `dbReopen()` checks whether the SQLite database file has changed since
-// the last access. If so, the current database connection is closed and
-// a new one is established.
-func (db *tDataBase) dbReopen() error {
-	select {
-	case _, more := <-db.wasCopied:
-		if nil != db.DB {
-			_ = db.DB.Close()
-		}
-		var err error
-		if !more {
-			return err // channel closed
-		}
-		// `cache=shared` is essential to avoid running out of file
-		// handles since each query seems to hold its own file handle.
-		// `loc=auto` gets time.Time with current locale.
-		// `mode=ro` is self-explanatory since we don't change the
-		// DB in any way.
-		dsn := `file:` + db.dbFileName + `?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-		if db.DB, err = sql.Open(`sqlite3`, dsn); nil != err {
-			return err
-		}
-		go goSQLtrace(`-- reOpened `+dsn, time.Now())
-		return db.DB.Ping()
-
-	default:
-		return nil
-	}
-} // dbReopen()
-
-// Query executes a query that returns rows, typically a SELECT.
-// The `args` are for any placeholder parameters in the query.
-func (db *tDataBase) Query(aQuery string, args ...interface{}) (*sql.Rows, error) {
-	if err := db.dbReopen(); nil != err {
-		return nil, err
-	}
-	go goSQLtrace(aQuery, time.Now())
-
-	rows, err := db.DB.Query(aQuery, args...)
-	db.doCheck <- struct{}{}
-
-	return rows, err
-} // Query()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// `copyDatabaseFile()` copies Calibre's database file to our cache directory.
-func copyDatabaseFile() (bool, error) {
-	sName := filepath.Join(quCalibreLibraryPath, quCalibreDatabaseFilename)
-	dName := filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
-	var (
-		err          error
-		sFile, tFile *os.File
-		sFI, dFI     os.FileInfo
-	)
-	defer func() {
-		if nil != sFile {
-			_ = sFile.Close()
-		}
-		if nil != tFile {
-			_ = tFile.Close()
-		}
-	}()
-	if sFI, err = os.Stat(sName); nil != err {
-		return false, err
-	}
-	if dFI, err = os.Stat(dName); nil == err {
-		if sFI.ModTime().Before(dFI.ModTime()) {
-			return false, nil
-		}
-	}
-
-	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
-		return false, err
-	}
-
-	tName := dName + `~`
-	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
-		return false, err
-	}
-
-	if _, err = io.Copy(tFile, sFile); nil != err {
-		return false, err
-	}
-	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
-
-	return true, os.Rename(tName, dName)
-} // copyDatabaseFile()
-
 // `doQueryAll()` returns a list of documents with all available fields.
 func doQueryAll(aQuery string) (*TDocList, error) {
-	rows, err := quSqliteDB.Query(aQuery)
+	rows, err := dbSqliteDB.Query(aQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -343,7 +139,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 		var (
 			authors, formats, identifiers, languages,
 			publisher, series, tags tPSVstring
-			notime  time.Time
+			noTime  time.Time
 			visible bool
 		)
 		doc := NewDocument()
@@ -380,7 +176,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			doc.path = ``
 		}
 		if visible, _ = BookFieldVisible(`pubdate`); !visible {
-			doc.pubdate = notime
+			doc.pubdate = noTime
 		}
 		if visible, _ = BookFieldVisible(`publisher`); visible {
 			doc.publisher = prepPublisher(publisher)
@@ -395,7 +191,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			doc.tags = prepTags(tags)
 		}
 		if visible, _ = BookFieldVisible(`timestamp`); !visible {
-			doc.timestamp = notime
+			doc.timestamp = noTime
 		}
 		if visible, _ = BookFieldVisible(`title`); !visible {
 			visible, _ = BookFieldVisible(`sort`)
@@ -478,12 +274,12 @@ func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 
 const (
 	// Half a second to sleep in `goWrite()`.
-	quHalfSecond = 500 * time.Millisecond
+	dbHalfSecond = 500 * time.Millisecond
 )
 
 var (
-	// The channel to send SQL to and read messages from
-	quSQLTraceChannel = make(chan string, 64)
+	// The channel to send SQL to and read trace messages from
+	dbSQLTraceChannel = make(chan string, 64)
 )
 
 // `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
@@ -491,13 +287,13 @@ var (
 //	`aQuery` The SQL query to log.
 //	`aTime` The time at which the query was run.
 func goSQLtrace(aQuery string, aTime time.Time) {
-	if 0 == len(quSQLTraceFile) {
+	if 0 == len(dbSQLTraceFile) {
 		return
 	}
 	aQuery = strings.ReplaceAll(aQuery, "\t", ` `)
 	aQuery = strings.ReplaceAll(aQuery, "\n", ` `)
 
-	quSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
+	dbSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
 		strings.ReplaceAll(aQuery, `  `, ` `)
 } // goSQLtrace()
 
@@ -522,13 +318,13 @@ func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
 	}()
 
 	// let the application initialise:
-	time.Sleep(quHalfSecond)
+	time.Sleep(dbHalfSecond)
 
 	for { // wait for strings to write
 		select {
 		case txt, more = <-aSource:
 			if !more { // channel closed
-				log.Println(`queries.goWrite(): message channel closed`)
+				log.Println(`queries.goWriteSQLtrace(): message channel closed`)
 				return
 			}
 			if nil == file {
@@ -552,7 +348,7 @@ func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
 
 		default:
 			if nil == file {
-				time.Sleep(quHalfSecond)
+				time.Sleep(dbHalfSecond)
 			} else {
 				if os.Stderr != file {
 					_ = file.Close()
@@ -581,21 +377,21 @@ func limit(aStart, aLength uint) string {
 
 // OpenDatabase establishes a new database connection.
 func OpenDatabase() error {
-	quSqliteDB.dbFileName = filepath.Join(quCalibreCachePath, quCalibreDatabaseFilename)
-	quSqliteDB.doCheck = make(chan struct{}, 64)
-	quSqliteDB.wasCopied = make(chan struct{}, 1)
+	dbSqliteDB.dbFileName = filepath.Join(dbCalibreCachePath, quCalibreDatabaseFilename)
+	dbSqliteDB.doCheck = make(chan struct{}, 64)
+	dbSqliteDB.wasCopied = make(chan struct{}, 1)
 
 	// prepare the local database copy:
 	if _, err := copyDatabaseFile(); nil != err {
 		return err
 	}
 	// signal for `dbReopen()`:
-	quSqliteDB.wasCopied <- struct{}{}
+	dbSqliteDB.wasCopied <- struct{}{}
 
 	// start monitoring the original database file:
-	go goCheckFile(quSqliteDB.doCheck, quSqliteDB.wasCopied)
+	go goCheckFile(dbSqliteDB.doCheck, dbSqliteDB.wasCopied)
 
-	return quSqliteDB.dbReopen()
+	return dbSqliteDB.dbReopen()
 } // OpenDatabase()
 
 // `orderBy()` returns a ORDER_BY clause defined by `aOrder` and `aDesc`.
@@ -770,7 +566,7 @@ var (
 //
 //	`aPath` is the directory/path of the document's data.
 func prepPages(aPath string) int {
-	fName := filepath.Join(quCalibreLibraryPath, aPath, `metadata.opf`)
+	fName := filepath.Join(dbCalibreLibraryPath, aPath, `metadata.opf`)
 	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
 		return 0
 	}
@@ -868,7 +664,7 @@ func prepTags(aTag tPSVstring) *tTagList {
 //
 //	`aOptions` The options to configure the query.
 func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := quSqliteDB.Query(quCalibreCountQuery +
+	if rows, err := dbSqliteDB.Query(dbCalibreCountQuery +
 		having(aOptions.Entity, aOptions.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
@@ -876,7 +672,7 @@ func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) 
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(quCalibreBaseQuery +
+		rList, rErr = doQueryAll(dbCalibreBaseQuery +
 			having(aOptions.Entity, aOptions.ID) +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))
@@ -898,7 +694,7 @@ type (
 
 // QueryCustomColumns returns data about user-defined columns in `Calibre`.
 func QueryCustomColumns() (*TCustomColumnList, error) {
-	rows, err := quSqliteDB.Query(quCalibreCustomColumnsQuery)
+	rows, err := dbSqliteDB.Query(dbCalibreCustomColumnsQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -922,7 +718,7 @@ func QueryCustomColumns() (*TCustomColumnList, error) {
 //
 //	`aID` The document ID to lookup.
 func QueryDocMini(aID TID) *TDocument {
-	rows, err := quSqliteDB.Query(fmt.Sprintf(quCalibreMiniQuery, aID))
+	rows, err := dbSqliteDB.Query(fmt.Sprintf(dbCalibreMiniQuery, aID))
 	if nil != err {
 		return nil
 	}
@@ -945,7 +741,7 @@ func QueryDocMini(aID TID) *TDocument {
 //
 //	`aID` The document ID to lookup.
 func QueryDocument(aID TID) *TDocument {
-	list, _ := doQueryAll(quCalibreBaseQuery +
+	list, _ := doQueryAll(dbCalibreBaseQuery +
 		`WHERE b.id=` + strconv.FormatInt(int64(aID), 10) + ` `)
 	if 0 < len(*list) {
 		doc := (*list)[0]
@@ -961,7 +757,7 @@ func QueryDocument(aID TID) *TDocument {
 //
 // This function is used by `thumbnails`.
 func QueryIDs() (*TDocList, error) {
-	rows, err := quSqliteDB.Query(quCalibreIDQuery)
+	rows, err := dbSqliteDB.Query(dbCalibreIDQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -986,14 +782,14 @@ func QueryIDs() (*TDocList, error) {
 //	`aOptions` The options to configure the query.
 func QuerySearch(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	where := NewSearch(aOptions.Matching)
-	if rows, err := quSqliteDB.Query(quCalibreCountQuery + where.Clause()); nil == err {
+	if rows, err := dbSqliteDB.Query(dbCalibreCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(quCalibreBaseQuery +
+		rList, rErr = doQueryAll(dbCalibreBaseQuery +
 			where.Clause() +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))

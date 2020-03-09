@@ -1,10 +1,10 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -75,24 +75,24 @@ func mdReadMetadataFile() error {
 	}
 	defer srcFile.Close()
 
-	var jsdata map[string]interface{}
+	var jsData map[string]interface{}
 	dec := json.NewDecoder(srcFile)
-	if err := dec.Decode(&jsdata); err != nil {
+	if err := dec.Decode(&jsData); err != nil {
 		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
 		return errors.New(msg)
 	}
 
 	// remove unneeded list entries:
-	delete(jsdata, `column_icon_rules`)
-	delete(jsdata, `cover_grid_icon_rules`)
-	delete(jsdata, `gui_view_history`)
-	delete(jsdata, `namespaced:CountPagesPlugin:settings`)
-	delete(jsdata, `namespaced:FindDuplicatesPlugin:settings`)
-	delete(jsdata, `news_to_be_synced`)
-	delete(jsdata, `saved_searches`)
-	delete(jsdata, `update_all_last_mod_dates_on_start`)
-	delete(jsdata, `user_categories`)
-	mdMetadataDbPrefs = &jsdata
+	delete(jsData, `column_icon_rules`)
+	delete(jsData, `cover_grid_icon_rules`)
+	delete(jsData, `gui_view_history`)
+	delete(jsData, `namespaced:CountPagesPlugin:settings`)
+	delete(jsData, `namespaced:FindDuplicatesPlugin:settings`)
+	delete(jsData, `news_to_be_synced`)
+	delete(jsData, `saved_searches`)
+	delete(jsData, `update_all_last_mod_dates_on_start`)
+	delete(jsData, `user_categories`)
+	mdMetadataDbPrefs = &jsData
 
 	return nil
 } // mdReadMetadataFile()

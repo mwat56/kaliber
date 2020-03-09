@@ -1,10 +1,10 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -37,20 +37,20 @@ const (
 
 // Definition of the GUI language to use
 const (
-	qoLangGerman  = uint8(0)
-	qoLangEnglish = uint8(1)
+	QoLangGerman  = uint8(0)
+	QoLangEnglish = uint8(1)
 )
 
 // Definition of the layout type
 const (
-	qoLayoutList = uint8(0)
-	qoLayoutGrid = uint8(1)
+	QoLayoutList = uint8(0)
+	QoLayoutGrid = uint8(1)
 )
 
 // Definition of the CSS theme to use
 const (
-	qoThemeLight = uint8(0)
-	qoThemeDark  = uint8(1)
+	QoThemeLight = uint8(0)
+	QoThemeDark  = uint8(1)
 )
 
 type (
@@ -132,10 +132,10 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 func (qo *TQueryOptions) SelectLanguageOptions() *TStringMap {
 	result := make(TStringMap, 2)
 	switch qo.GuiLang {
-	case qoLangEnglish:
+	case QoLangEnglish:
 		result["de"] = `<option value="de">`
 		result["en"] = `<option SELECTED value="en">`
-	case qoLangGerman:
+	case QoLangGerman:
 		fallthrough
 	default:
 		result["de"] = `<option SELECTED value="de">`
@@ -148,7 +148,7 @@ func (qo *TQueryOptions) SelectLanguageOptions() *TStringMap {
 // SelectLayoutOptions returns a list of SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectLayoutOptions() *TStringMap {
 	result := make(TStringMap, 2)
-	if qoLayoutList == qo.Layout {
+	if QoLayoutList == qo.Layout {
 		result["list"] = `<option SELECTED value="list">`
 		result["grid"] = `<option value="grid">`
 	} else {
@@ -228,10 +228,10 @@ func (qo *TQueryOptions) String() string {
 func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 	result := make(TStringMap, 2)
 	switch qo.Theme {
-	case qoThemeLight:
+	case QoThemeLight:
 		result["light"] = `<option SELECTED value="light">`
 		result["dark"] = `<option value="dark">`
-	case qoThemeDark:
+	case QoThemeDark:
 		result["light"] = `<option value="light">`
 		result["dark"] = `<option SELECTED value="dark">`
 	}
@@ -251,29 +251,29 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	if lang := aRequest.FormValue("guilang"); 0 < len(lang) {
 		var l uint8 // defaults to `0` == `qoLangGerman`
 		if "en" == lang {
-			l = qoLangEnglish
+			l = QoLangEnglish
 		}
 		qo.GuiLang = l
 	} else {
-		qo.GuiLang = qoLangGerman
+		qo.GuiLang = QoLangGerman
 	}
 
 	if lt := aRequest.FormValue("layout"); 0 < len(lt) {
 		var l uint8 // default to `0` == `qoLayoutList`
 		if "grid" == lt {
-			l = qoLayoutGrid
+			l = QoLayoutGrid
 		}
 		qo.Layout = l
 	} else {
-		qo.Layout = qoLayoutList
+		qo.Layout = QoLayoutList
 	}
 
 	if fll := aRequest.FormValue("limitlength"); 0 < len(fll) {
 		if ll, err := strconv.Atoi(fll); nil == err {
-			limlen := uint(ll)
-			if limlen != qo.LimitLength {
+			limLen := uint(ll)
+			if limLen != qo.LimitLength {
 				qo.DecLimit()
-				qo.LimitLength = limlen
+				qo.LimitLength = limLen
 			}
 		}
 	}
@@ -331,11 +331,11 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	if theme := aRequest.FormValue("theme"); 0 < len(theme) {
 		var t uint8 // defaults to `0` == `qoThemeLight`
 		if "dark" == theme {
-			t = qoThemeDark
+			t = QoThemeDark
 		}
 		qo.Theme = t
 	} else {
-		qo.Theme = qoThemeLight
+		qo.Theme = QoThemeLight
 	}
 
 	if vl := aRequest.FormValue("virtlib"); 0 < len(vl) {
@@ -364,16 +364,14 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // NewQueryOptions returns a new `TQueryOptions` instance.
-func NewQueryOptions() *TQueryOptions {
+func NewQueryOptions(aDocsPerPage int) *TQueryOptions {
 	result := TQueryOptions{
 		Descending:  true,
 		LimitLength: 24,
 		SortBy:      qoSortByAcquisition,
 	}
-	if s, _ := AppArguments.Get("booksPerPage"); 0 < len(s) {
-		if _, err := fmt.Sscanf(s, "%d", &result.LimitLength); nil != err {
-			result.LimitLength = 24
-		}
+	if 0 < aDocsPerPage {
+		result.LimitLength = uint(aDocsPerPage)
 	}
 
 	return &result

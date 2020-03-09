@@ -1,10 +1,10 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
               All rights reserved
           EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -103,11 +103,11 @@ func (exp *tExpression) buildSQL() (rWhere string) {
 		if isCategory, err := MetaFieldValue(field, "is_category"); (nil != err) || (true != isCategory) {
 			return
 		}
-		itable, err := MetaFieldValue(field, "table")
+		iTable, err := MetaFieldValue(field, "table")
 		if nil != err {
 			return
 		}
-		table, ok := itable.(string)
+		table, ok := iTable.(string)
 		if !ok {
 			return
 		}
@@ -174,7 +174,7 @@ var (
 	// RegEx to find a search expression
 	soSearchExpressionRE = regexp.MustCompile(
 		`(?i)((!?)(#?\w+):)"([=~]?)([^"]*)"(\s*(AND|OR))?`)
-	//       12   3       4      5       6   7
+	//       12222333333311 44444445555555 6666777777776
 
 	soSearchRemainderRE = regexp.MustCompile(
 		`\s*(!?)\s*([\w ]+)`)

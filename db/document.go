@@ -4,7 +4,7 @@
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -20,7 +20,7 @@ import (
 
 /*
 * This file provides methods to handle a single document.
-*/
+ */
 
 type (
 	// TID is the database index type (i.e. `int`).
@@ -139,7 +139,7 @@ func (doc *TDocument) Cover() string {
 	return fmt.Sprintf("/cover/%d/cover.gif", doc.ID)
 } // Cover()
 
-// `coverAbs()` returns the path/filename of the document's cover image.
+// CoverAbs returns the path/filename of the document's cover image.
 //
 // If `aRelative` is `true` the function result is the path/filename
 // relative to `CalibreLibraryPath()`, otherwise it's the document
@@ -147,7 +147,7 @@ func (doc *TDocument) Cover() string {
 //
 //	`aRelative` Flag indicating a complete or relative path/filename
 // of he document's cover is requested.
-func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
+func (doc *TDocument) CoverAbs(aRelative bool) (string, error) {
 	dir := filepath.Join(CalibreLibraryPath(), doc.path)
 	if 0 <= strings.Index(dir, `[`) {
 		// make sure to escape the meta-character
@@ -168,11 +168,11 @@ func (doc *TDocument) coverAbs(aRelative bool) (string, error) {
 	}
 
 	return dir, nil
-} // coverAbs()
+} // CoverAbs()
 
 // CoverFile returns the complete path/filename of the document's cover file.
 func (doc *TDocument) CoverFile() (string, error) {
-	return doc.coverAbs(false)
+	return doc.CoverAbs(false)
 } // CoverFile()
 
 // DocLink returns a link to this document's page.
@@ -381,6 +381,13 @@ func (doc *TDocument) SeriesIndex() string {
 
 	return result
 } // SeriesIndex()
+
+// SetPath sets the document's file/path.
+func (doc *TDocument) SetPath(aPath string) {
+	if p := strings.TrimSpace(aPath); 0 < len(p) {
+		doc.path = p
+	}
+} // SetPath()
 
 // Tags returns a list of ID/Name/URL tag fields.
 func (doc *TDocument) Tags() *TEntityList {

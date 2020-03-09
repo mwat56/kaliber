@@ -1,10 +1,10 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -64,8 +64,8 @@ func TestTDocument_coverAbs(t *testing.T) {
 		path: "John Scalzi/Zoe's Tale (6730)",
 	}
 	w2 := d2.path + "/cover.jpg"
-	w3 := filepath.Join(quCalibreLibraryPath, w1)
-	w4 := filepath.Join(quCalibreLibraryPath, w2)
+	w3 := filepath.Join(dbCalibreLibraryPath, w1)
+	w4 := filepath.Join(dbCalibreLibraryPath, w2)
 	d5 := TDocument{
 		ID:   4793,
 		path: "Gail Carriger/Soulless [1] (4793)",
@@ -74,7 +74,7 @@ func TestTDocument_coverAbs(t *testing.T) {
 	type args struct {
 		aRelative bool
 	}
-	w6 := filepath.Join(quCalibreLibraryPath, w5)
+	w6 := filepath.Join(dbCalibreLibraryPath, w5)
 	tests := []struct {
 		name    string
 		fields  TDocument
@@ -93,7 +93,7 @@ func TestTDocument_coverAbs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			doc := &tt.fields
-			got, err := doc.coverAbs(tt.args.aRelative)
+			got, err := doc.CoverAbs(tt.args.aRelative)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TDocument.coverAbs() error = %v, wantErr %v", err, tt.wantErr)
 				return

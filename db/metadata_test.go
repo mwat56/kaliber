@@ -1,10 +1,10 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
 
-package kaliber
+package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
@@ -14,6 +14,7 @@ import (
 )
 
 func Test_BookFieldVisible(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	type args struct {
 		aFieldname string
 	}
@@ -43,6 +44,7 @@ func Test_BookFieldVisible(t *testing.T) {
 } // Test_BookFieldVisible()
 
 func Test_GetMetaFieldValue(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	type args struct {
 		aField string
 		aKey   string
@@ -155,6 +157,7 @@ func Test_mdGetFieldData(t *testing.T) {
 } // Test_mdGetFieldData()
 
 func Test_mdReadBookDisplayFields(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -196,6 +199,7 @@ func Test_mdReadFieldMetadata(t *testing.T) {
 } // Test_mdReadFieldMetadata()
 
 func Test_mdReadHiddenVirtualLibraries(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
 	tests := []struct {
 		name    string
 		wantErr bool
