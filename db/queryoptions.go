@@ -91,7 +91,7 @@ const (
 	//                   + ID
 )
 
-// DecLimit decrements the LIMIT values.
+// DecLimit decrements the LIMIT-start value.
 func (qo *TQueryOptions) DecLimit() *TQueryOptions {
 	if 0 < qo.LimitStart {
 		if qo.LimitStart <= qo.LimitLength {
@@ -112,6 +112,8 @@ func (qo *TQueryOptions) IncLimit() *TQueryOptions {
 } // IncLimit()
 
 // Scan returns the options read from `aString`.
+//
+//	`aString` The value string to scan.
 func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	var m, v string
 	_, _ = fmt.Sscanf(aString, qoStringPattern,

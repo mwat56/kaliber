@@ -181,15 +181,16 @@ var (
 	//      1      2
 )
 
+// `p1` returns the parsed search term(s).
 func (so *TSearch) p1() *TSearch {
 	op, p, s, w := "", 0, "", strings.TrimSpace(so.raw)
 	for matches := soSearchExpressionRE.FindStringSubmatch(w); 7 < len(matches); matches = soSearchExpressionRE.FindStringSubmatch(w) {
 		if 0 == len(matches[4]) {
-			matches[4] = `=` // default to exact match
+			matches[4] = `=` // defaults to exact match
 		}
 		exp := &tExpression{
 			entity:  strings.ToLower(matches[3]),
-			not:     ("!" == matches[2]),
+			not:     (`!` == matches[2]),
 			matcher: matches[4],
 			op:      strings.ToUpper(matches[7]),
 			term:    matches[5],
@@ -206,7 +207,7 @@ func (so *TSearch) p1() *TSearch {
 		matches := soSearchRemainderRE.FindStringSubmatch(w[p:])
 		if 2 < len(matches) {
 			exp := &tExpression{
-				not:  ("!" == matches[1]),
+				not:  (`!` == matches[1]),
 				term: matches[2],
 			}
 			if 0 == len(op) {
@@ -217,7 +218,7 @@ func (so *TSearch) p1() *TSearch {
 			w = strings.Replace(w, matches[0], s, 1)
 		}
 	}
-	so.next, so.raw, so.where = "", "", w
+	so.next, so.raw, so.where = ``, ``, w
 
 	return so
 } // p1()
@@ -230,6 +231,7 @@ func (so *TSearch) Parse() *TSearch {
 		return so
 	}
 	if soSearchExpressionRE.MatchString(so.raw) {
+		// This is moved to a separate method for easier testing.
 		return so.p1()
 	}
 
