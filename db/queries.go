@@ -11,7 +11,6 @@ package db
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,9 +21,9 @@ import (
 )
 
 const (
-	// `dbCalibreBaseQuery` is the default query to get document data.
+	// `quCalibreBaseQuery` is the default query to get document data.
 	// By appending `WHERE` and `LIMIT` clauses the resultset gets stinted.
-	dbCalibreBaseQuery = `SELECT b.id,
+	quCalibreBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
 	FROM authors a
@@ -89,16 +88,16 @@ b.has_cover
 FROM books b `
 
 	// see `QueryBy()`, `QuerySearch()`
-	dbCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
+	quCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
 
 	// see `QueryCustomColumns()`
-	dbCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
+	quCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
 
 	// see `QueryIDs()`
-	dbCalibreIDQuery = `SELECT id, path FROM books `
+	quCalibreIDQuery = `SELECT id, path FROM books `
 
 	// see `QueryDoc()`
-	dbCalibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
+	quCalibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
 FROM data d WHERE d.book = b.id), "") formats,
 b.path,
 b.title
@@ -107,8 +106,7 @@ WHERE b.id = %d`
 )
 
 type (
-
-	// A comma separated value string
+	// A pipe separated value string
 	tPSVstring = string
 )
 
@@ -126,7 +124,10 @@ var (
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// `doQueryAll()` returns a list of documents with all available fields.
+// `doQueryAll()` returns a list of documents with all available fields
+// and an `error` in case of problems.
+//
+//	`aQuery` The SQL query to run.
 func doQueryAll(aQuery string) (*TDocList, error) {
 	rows, err := dbSqliteDB.Query(aQuery)
 	if nil != err {
@@ -241,9 +242,9 @@ func escapeQuery(aSource string) string {
 		}
 
 		if escape {
+			escape = false
 			result[j] = '\\'
 			result[j+1] = character
-			escape = false
 			j += 2
 		} else {
 			result[j] = character
@@ -254,112 +255,8 @@ func escapeQuery(aSource string) string {
 	return string(result[0:j])
 } // escapeQuery()
 
-// `goCheckFile()` checks in background whether the original database
-// file has changed. If so, that file is copied to the cache directory
-// from where it is read and used by the `quSQLiteDB` instance.
-func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
-	//lint:ignore S1000 – we only need the separate `more` field
-	for {
-		select {
-		case _, more := <-aCheck:
-			if !more {
-				return // channel closed
-			}
-			if copied, err := copyDatabaseFile(); copied && (nil == err) {
-				aCopied <- struct{}{}
-			}
-		}
-	}
-} // goCheckFile()
-
-const (
-	// Half a second to sleep in `goWrite()`.
-	dbHalfSecond = 500 * time.Millisecond
-)
-
-var (
-	// The channel to send SQL to and read trace messages from
-	dbSQLTraceChannel = make(chan string, 64)
-)
-
-// `goSQLtrace()` runs in background to log `aQuery` (if a tracefile is set).
-//
-//	`aQuery` The SQL query to log.
-//	`aTime` The time at which the query was run.
-func goSQLtrace(aQuery string, aTime time.Time) {
-	if 0 == len(dbSQLTraceFile) {
-		return
-	}
-	aQuery = strings.ReplaceAll(aQuery, "\t", ` `)
-	aQuery = strings.ReplaceAll(aQuery, "\n", ` `)
-
-	dbSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
-		strings.ReplaceAll(aQuery, `  `, ` `)
-} // goSQLtrace()
-
-// `goWriteSQLtrace()` performs the actual file writes.
-//
-// This function is called only once, handling all write requests
-// in background.
-//
-//	`aTraceLog` The name of the logfile to write to.
-//	`aSource` The source of the log messages to write.
-func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
-	var (
-		err  error
-		file *os.File
-		more bool
-		txt  string
-	)
-	defer func() {
-		if (nil != file) && (os.Stderr != file) {
-			_ = file.Close()
-		}
-	}()
-
-	// let the application initialise:
-	time.Sleep(dbHalfSecond)
-
-	for { // wait for strings to write
-		select {
-		case txt, more = <-aSource:
-			if !more { // channel closed
-				log.Println(`queries.goWriteSQLtrace(): message channel closed`)
-				return
-			}
-			if nil == file {
-				if file, err = os.OpenFile(aTraceLog,
-					os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640); /* #nosec G302 */ nil != err {
-					file = os.Stderr // a last resort
-				}
-			}
-			fmt.Fprintln(file, txt)
-			/*
-				// let's handle waiting messages
-				cCap := cap(aSource)
-				for txt = range aSource {
-					fmt.Fprintln(file, txt)
-					cCap--
-					if 0 == cCap {
-						break // give a chance to close the file
-					}
-				}
-			*/
-
-		default:
-			if nil == file {
-				time.Sleep(dbHalfSecond)
-			} else {
-				if os.Stderr != file {
-					_ = file.Close()
-				}
-				file = nil
-			}
-		}
-	}
-} // goWriteSQLtrace()
-
-// `having()` returns a string limiting the query to the given `aID`.
+// `having()` returns a string limiting the query to the given `aEntity`
+// with `aID`.
 func having(aEntity string, aID TID) string {
 	if (0 == len(aEntity)) || (`all` == aEntity) || (0 == aID) {
 		return ``
@@ -372,27 +269,7 @@ func having(aEntity string, aID TID) string {
 func limit(aStart, aLength uint) string {
 	return `LIMIT ` + strconv.FormatInt(int64(aStart), 10) +
 		`,` + strconv.FormatInt(int64(aLength), 10)
-	// return fmt.Sprintf(`LIMIT %d, %d `, aStart, aLength)
 } // limit()
-
-// OpenDatabase establishes a new database connection.
-func OpenDatabase() error {
-	dbSqliteDB.dbFileName = filepath.Join(dbCalibreCachePath, quCalibreDatabaseFilename)
-	dbSqliteDB.doCheck = make(chan struct{}, 64)
-	dbSqliteDB.wasCopied = make(chan struct{}, 1)
-
-	// prepare the local database copy:
-	if _, err := copyDatabaseFile(); nil != err {
-		return err
-	}
-	// signal for `dbReopen()`:
-	dbSqliteDB.wasCopied <- struct{}{}
-
-	// start monitoring the original database file:
-	go goCheckFile(dbSqliteDB.doCheck, dbSqliteDB.wasCopied)
-
-	return dbSqliteDB.dbReopen()
-} // OpenDatabase()
 
 // `orderBy()` returns a ORDER_BY clause defined by `aOrder` and `aDesc`.
 //
@@ -446,7 +323,7 @@ func orderBy(aOrder TSortType, aDescending bool) string {
 
 // `prepAuthors()` returns a sorted list of document authors.
 //
-//	`aAuthor`
+//	`aAuthor` The document's author(s).
 func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 	list := strings.Split(aAuthor, `, `)
 	result := make(tAuthorList, 0, len(list))
@@ -473,7 +350,7 @@ func prepAuthors(aAuthor tPSVstring) *tAuthorList {
 
 // `prepFormats()` returns a sorted list of document formats.
 //
-//	`aFormat`
+//	`aFormat` The document format(s) available.
 func prepFormats(aFormat tPSVstring) *tFormatList {
 	list := strings.Split(aFormat, `, `)
 	result := make(tFormatList, 0, len(list))
@@ -500,7 +377,7 @@ func prepFormats(aFormat tPSVstring) *tFormatList {
 
 // `prepIdentifiers()` returns a sorted list of document identifiers.
 //
-//	`aIdentifier`
+//	`aIdentifier` The document's identifier(s).
 func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 	list := strings.Split(aIdentifier, `, `)
 	result := make(tIdentifierList, 0, len(list))
@@ -528,7 +405,7 @@ func prepIdentifiers(aIdentifier tPSVstring) *tIdentifierList {
 
 // `prepLanguages()` returns a document's languages.
 //
-//	`aLanguage`
+//	`aLanguage` The document's language(s).
 func prepLanguages(aLanguage tPSVstring) *tLanguageList {
 	list := strings.Split(aLanguage, `, `)
 	result := make(tLanguageList, 0, len(list))
@@ -564,7 +441,7 @@ var (
 // plugin is installed with `Calibre` _and_ it uses internally a data
 // field called `#pages` stored in the document's metadata file.
 //
-//	`aPath` is the directory/path of the document's data.
+//	`aPath` The relative directory/path of the document's data.
 func prepPages(aPath string) int {
 	fName := filepath.Join(dbCalibreLibraryPath, aPath, `metadata.opf`)
 	if fi, err := os.Stat(fName); (nil != err) || (0 >= fi.Size()) {
@@ -589,7 +466,7 @@ func prepPages(aPath string) int {
 
 // `prepPublisher()` returns a document's publisher.
 //
-//	`aPublisher`
+//	`aPublisher` The document's publisher(s).
 func prepPublisher(aPublisher tPSVstring) *tPublisher {
 	list := strings.Split(aPublisher, `, `)
 	for _, val := range list {
@@ -610,7 +487,7 @@ func prepPublisher(aPublisher tPSVstring) *tPublisher {
 
 // `prepSeries()` returns a document's series.
 //
-//	`aSeries`
+//	`aSeries` The document's series.
 func prepSeries(aSeries tPSVstring) *tSeries {
 	list := strings.Split(aSeries, `, `)
 	for _, val := range list {
@@ -631,7 +508,7 @@ func prepSeries(aSeries tPSVstring) *tSeries {
 
 // `prepTags()` returns a sorted list of document tags.
 //
-//	`aTag`
+//	`aTag` The document's tag(s).
 func prepTags(aTag tPSVstring) *tTagList {
 	list := strings.Split(aTag, `, `)
 	result := make(tTagList, 0, len(list))
@@ -664,7 +541,7 @@ func prepTags(aTag tPSVstring) *tTagList {
 //
 //	`aOptions` The options to configure the query.
 func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := dbSqliteDB.Query(dbCalibreCountQuery +
+	if rows, err := dbSqliteDB.Query(quCalibreCountQuery +
 		having(aOptions.Entity, aOptions.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
@@ -672,7 +549,7 @@ func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) 
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(dbCalibreBaseQuery +
+		rList, rErr = doQueryAll(quCalibreBaseQuery +
 			having(aOptions.Entity, aOptions.ID) +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))
@@ -694,7 +571,7 @@ type (
 
 // QueryCustomColumns returns data about user-defined columns in `Calibre`.
 func QueryCustomColumns() (*TCustomColumnList, error) {
-	rows, err := dbSqliteDB.Query(dbCalibreCustomColumnsQuery)
+	rows, err := dbSqliteDB.Query(quCalibreCustomColumnsQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -713,12 +590,15 @@ func QueryCustomColumns() (*TCustomColumnList, error) {
 
 // QueryDocMini returns the document identified by `aID`.
 //
-// This function fills only the document fields `ID`, `formats`,
+// This function fills only the document properties `ID`, `formats`,
 // `path`, and `Title`.
 //
 //	`aID` The document ID to lookup.
 func QueryDocMini(aID TID) *TDocument {
-	rows, err := dbSqliteDB.Query(fmt.Sprintf(dbCalibreMiniQuery, aID))
+
+	//TODO: add `error` return value
+
+	rows, err := dbSqliteDB.Query(fmt.Sprintf(quCalibreMiniQuery, aID))
 	if nil != err {
 		return nil
 	}
@@ -734,6 +614,8 @@ func QueryDocMini(aID TID) *TDocument {
 		return doc
 	}
 
+	//TODO: set `error` return value
+
 	return nil
 } // QueryDocMini()
 
@@ -741,13 +623,18 @@ func QueryDocMini(aID TID) *TDocument {
 //
 //	`aID` The document ID to lookup.
 func QueryDocument(aID TID) *TDocument {
-	list, _ := doQueryAll(dbCalibreBaseQuery +
+
+	//TODO: add `error` return value
+
+	list, _ := doQueryAll(quCalibreBaseQuery +
 		`WHERE b.id=` + strconv.FormatInt(int64(aID), 10) + ` `)
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
 		return &doc
 	}
+
+	//TODO: set `error` return value
 
 	return nil
 } // QueryDocument()
@@ -757,7 +644,7 @@ func QueryDocument(aID TID) *TDocument {
 //
 // This function is used by `thumbnails`.
 func QueryIDs() (*TDocList, error) {
-	rows, err := dbSqliteDB.Query(dbCalibreIDQuery)
+	rows, err := dbSqliteDB.Query(quCalibreIDQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -782,17 +669,21 @@ func QueryIDs() (*TDocList, error) {
 //	`aOptions` The options to configure the query.
 func QuerySearch(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	where := NewSearch(aOptions.Matching)
-	if rows, err := dbSqliteDB.Query(dbCalibreCountQuery + where.Clause()); nil == err {
+	if rows, err := dbSqliteDB.Query(quCalibreCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(dbCalibreBaseQuery +
+		rList, rErr = doQueryAll(quCalibreBaseQuery +
 			where.Clause() +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))
+	} else {
+
+		//TODO: set `error` return value
+
 	}
 
 	return
