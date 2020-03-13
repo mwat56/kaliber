@@ -6,9 +6,11 @@
 
 package db
 
+//lint:file-ignore ST1005 - I prefer capitalisation
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -21,9 +23,10 @@ import (
 )
 
 const (
-	// `quCalibreBaseQuery` is the default query to get document data.
-	// By appending `WHERE` and `LIMIT` clauses the resultset gets stinted.
-	quCalibreBaseQuery = `SELECT b.id,
+	// `quBaseQuery` is the default query to get all document data.
+	// By appending `WHERE` and `LIMIT` clauses the result-set can
+	// get stinted (i.e. limited to a sub-set).
+	quBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
 	FROM authors a
@@ -86,43 +89,14 @@ b.flags,
 b.uuid,
 b.has_cover
 FROM books b `
-
-	// see `QueryBy()`, `QuerySearch()`
-	quCalibreCountQuery = `SELECT COUNT(b.id) FROM books b `
-
-	// see `QueryCustomColumns()`
-	quCalibreCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns`
-
-	// see `QueryIDs()`
-	quCalibreIDQuery = `SELECT id, path FROM books `
-
-	// see `QueryDoc()`
-	quCalibreMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
-FROM data d WHERE d.book = b.id), "") formats,
-b.path,
-b.title
-FROM books b
-WHERE b.id = %d`
 )
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 type (
 	// A pipe separated value string
 	tPSVstring = string
 )
-
-var (
-	quHaving = map[string]string{
-		`all`:       ``,
-		`authors`:   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
-		`format`:    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
-		`languages`: `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
-		`publisher`: `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
-		`series`:    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
-		`tags`:      `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
-	}
-)
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // `doQueryAll()` returns a list of documents with all available fields
 // and an `error` in case of problems.
@@ -255,6 +229,18 @@ func escapeQuery(aSource string) string {
 	return string(result[0:j])
 } // escapeQuery()
 
+var (
+	quHaving = map[string]string{
+		`all`:       ``,
+		`authors`:   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
+		`format`:    `JOIN data d ON(b.id = d.book) JOIN data dd ON (d.format = dd.format) WHERE (dd.id = %d) `,
+		`languages`: `JOIN books_languages_link l ON(l.book = b.id) WHERE (l.lang_code = %d) `,
+		`publisher`: `JOIN books_publishers_link p ON(p.book = b.id) WHERE (p.publisher = %d) `,
+		`series`:    `JOIN books_series_link s ON(s.book = b.id) WHERE (s.series = %d) `,
+		`tags`:      `JOIN books_tags_link t ON(t.book = b.id) WHERE (t.tag = %d) `,
+	}
+)
+
 // `having()` returns a string limiting the query to the given `aEntity`
 // with `aID`.
 func having(aEntity string, aID TID) string {
@@ -286,7 +272,7 @@ func limit(aStart, aLength uint) string {
 //	qoSortByTime
 //	qoSortByTitle
 //
-//	`aDescending` if `true` the query result is sorted in DESCending order.
+//	`aDescending` If `true` the query result is sorted in DESCending order.
 func orderBy(aOrder TSortType, aDescending bool) string {
 	desc := `` // ` ASC ` is default
 	if aDescending {
@@ -431,7 +417,7 @@ func prepLanguages(aLanguage tPSVstring) *tLanguageList {
 } // prepLanguages()
 
 var (
-	// RegEx to find a document's number of pages
+	// RegEx to find a document's number of pages.
 	quPagesRE = regexp.MustCompile(`(?si)<meta name="calibre:user_metadata:#pages" .*?, &quot;#value#&quot;: (\d+),`)
 )
 
@@ -533,15 +519,20 @@ func prepTags(aTag tPSVstring) *tTagList {
 	return &result
 } // prepTags()
 
+const (
+	// see `QueryBy()`, `QuerySearch()`
+	quCountQuery = `SELECT COUNT(b.id) FROM books b `
+)
+
 // QueryBy returns all documents according to `aOptions`.
 //
 // The function returns in `rCount` the number of documents found,
 // in `rList` either `nil` or a list list of documents,
-// in `rErr` either `nil` or an error occurred during the search.
+// in `rErr` either `nil` or the error occurred during the search.
 //
 //	`aOptions` The options to configure the query.
 func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := dbSqliteDB.Query(quCalibreCountQuery +
+	if rows, err := dbSqliteDB.Query(quCountQuery +
 		having(aOptions.Entity, aOptions.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
@@ -549,7 +540,7 @@ func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) 
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(quCalibreBaseQuery +
+		rList, rErr = doQueryAll(quBaseQuery +
 			having(aOptions.Entity, aOptions.ID) +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))
@@ -557,6 +548,11 @@ func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) 
 
 	return
 } // QueryBy()
+
+const (
+	// see `QueryCustomColumns()`
+	quCustomColumnsQuery = `SELECT id, label, name, datatype FROM custom_columns `
+)
 
 type (
 	// TCustomColumn contains info about a user-defined data field.
@@ -571,7 +567,7 @@ type (
 
 // QueryCustomColumns returns data about user-defined columns in `Calibre`.
 func QueryCustomColumns() (*TCustomColumnList, error) {
-	rows, err := dbSqliteDB.Query(quCalibreCustomColumnsQuery)
+	rows, err := dbSqliteDB.Query(quCustomColumnsQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -588,17 +584,26 @@ func QueryCustomColumns() (*TCustomColumnList, error) {
 	return &result, nil
 } // QueryCustomColumns()
 
+const (
+	// see `QueryDocMini()`
+	quDocMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
+FROM data d WHERE d.book = b.id), "") formats,
+b.path,
+b.title
+FROM books b
+WHERE b.id = `
+)
+
 // QueryDocMini returns the document identified by `aID`.
 //
 // This function fills only the document properties `ID`, `formats`,
 // `path`, and `Title`.
+// If a matching document could not be found the function returns `nil`.
 //
 //	`aID` The document ID to lookup.
 func QueryDocMini(aID TID) *TDocument {
-
-	//TODO: add `error` return value
-
-	rows, err := dbSqliteDB.Query(fmt.Sprintf(quCalibreMiniQuery, aID))
+	rows, err := dbSqliteDB.Query(quDocMiniQuery +
+		strconv.FormatInt(int64(aID), 10))
 	if nil != err {
 		return nil
 	}
@@ -614,37 +619,39 @@ func QueryDocMini(aID TID) *TDocument {
 		return doc
 	}
 
-	//TODO: set `error` return value
-
 	return nil
 } // QueryDocMini()
 
 // QueryDocument returns the `TDocument` identified by `aID`.
 //
+// In case the document with `aID` can not be found the function
+// returns `nil`.
+//
 //	`aID` The document ID to lookup.
 func QueryDocument(aID TID) *TDocument {
-
-	//TODO: add `error` return value
-
-	list, _ := doQueryAll(quCalibreBaseQuery +
-		`WHERE b.id=` + strconv.FormatInt(int64(aID), 10) + ` `)
+	list, _ := doQueryAll(quBaseQuery +
+		`WHERE b.id=` + strconv.FormatInt(int64(aID), 10) +
+		` LIMIT 1`)
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
 		return &doc
 	}
 
-	//TODO: set `error` return value
-
 	return nil
 } // QueryDocument()
+
+const (
+	// see `QueryIDs()`
+	quIDQuery = `SELECT id, path FROM books `
+)
 
 // QueryIDs returns a list of documents with only the `ID` and
 // `path` fields set.
 //
 // This function is used by `thumbnails`.
 func QueryIDs() (*TDocList, error) {
-	rows, err := dbSqliteDB.Query(quCalibreIDQuery)
+	rows, err := dbSqliteDB.Query(quIDQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -660,7 +667,8 @@ func QueryIDs() (*TDocList, error) {
 	return result, nil
 } // QueryIDs()
 
-// QuerySearch returns a list of documents.
+// QuerySearch returns a list of documents matching the criteria
+// in `aOptions`.
 //
 // The function returns in `rCount` the number of documents found,
 // in `rList` either `nil` or a list list of documents,
@@ -669,21 +677,19 @@ func QueryIDs() (*TDocList, error) {
 //	`aOptions` The options to configure the query.
 func QuerySearch(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	where := NewSearch(aOptions.Matching)
-	if rows, err := dbSqliteDB.Query(quCalibreCountQuery + where.Clause()); nil == err {
+	if rows, err := dbSqliteDB.Query(quCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
 		_ = rows.Close()
 	}
 	if 0 < rCount {
-		rList, rErr = doQueryAll(quCalibreBaseQuery +
+		rList, rErr = doQueryAll(quBaseQuery +
 			where.Clause() +
 			orderBy(aOptions.SortBy, aOptions.Descending) +
 			limit(aOptions.LimitStart, aOptions.LimitLength))
 	} else {
-
-		//TODO: set `error` return value
-
+		rErr = errors.New(`No documents found`)
 	}
 
 	return
