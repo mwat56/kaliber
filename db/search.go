@@ -35,7 +35,7 @@ type (
 	}
 )
 
-// `allSQL()` returns an SQL clause to match the current term
+// `allSQL()` returns a WHERE clause to match the current term
 // in all suitable tables.
 func (exp *tExpression) allSQL() (rWhere string) {
 	exp.matcher, exp.op = "~", "OR"

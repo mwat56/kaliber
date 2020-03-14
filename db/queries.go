@@ -103,7 +103,7 @@ type (
 //
 //	`aQuery` The SQL query to run.
 func doQueryAll(aQuery string) (*TDocList, error) {
-	rows, err := dbSqliteDB.Query(aQuery)
+	rows, err := dbSqliteDB.query(aQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -532,7 +532,7 @@ const (
 //
 //	`aOptions` The options to configure the query.
 func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := dbSqliteDB.Query(quCountQuery +
+	if rows, err := dbSqliteDB.query(quCountQuery +
 		having(aOptions.Entity, aOptions.ID)); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
@@ -567,7 +567,7 @@ type (
 
 // QueryCustomColumns returns data about user-defined columns in `Calibre`.
 func QueryCustomColumns() (*TCustomColumnList, error) {
-	rows, err := dbSqliteDB.Query(quCustomColumnsQuery)
+	rows, err := dbSqliteDB.query(quCustomColumnsQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ WHERE b.id = `
 //
 //	`aID` The document ID to lookup.
 func QueryDocMini(aID TID) *TDocument {
-	rows, err := dbSqliteDB.Query(quDocMiniQuery +
+	rows, err := dbSqliteDB.query(quDocMiniQuery +
 		strconv.FormatInt(int64(aID), 10))
 	if nil != err {
 		return nil
@@ -651,7 +651,7 @@ const (
 //
 // This function is used by `thumbnails`.
 func QueryIDs() (*TDocList, error) {
-	rows, err := dbSqliteDB.Query(quIDQuery)
+	rows, err := dbSqliteDB.query(quIDQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -677,7 +677,7 @@ func QueryIDs() (*TDocList, error) {
 //	`aOptions` The options to configure the query.
 func QuerySearch(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
 	where := NewSearch(aOptions.Matching)
-	if rows, err := dbSqliteDB.Query(quCountQuery + where.Clause()); nil == err {
+	if rows, err := dbSqliteDB.query(quCountQuery + where.Clause()); nil == err {
 		if rows.Next() {
 			_ = rows.Scan(&rCount)
 		}
