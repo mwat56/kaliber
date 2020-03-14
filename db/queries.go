@@ -24,9 +24,12 @@ import (
 )
 
 const (
-	// `quBaseQuery` is the default query to get all document data.
-	// By appending `WHERE` and `LIMIT` clauses the result-set can
-	// get stinted (i.e. limited to a sub-set).
+	// `quBaseQuery` is the default query to get all available document
+	// data.
+	// By appending `WHERE` and `LIMIT` clauses the result-set can be
+	// limited to a sub-set.
+	//
+	// see `QueryBy()`, `QueryDocument()`, `QuerySearch()`
 	quBaseQuery = `SELECT b.id,
 b.title,
 IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
@@ -194,6 +197,60 @@ func doQueryAll(aContext context.Context, aQuery string) (result *TDocList, rErr
 
 	return
 } // doQueryAll()
+
+const (
+	// `quGridQuery` selects only those document fields which are used
+	// by the `grid` layout.
+	// By appending `WHERE` and `LIMIT` clauses the result-set can be
+	// limited to a sub-set.
+	//
+	// see `QueryBy()`, `QuerySearch()`
+	quGridQuery = `SELECT b.id,
+b.title,
+IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
+	FROM authors a
+	JOIN books_authors_link bal ON(bal.author = a.id)
+	WHERE (bal.book = b.id)
+), "") authors
+FROM books b `
+)
+
+// `doQueryGrid()` selects the data for a `grid` layout.
+//
+//	`aContext` The current request's context.
+//	`aQuery` The SQL query to run.
+func doQueryGrid(aContext context.Context, aQuery string) (rList *TDocList, rErr error) {
+	var rows *sql.Rows
+	if rows, rErr = dbSqliteDB.query(aContext, aQuery); nil != rErr {
+		return
+	}
+	defer rows.Close()
+
+	rList = NewDocList()
+	for rows.Next() {
+		var (
+			authors tPSVstring
+			visible bool
+		)
+		doc := NewDocument()
+
+		_ = rows.Scan(&doc.ID, &doc.Title, &authors)
+		if visible, _ = BookFieldVisible(`authors`); !visible {
+			_, _ = BookFieldVisible(`author_sort`)
+		}
+		doc.authors = prepAuthors(authors)
+
+		select {
+		case <-aContext.Done():
+			rErr = aContext.Err()
+			return
+		default:
+			rList.Add(doc)
+		}
+	}
+
+	return
+} // doQueryGrid()
 
 // `escapeQuery()` returns a string with some characters escaped.
 //
@@ -552,17 +609,25 @@ func QueryBy(aContext context.Context, aOptions *TQueryOptions) (rCount int, rLi
 	if rows.Next() {
 		_ = rows.Scan(&rCount)
 	}
-	_ = rows.Close()
-	if 0 < rCount {
-		rList, rErr = doQueryAll(aContext, quBaseQuery+
-			having(aOptions.Entity, aOptions.ID)+
-			orderBy(aOptions.SortBy, aOptions.Descending)+
-			limit(aOptions.LimitStart, aOptions.LimitLength))
-	} else {
-		select {
-		case <-aContext.Done():
-			rErr = aContext.Err()
-		default:
+
+	select {
+	case <-aContext.Done():
+		rErr = aContext.Err()
+	default:
+		if 0 < rCount {
+			if QoLayoutList == aOptions.Layout {
+				rList, rErr = doQueryAll(aContext,
+					quBaseQuery+
+						having(aOptions.Entity, aOptions.ID)+
+						orderBy(aOptions.SortBy, aOptions.Descending)+
+						limit(aOptions.LimitStart, aOptions.LimitLength))
+			} else {
+				rList, rErr = doQueryGrid(aContext,
+					quGridQuery+
+						having(aOptions.Entity, aOptions.ID)+
+						orderBy(aOptions.SortBy, aOptions.Descending)+
+						limit(aOptions.LimitStart, aOptions.LimitLength))
+			}
 		}
 	}
 
@@ -658,7 +723,8 @@ func QueryDocMini(aContext context.Context, aID TID) (rDoc *TDocument) {
 //	`aID` The document ID to lookup.
 func QueryDocument(aContext context.Context, aID TID) *TDocument {
 	list, _ := doQueryAll(aContext, quBaseQuery+
-		`WHERE b.id=`+strconv.FormatInt(int64(aID), 10)+
+		`WHERE b.id=`+
+		strconv.FormatInt(int64(aID), 10)+
 		` LIMIT 1`)
 	if 0 < len(*list) {
 		doc := (*list)[0]
@@ -733,11 +799,19 @@ func QuerySearch(aContext context.Context, aOptions *TQueryOptions) (rCount int,
 		return
 	default:
 		if 0 < rCount {
-			rList, rErr = doQueryAll(aContext,
-				quBaseQuery+
-					where.Clause()+
-					orderBy(aOptions.SortBy, aOptions.Descending)+
-					limit(aOptions.LimitStart, aOptions.LimitLength))
+			if QoLayoutList == aOptions.Layout {
+				rList, rErr = doQueryAll(aContext,
+					quBaseQuery+
+						where.Clause()+
+						orderBy(aOptions.SortBy, aOptions.Descending)+
+						limit(aOptions.LimitStart, aOptions.LimitLength))
+			} else {
+				rList, rErr = doQueryGrid(aContext,
+					quGridQuery+
+						where.Clause()+
+						orderBy(aOptions.SortBy, aOptions.Descending)+
+						limit(aOptions.LimitStart, aOptions.LimitLength))
+			}
 		}
 	}
 
