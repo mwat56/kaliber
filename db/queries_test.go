@@ -9,6 +9,7 @@ package db
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
+	"context"
 	"crypto/md5" // #nosec
 	"fmt"
 	"log"
@@ -20,17 +21,41 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func openDBforTesting() {
+func openDBforTesting(aContext context.Context) {
 	libPath := `/var/opt/Calibre`
 	s := fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
 	ucd, _ := os.UserCacheDir()
 	SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
 	SetCalibreLibraryPath(libPath)
-	if err := OpenDatabase(); nil != err {
+	if err := OpenDatabase(aContext); nil != err {
 		log.Fatalf("OpenDatabase(): %v", err)
 	}
 	SetSQLtraceFile("./SQLtrace.sql")
 } // openDBforTesting()
+
+func Test_escapeQuery(t *testing.T) {
+	type args struct {
+		source string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{" 1", args{""}, ""},
+		{" 2", args{"Hello World!"}, "Hello World!"},
+		{" 3", args{`"Hello World!"`}, `\"Hello World!\"`},
+		{" 4", args{`"Rock 'n' Roll!"`}, `\"Rock 'n' Roll!\"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := escapeQuery(tt.args.source); got != tt.want {
+				t.Errorf("escape() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // Test_escapeQuery()
 
 func Test_prepAuthors(t *testing.T) {
 	w0 := &tAuthorList{}
@@ -308,6 +333,7 @@ func Test_prepTags(t *testing.T) {
 } // Test_prepTags()
 
 func TestOpenDatabase(t *testing.T) {
+	ctx := context.TODO()
 	libPath := `/var/opt/Calibre`
 	s := fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
 	ucd, _ := os.UserCacheDir()
@@ -322,40 +348,17 @@ func TestOpenDatabase(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := OpenDatabase(); (err != nil) != tt.wantErr {
+			if err := OpenDatabase(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("OpenDatabase() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 } // TestOpenDatabase()
 
-func Test_queryDocument(t *testing.T) {
-	openDBforTesting()
-
-	type args struct {
-		aID int
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool // *TDocument
-	}{
-		// TODO: Add test cases.
-		{" 0", args{-1}, false},
-		{" 1", args{1}, true},
-		{" 2", args{2}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := QueryDocument(tt.args.aID); (nil != got) != tt.want {
-				t.Errorf("QueryDocument() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // Test_queryDocument()
-
 func TestQueryBy(t *testing.T) {
-	openDBforTesting()
+	ctx := context.TODO()
+	openDBforTesting(ctx)
+
 	o0 := &TQueryOptions{
 		ID:          0,
 		Descending:  false,
@@ -411,7 +414,8 @@ func TestQueryBy(t *testing.T) {
 		SortBy:      qoSortByTags,
 	}
 	type args struct {
-		aOption *TQueryOptions
+		aContext context.Context
+		aOption  *TQueryOptions
 	}
 	tests := []struct {
 		name       string
@@ -421,16 +425,16 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{o0}, 5560, 1000, false},
-		{" 1", args{o1}, 14, 14, false},
-		{" 2", args{o2}, 4618, 50, false},
-		{" 3", args{o3}, 42, 42, false},
-		{" 4", args{o4}, 390, 50, false},
-		{" 5", args{o5}, 447, 50, false},
+		{" 0", args{ctx, o0}, 5560, 1000, false},
+		{" 1", args{ctx, o1}, 14, 14, false},
+		{" 2", args{ctx, o2}, 4618, 50, false},
+		{" 3", args{ctx, o3}, 42, 42, false},
+		{" 4", args{ctx, o4}, 390, 50, false},
+		{" 5", args{ctx, o5}, 447, 50, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRCount, gotRList, err := QueryBy(tt.args.aOption)
+			gotRCount, gotRList, err := QueryBy(tt.args.aContext, tt.args.aOption)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("QueryBy() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -446,7 +450,9 @@ func TestQueryBy(t *testing.T) {
 } // TestQueryBy()
 
 func TestQueryCustomColumns(t *testing.T) {
-	openDBforTesting()
+	ctx := context.TODO()
+	openDBforTesting(ctx)
+
 	w1 := &TCustomColumnList{}
 	tests := []struct {
 		name    string
@@ -458,7 +464,7 @@ func TestQueryCustomColumns(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := QueryCustomColumns()
+			got, err := QueryCustomColumns(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("QueryCustomColumns() error = %v,\nwantErr %v", err, tt.wantErr)
 				return
@@ -473,8 +479,67 @@ func TestQueryCustomColumns(t *testing.T) {
 	}
 } // TestQueryCustomColumns()
 
+func TestQueryDocMini(t *testing.T) {
+	ctx := context.TODO()
+	openDBforTesting(ctx)
+
+	type args struct {
+		aContext context.Context
+		aID      TID
+	}
+	tests := []struct {
+		name string
+		args args
+		want *TDocument
+	}{
+		// TODO: Add test cases.
+		{" 1", args{ctx, 0}, nil},
+		{" 2", args{ctx, 1}, NewDocument()},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := QueryDocMini(tt.args.aContext, tt.args.aID)
+			if (nil == got) && (nil != tt.want) {
+				t.Errorf("QueryDocMini() = %v,\nwant %v", got, tt.want)
+			}
+			if (nil != got) && (nil == tt.want) {
+				t.Errorf("QueryDocMini() = %v,\nwant %v", got, tt.want)
+			}
+		})
+	}
+} // TestQueryDocMini()
+
+func TestQueryDocument(t *testing.T) {
+	ctx := context.TODO()
+	openDBforTesting(ctx)
+
+	type args struct {
+		aContext context.Context
+		aID      int
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool // *TDocument
+	}{
+		// TODO: Add test cases.
+		{" 0", args{ctx, -1}, false},
+		{" 1", args{ctx, 1}, true},
+		{" 2", args{ctx, 2}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := QueryDocument(tt.args.aContext, tt.args.aID); (nil != got) != tt.want {
+				t.Errorf("QueryDocument() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // TestQueryDocument()
+
 func TestQuerySearch(t *testing.T) {
-	openDBforTesting()
+	ctx := context.TODO()
+	openDBforTesting(ctx)
+
 	qo1 := NewQueryOptions(0)
 	qo1.Matching = `Golang`
 	qo2 := NewQueryOptions(0)
@@ -482,7 +547,8 @@ func TestQuerySearch(t *testing.T) {
 	qo3 := NewQueryOptions(0)
 	qo3.Matching = `languages:"=deu"`
 	type args struct {
-		aOption *TQueryOptions
+		aContext context.Context
+		aOption  *TQueryOptions
 	}
 	tests := []struct {
 		name       string
@@ -492,13 +558,13 @@ func TestQuerySearch(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{qo1}, 35, 24, false},
-		{" 2", args{qo2}, 4618, 24, false},
-		{" 3", args{qo3}, 930, 24, false},
+		{" 1", args{ctx, qo1}, 35, 24, false},
+		{" 2", args{ctx, qo2}, 4618, 24, false},
+		{" 3", args{ctx, qo3}, 930, 24, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRCount, gotRList, err := QuerySearch(tt.args.aOption)
+			gotRCount, gotRList, err := QuerySearch(tt.args.aContext, tt.args.aOption)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("QuerySearch() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -512,54 +578,3 @@ func TestQuerySearch(t *testing.T) {
 		})
 	}
 } // TestQuerySearch()
-
-func Test_escapeQuery(t *testing.T) {
-	type args struct {
-		source string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-		{" 1", args{""}, ""},
-		{" 2", args{"Hello World!"}, "Hello World!"},
-		{" 3", args{`"Hello World!"`}, `\"Hello World!\"`},
-		{" 4", args{`"Rock 'n' Roll!"`}, `\"Rock 'n' Roll!\"`},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := escapeQuery(tt.args.source); got != tt.want {
-				t.Errorf("escape() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // Test_escapeQuery()
-
-func TestQueryDocMini(t *testing.T) {
-	openDBforTesting()
-	type args struct {
-		aID TID
-	}
-	tests := []struct {
-		name string
-		args args
-		want *TDocument
-	}{
-		// TODO: Add test cases.
-		{" 1", args{0}, nil},
-		{" 2", args{1}, NewDocument()},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := QueryDocMini(tt.args.aID)
-			if (nil == got) && (nil != tt.want) {
-				t.Errorf("QueryDocMini() = %v,\nwant %v", got, tt.want)
-			}
-			if (nil != got) && (nil == tt.want) {
-				t.Errorf("QueryDocMini() = %v,\nwant %v", got, tt.want)
-			}
-		})
-	}
-} // TestQueryDocMini()

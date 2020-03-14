@@ -94,7 +94,7 @@ func main() {
 	Me, _ := filepath.Abs(os.Args[0])
 	kaliber.InitConfig()
 
-	if err = db.OpenDatabase(); nil != err {
+	if err = db.OpenDatabase(context.Background()); nil != err {
 		kaliber.ShowHelp()
 		fatal(fmt.Sprintf("%s: %v", Me, err))
 	}

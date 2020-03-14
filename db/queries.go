@@ -10,7 +10,8 @@ package db
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
-	"errors"
+	"context"
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -94,22 +95,23 @@ FROM books b `
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 type (
-	// A pipe separated value string
+	// A pipe separated value string.
 	tPSVstring = string
 )
 
 // `doQueryAll()` returns a list of documents with all available fields
 // and an `error` in case of problems.
 //
+//	`aContext` The current request's context.
 //	`aQuery` The SQL query to run.
-func doQueryAll(aQuery string) (*TDocList, error) {
-	rows, err := dbSqliteDB.query(aQuery)
-	if nil != err {
-		return nil, err
+func doQueryAll(aContext context.Context, aQuery string) (result *TDocList, rErr error) {
+	var rows *sql.Rows
+	if rows, rErr = dbSqliteDB.query(aContext, aQuery); nil != rErr {
+		return
 	}
 	defer rows.Close()
 
-	result := NewDocList()
+	result = NewDocList()
 	for rows.Next() {
 		var (
 			authors, formats, identifiers, languages,
@@ -125,7 +127,7 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			&doc.ISBN, &identifiers, &doc.path, &doc.lccn,
 			&doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
 
-		// check for (un)visible fields:
+		// check for (in)visible fields:
 		if visible, _ = BookFieldVisible(`authors`); !visible {
 			visible, _ = BookFieldVisible(`author_sort`)
 		}
@@ -181,10 +183,16 @@ func doQueryAll(aQuery string) (*TDocList, error) {
 			doc.uuid = ``
 		}
 
-		result.Add(doc)
+		select {
+		case <-aContext.Done():
+			rErr = aContext.Err()
+			return
+		default:
+			result.Add(doc)
+		}
 	}
 
-	return result, nil
+	return
 } // doQueryAll()
 
 // `escapeQuery()` returns a string with some characters escaped.
@@ -530,20 +538,32 @@ const (
 // in `rList` either `nil` or a list list of documents,
 // in `rErr` either `nil` or the error occurred during the search.
 //
+//	`aContext` The current request's context.
 //	`aOptions` The options to configure the query.
-func QueryBy(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
-	if rows, err := dbSqliteDB.query(quCountQuery +
-		having(aOptions.Entity, aOptions.ID)); nil == err {
-		if rows.Next() {
-			_ = rows.Scan(&rCount)
-		}
-		_ = rows.Close()
+func QueryBy(aContext context.Context, aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+	var rows *sql.Rows
+	rows, rErr = dbSqliteDB.query(aContext,
+		quCountQuery+having(aOptions.Entity, aOptions.ID))
+	if nil != rErr {
+		return
 	}
+	defer rows.Close()
+
+	if rows.Next() {
+		_ = rows.Scan(&rCount)
+	}
+	_ = rows.Close()
 	if 0 < rCount {
-		rList, rErr = doQueryAll(quBaseQuery +
-			having(aOptions.Entity, aOptions.ID) +
-			orderBy(aOptions.SortBy, aOptions.Descending) +
+		rList, rErr = doQueryAll(aContext, quBaseQuery+
+			having(aOptions.Entity, aOptions.ID)+
+			orderBy(aOptions.SortBy, aOptions.Descending)+
 			limit(aOptions.LimitStart, aOptions.LimitLength))
+	} else {
+		select {
+		case <-aContext.Done():
+			rErr = aContext.Err()
+		default:
+		}
 	}
 
 	return
@@ -566,8 +586,10 @@ type (
 )
 
 // QueryCustomColumns returns data about user-defined columns in `Calibre`.
-func QueryCustomColumns() (*TCustomColumnList, error) {
-	rows, err := dbSqliteDB.query(quCustomColumnsQuery)
+//
+//	`aContext` The current request's context.
+func QueryCustomColumns(aContext context.Context) (*TCustomColumnList, error) {
+	rows, err := dbSqliteDB.query(aContext, quCustomColumnsQuery)
 	if nil != err {
 		return nil, err
 	}
@@ -578,6 +600,12 @@ func QueryCustomColumns() (*TCustomColumnList, error) {
 		var cc TCustomColumn
 		if err = rows.Scan(&cc.ID, &cc.Label, &cc.Name, &cc.Datatype); nil == err {
 			result = append(result, cc)
+		}
+
+		select {
+		case <-aContext.Done():
+			return nil, aContext.Err()
+		default:
 		}
 	}
 
@@ -600,26 +628,25 @@ WHERE b.id = `
 // `path`, and `Title`.
 // If a matching document could not be found the function returns `nil`.
 //
+//	`aContext` The current request's context.
 //	`aID` The document ID to lookup.
-func QueryDocMini(aID TID) *TDocument {
-	rows, err := dbSqliteDB.query(quDocMiniQuery +
-		strconv.FormatInt(int64(aID), 10))
+func QueryDocMini(aContext context.Context, aID TID) (rDoc *TDocument) {
+	rows, err := dbSqliteDB.query(aContext,
+		quDocMiniQuery+strconv.FormatInt(int64(aID), 10))
 	if nil != err {
-		return nil
+		return
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		var formats tPSVstring
-		doc := NewDocument()
-		doc.ID = aID
-		_ = rows.Scan(&doc.ID, &formats, &doc.path, &doc.Title)
-		doc.formats = prepFormats(formats)
-
-		return doc
+		rDoc = NewDocument()
+		rDoc.ID = aID
+		_ = rows.Scan(&rDoc.ID, &formats, &rDoc.path, &rDoc.Title)
+		rDoc.formats = prepFormats(formats)
 	}
 
-	return nil
+	return
 } // QueryDocMini()
 
 // QueryDocument returns the `TDocument` identified by `aID`.
@@ -627,10 +654,11 @@ func QueryDocMini(aID TID) *TDocument {
 // In case the document with `aID` can not be found the function
 // returns `nil`.
 //
+//	`aContext` The current request's context.
 //	`aID` The document ID to lookup.
-func QueryDocument(aID TID) *TDocument {
-	list, _ := doQueryAll(quBaseQuery +
-		`WHERE b.id=` + strconv.FormatInt(int64(aID), 10) +
+func QueryDocument(aContext context.Context, aID TID) *TDocument {
+	list, _ := doQueryAll(aContext, quBaseQuery+
+		`WHERE b.id=`+strconv.FormatInt(int64(aID), 10)+
 		` LIMIT 1`)
 	if 0 < len(*list) {
 		doc := (*list)[0]
@@ -650,21 +678,32 @@ const (
 // `path` fields set.
 //
 // This function is used by `thumbnails`.
-func QueryIDs() (*TDocList, error) {
-	rows, err := dbSqliteDB.query(quIDQuery)
-	if nil != err {
-		return nil, err
+//
+//	`aContext` The current request's context.
+func QueryIDs(aContext context.Context) (rList *TDocList, rErr error) {
+	var rows *sql.Rows
+	rows, rErr = dbSqliteDB.query(aContext, quIDQuery)
+	if nil != rErr {
+		return
 	}
 	defer rows.Close()
 
-	result := NewDocList()
+	rList = NewDocList()
 	for rows.Next() {
 		doc := NewDocument()
 		_ = rows.Scan(&doc.ID, &doc.path)
-		result.Add(doc)
+
+		select {
+		case <-aContext.Done():
+			rErr = aContext.Err()
+			return
+		default:
+			rList.Add(doc)
+		}
+
 	}
 
-	return result, nil
+	return
 } // QueryIDs()
 
 // QuerySearch returns a list of documents matching the criteria
@@ -674,22 +713,32 @@ func QueryIDs() (*TDocList, error) {
 // in `rList` either `nil` or a list list of documents,
 // in `rErr` either `nil` or an error occurred during the search.
 //
+//	`aContext` The current request's context.
 //	`aOptions` The options to configure the query.
-func QuerySearch(aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+func QuerySearch(aContext context.Context, aOptions *TQueryOptions) (rCount int, rList *TDocList, rErr error) {
+	var rows *sql.Rows
 	where := NewSearch(aOptions.Matching)
-	if rows, err := dbSqliteDB.query(quCountQuery + where.Clause()); nil == err {
-		if rows.Next() {
-			_ = rows.Scan(&rCount)
-		}
-		_ = rows.Close()
+	if rows, rErr = dbSqliteDB.query(aContext, quCountQuery+where.Clause()); nil != rErr {
+		return
 	}
-	if 0 < rCount {
-		rList, rErr = doQueryAll(quBaseQuery +
-			where.Clause() +
-			orderBy(aOptions.SortBy, aOptions.Descending) +
-			limit(aOptions.LimitStart, aOptions.LimitLength))
-	} else {
-		rErr = errors.New(`No documents found`)
+	defer rows.Close()
+
+	if rows.Next() {
+		_ = rows.Scan(&rCount)
+	}
+
+	select {
+	case <-aContext.Done():
+		rErr = aContext.Err()
+		return
+	default:
+		if 0 < rCount {
+			rList, rErr = doQueryAll(aContext,
+				quBaseQuery+
+					where.Clause()+
+					orderBy(aOptions.SortBy, aOptions.Descending)+
+					limit(aOptions.LimitStart, aOptions.LimitLength))
+		}
 	}
 
 	return

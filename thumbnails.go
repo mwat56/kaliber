@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
               All rights reserved
           EMail : <support@mwat.de>
 */
@@ -9,6 +9,7 @@ package kaliber
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -24,7 +25,7 @@ import (
 )
 
 /*
- * This file provides functions for thumbnail generation.
+ * This file provides functions for thumbnail generation and maintenance.
  */
 
 // `goThumbCleanup()` removes orphaned thumbnails.
@@ -80,7 +81,7 @@ func checkThumbFile(aFilename string) {
 		return
 	}
 
-	doc := db.QueryDocument(docID)
+	doc := db.QueryDocument(context.Background(), docID)
 	if nil == doc {
 		// remove thumbnail for non-existing document
 		if err = os.Remove(aFilename); nil != err {
@@ -255,7 +256,7 @@ func thumbnailRemove(aDoc *db.TDocument) error {
 
 // ThumbnailUpdate creates thumbnails for all existing documents
 func ThumbnailUpdate() {
-	docList, err := db.QueryIDs()
+	docList, err := db.QueryIDs(context.Background())
 	if nil != err {
 		return
 	}

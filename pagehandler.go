@@ -281,11 +281,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		if 0 < qo.ID {
 			qo.Matching = path + `:"=` + parts[1] + `"`
 		}
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "back":
 		qo.DecLimit()
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "certs": // these files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
@@ -296,7 +296,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		doc := db.QueryDocMini(id)
+		doc := db.QueryDocMini(aRequest.Context(), id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -319,7 +319,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
-		doc := db.QueryDocument(id)
+		doc := db.QueryDocument(aRequest.Context(), id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -337,7 +337,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "file":
 		parts := strings.Split(tail, `/`)
 		qo.ID, _ = strconv.Atoi(parts[0])
-		doc := db.QueryDocMini(qo.ID)
+		doc := db.QueryDocMini(aRequest.Context(), qo.ID)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -352,7 +352,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "first":
 		qo.LimitStart = 0
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "fonts":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
@@ -372,22 +372,22 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		} else {
 			qo.LimitStart = qo.QueryCount - qo.LimitLength
 		}
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "licence", "license", "lizenz":
 		ph.handleReply("licence", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "next":
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "post":
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "prev":
 		// Since the current LimitStart points to the _next_ query
 		// start we have to decrement the value twice to go _before_.
 		qo.DecLimit().DecLimit()
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	case "privacy", "datenschutz":
 		ph.handleReply("privacy", aWriter, so, qo, ph.basicTemplateData(qo))
@@ -404,7 +404,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		doc := db.QueryDocMini(id)
+		doc := db.QueryDocMini(aRequest.Context(), id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -430,7 +430,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		qo.Entity = ""    // dito
 		qo.LimitStart = 0 //
 		qo.Matching = ""  //
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	default:
 		// // if nothing matched (above) reply to the request
@@ -456,7 +456,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		// Since the query options hold the LimitStart of the
 		// _next_ query we have to go back here one page:
 		qo.DecLimit()
-		ph.handleQuery(qo, aWriter, so)
+		ph.handleQuery(aWriter, aRequest, qo, so)
 
 	default:
 		// // if nothing matched (above) reply to the request
@@ -469,16 +469,16 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleQuery()` serves the logical web-root directory.
-func (ph *TPageHandler) handleQuery(aOption *db.TQueryOptions, aWriter http.ResponseWriter, aSession *sessions.TSession) {
+func (ph *TPageHandler) handleQuery(aWriter http.ResponseWriter, aRequest *http.Request, aOption *db.TQueryOptions, aSession *sessions.TSession) {
 	var (
 		count   int
 		doclist *db.TDocList
 		err     error
 	)
 	if 0 < len(aOption.Matching) {
-		count, doclist, err = db.QuerySearch(aOption)
+		count, doclist, err = db.QuerySearch(aRequest.Context(), aOption)
 	} else {
-		count, doclist, err = db.QueryBy(aOption)
+		count, doclist, err = db.QueryBy(aRequest.Context(), aOption)
 	}
 	if nil != err {
 		msg := fmt.Sprintf("QueryBy/QuerySearch: %v", err)

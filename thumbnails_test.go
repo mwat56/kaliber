@@ -6,7 +6,10 @@
 
 package kaliber
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
+	"context"
 	"crypto/md5" // #nosec
 	"fmt"
 	"log"
@@ -145,7 +148,7 @@ func TestThumbnailRemove(t *testing.T) {
 
 func Test_goThumbCleanup(t *testing.T) {
 	setup4Testing()
-	if err := db.OpenDatabase(); nil != err {
+	if err := db.OpenDatabase(context.TODO()); nil != err {
 		log.Fatalf("OpenDatabase(): %v", err)
 	}
 	db.SetSQLtraceFile("./SQLtrace.sql")

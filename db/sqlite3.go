@@ -9,6 +9,7 @@ package db
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -32,10 +33,10 @@ const (
 
 type (
 	tDataBase struct {
-		*sql.DB           // the embedded database connection
-		dbFileName string // the SQLite database file
-		doCheck    chan struct{}
-		wasCopied  chan struct{}
+		*sql.DB          // the embedded database connection
+		fName     string // the SQLite database file
+		doCheck   chan struct{}
+		wasCopied chan struct{}
 	}
 )
 
@@ -69,6 +70,51 @@ func CalibrePreferencesFile() string {
 	return filepath.Join(dbCalibreLibraryPath, dbCalibrePreferencesFile)
 } // CalibrePreferencesFile()
 
+// `copyDatabaseFile()` copies Calibre's database file to our cache directory.
+func copyDatabaseFile() (bool, error) {
+	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
+	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
+	var (
+		err          error
+		sFile, tFile *os.File
+		sFI, dFI     os.FileInfo
+	)
+	defer func() {
+		if nil != sFile {
+			_ = sFile.Close()
+		}
+		if nil != tFile {
+			_ = tFile.Close()
+		}
+	}()
+
+	if sFI, err = os.Stat(sName); nil != err {
+		return false, err
+	}
+
+	if dFI, err = os.Stat(dName); nil == err {
+		if sFI.ModTime().Before(dFI.ModTime()) {
+			return false, nil
+		}
+	}
+
+	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
+		return false, err
+	}
+
+	tName := dName + `~`
+	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
+		return false, err
+	}
+
+	if _, err = io.Copy(tFile, sFile); nil != err {
+		return false, err
+	}
+	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
+
+	return true, os.Rename(tName, dName)
+} // copyDatabaseFile()
+
 // `goCheckFile()` checks in background whether the original database
 // file has changed. If so, that file is copied to the cache directory
 // from where it is read and used by the `quSQLiteDB` instance.
@@ -76,7 +122,6 @@ func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 	timer := time.NewTimer(time.Minute)
 	defer func() { _ = timer.Stop() }()
 
-	// ++lint:ignore S1000 – we only need the separate `more` field
 	for {
 		select {
 		case _, more := <-aCheck:
@@ -169,10 +214,10 @@ func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
 } // goWriteSQLtrace()
 
 // OpenDatabase establishes a new database connection.
-func OpenDatabase() error {
+func OpenDatabase(aContext context.Context) error {
 	var once sync.Once
 	once.Do(func() {
-		dbSqliteDB.dbFileName = filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
+		dbSqliteDB.fName = filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
 		dbSqliteDB.doCheck = make(chan struct{}, 64)
 		dbSqliteDB.wasCopied = make(chan struct{}, 1)
 	})
@@ -187,7 +232,7 @@ func OpenDatabase() error {
 	// start monitoring the original database file:
 	go goCheckFile(dbSqliteDB.doCheck, dbSqliteDB.wasCopied)
 
-	return dbSqliteDB.reOpen()
+	return dbSqliteDB.reOpen(aContext)
 } // OpenDatabase()
 
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
@@ -218,7 +263,7 @@ func SetCalibreLibraryPath(aPath string) string {
 	}
 
 	return dbCalibreLibraryPath
-} // CalibreLibraryPath()
+} // SetCalibreLibraryPath()
 
 // SetSQLtraceFile sets the filename to use for logging SQL queries.
 //
@@ -251,23 +296,29 @@ func SQLtraceFile() string {
 
 // `query()` executes a query that returns rows, typically a SELECT.
 // The `args` are for any placeholder parameters in the query.
-func (db *tDataBase) query(aQuery string, args ...interface{}) (rRows *sql.Rows, rErr error) {
-	if rErr = db.reOpen(); nil != rErr {
+//
+//	`aContext` The current request's context.
+//	`aQuery` The SQL query to run.
+func (db *tDataBase) query(aContext context.Context, aQuery string) (rRows *sql.Rows, rErr error) {
+	if rErr = db.reOpen(aContext); nil != rErr {
 		return
 	}
+	db.doCheck <- struct{}{}
+
 	go goSQLtrace(aQuery, time.Now())
 
-	//TODO use `db.DB.QueryContext(…)`:
-	rRows, rErr = db.DB.Query(aQuery, args...)
-	db.doCheck <- struct{}{}
+	rRows, rErr = db.DB.QueryContext(aContext, aQuery)
 
 	return
 } // query()
 
-// `reOpen()` checks whether the SQLite database file has changed since
-// the last access. If so, the current database connection is closed and
-// a new one is established.
-func (db *tDataBase) reOpen() error {
+// `reOpen()` checks whether the SQLite database file has changed
+// since the last access.
+// If so, the current database connection is closed and a new one
+// is established.
+//
+//	`aContext` The current request's context.
+func (db *tDataBase) reOpen(aContext context.Context) error {
 	select {
 	case _, more := <-db.wasCopied:
 		if nil != db.DB {
@@ -286,63 +337,19 @@ func (db *tDataBase) reOpen() error {
 		// `loc=auto` gets time.Time with current locale.
 		// `mode=ro` is self-explanatory since we don't change the
 		// DB in any way.
-		dsn := `file:` + db.dbFileName + `?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
+		dsn := `file:` + db.fName +
+			`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
 		if db.DB, err = sql.Open(`sqlite3`, dsn); nil != err {
 			return err
 		}
 		// db.Exec("PRAGMA xxx=yyy")
 
 		go goSQLtrace(`-- reOpened `+dsn, time.Now())
-		return db.DB.Ping()
+		return db.DB.PingContext(aContext)
 
 	default:
 		return nil
 	}
 } // reOpen()
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// `copyDatabaseFile()` copies Calibre's database file to our cache directory.
-func copyDatabaseFile() (bool, error) {
-	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
-	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
-	var (
-		err          error
-		sFile, tFile *os.File
-		sFI, dFI     os.FileInfo
-	)
-	defer func() {
-		if nil != sFile {
-			_ = sFile.Close()
-		}
-		if nil != tFile {
-			_ = tFile.Close()
-		}
-	}()
-
-	if sFI, err = os.Stat(sName); nil != err {
-		return false, err
-	}
-
-	if dFI, err = os.Stat(dName); nil == err {
-		if sFI.ModTime().Before(dFI.ModTime()) {
-			return false, nil
-		}
-	}
-
-	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
-		return false, err
-	}
-
-	tName := dName + `~`
-	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
-		return false, err
-	}
-
-	if _, err = io.Copy(tFile, sFile); nil != err {
-		return false, err
-	}
-	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
-
-	return true, os.Rename(tName, dName)
-} // copyDatabaseFile()
+/* _EoF_ */
