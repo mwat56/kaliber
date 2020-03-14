@@ -295,6 +295,8 @@ func escapeQuery(aSource string) string {
 } // escapeQuery()
 
 var (
+	// `quHaving` defines a JOIN operation limiting the result-set
+	// to records matching a certain condition.
 	quHaving = map[string]string{
 		`all`:       ``,
 		`authors`:   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
@@ -679,8 +681,9 @@ func QueryCustomColumns(aContext context.Context) (*TCustomColumnList, error) {
 
 const (
 	// see `QueryDocMini()`
-	quDocMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
-FROM data d WHERE d.book = b.id), "") formats,
+	quDocMiniQuery = `SELECT b.id,
+IFNULL((SELECT group_concat(d.format, ", ")
+	FROM data d WHERE d.book = b.id), "") formats,
 b.path,
 b.title
 FROM books b
@@ -696,8 +699,7 @@ WHERE b.id = `
 //	`aContext` The current request's context.
 //	`aID` The document ID to lookup.
 func QueryDocMini(aContext context.Context, aID TID) (rDoc *TDocument) {
-	rows, err := dbSqliteDB.query(aContext,
-		quDocMiniQuery+strconv.FormatInt(int64(aID), 10))
+	rows, err := dbSqliteDB.query(aContext, quDocMiniQuery+aID.String())
 	if nil != err {
 		return
 	}
@@ -723,9 +725,7 @@ func QueryDocMini(aContext context.Context, aID TID) (rDoc *TDocument) {
 //	`aID` The document ID to lookup.
 func QueryDocument(aContext context.Context, aID TID) *TDocument {
 	list, _ := doQueryAll(aContext, quBaseQuery+
-		`WHERE b.id=`+
-		strconv.FormatInt(int64(aID), 10)+
-		` LIMIT 1`)
+		`WHERE b.id=`+aID.String()+` LIMIT 1`)
 	if 0 < len(*list) {
 		doc := (*list)[0]
 
@@ -763,6 +763,7 @@ func QueryIDs(aContext context.Context) (rList *TDocList, rErr error) {
 		case <-aContext.Done():
 			rErr = aContext.Err()
 			return
+
 		default:
 			rList.Add(doc)
 		}
@@ -796,7 +797,7 @@ func QuerySearch(aContext context.Context, aOptions *TQueryOptions) (rCount int,
 	select {
 	case <-aContext.Done():
 		rErr = aContext.Err()
-		return
+
 	default:
 		if 0 < rCount {
 			if QoLayoutList == aOptions.Layout {
