@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
                All rights reserved
            EMail : <support@mwat.de>
 */
@@ -25,7 +25,6 @@ import (
 // with error code `0` (zero) if successful, or `1` (one) otherwise.
 //
 //	`aUser` the username to add to the password file.
-//
 //	`aFilename` name of the password file to use.
 func AddUser(aUser, aFilename string) {
 	passlist.AddUser(aUser, aFilename)
@@ -38,7 +37,6 @@ func AddUser(aUser, aFilename string) {
 // with error code `0` (zero) if successful, or `1` (one) otherwise.
 //
 //	`aUser` the username to check in the password file.
-//
 //	`aFilename` name of the password file to use.
 func CheckUser(aUser, aFilename string) {
 	passlist.CheckUser(aUser, aFilename)
@@ -51,7 +49,6 @@ func CheckUser(aUser, aFilename string) {
 // with error code `0` (zero) if successful, or `1` (one) otherwise.
 //
 //	`aUser` the username to remove from the password file.
-//
 //	`aFilename` name of the password file to use.
 func DeleteUser(aUser, aFilename string) {
 	passlist.DeleteUser(aUser, aFilename)
@@ -74,7 +71,6 @@ func ListUsers(aFilename string) {
 // with error code `0` (zero) if successful, or `1` (one) otherwise.
 //
 // `aUser` the username to remove from the password file.
-//
 // `aFilename` name of the password file to use.
 func UpdateUser(aUser, aFilename string) {
 	passlist.UpdateUser(aUser, aFilename)
