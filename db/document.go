@@ -14,7 +14,6 @@ import (
 	"html/template"
 	"net/url"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -417,7 +416,7 @@ func (doc *TDocument) Thumb() string {
 	return fmt.Sprintf("/thumb/%d/cover.jpg", doc.ID)
 } // Thumb()
 
-// Timestamp returns the ISO formatted `timestamp` property.
+// Timestamp returns the formatted `timestamp` property.
 func (doc *TDocument) Timestamp() string {
 	return doc.timestamp.Format("2006-01-02 15:04:05")
 } // Timestamp()
@@ -430,13 +429,6 @@ func NewDocument() *TDocument {
 
 	return result
 } // NewDocument()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// String returns the current ID as a string.
-func (id TID) String() string {
-	return strconv.FormatInt(int64(id), 10)
-} // String()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
