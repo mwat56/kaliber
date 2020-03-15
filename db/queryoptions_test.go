@@ -6,16 +6,35 @@
 
 package db
 
-//lint:file-ignore ST1017 - I prefer Yoda conditions
-
 import (
 	"reflect"
 	"testing"
 )
 
+func TestTQueryOptions_clone(t *testing.T) {
+	qo1 := NewQueryOptions(9)
+	w1 := NewQueryOptions(9)
+	tests := []struct {
+		name   string
+		fields *TQueryOptions
+		want   *TQueryOptions
+	}{
+		// TODO: Add test cases.
+		{" 1", qo1, w1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qo := tt.fields
+			if got := qo.clone(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TQueryOptions.clone() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // TestTQueryOptions_clone()
+
 func TestTQueryOptions_Scan(t *testing.T) {
 	o1 := NewQueryOptions(0)
-	s1 := `|3524|true|"authors"|0|0|25|0|""|100|2|0|`
+	s1 := `|3524|true|"authors"|0|0|25|0|""|100|1|0|`
 	w1 := &TQueryOptions{
 		ID:          3524,
 		Descending:  true,
@@ -30,7 +49,7 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		Theme:       QoThemeLight,
 	}
 	o2 := NewQueryOptions(0)
-	s2 := `|1|false|"lang"|1|1|50|0|""|200|3|1|`
+	s2 := `|1|false|"lang"|1|1|50|0|""|200|2|1|`
 	w2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -45,7 +64,7 @@ func TestTQueryOptions_Scan(t *testing.T) {
 		Theme:       QoThemeDark,
 	}
 	o3 := NewQueryOptions(0)
-	s3 := `|7607|true|"tags"|0|0|25|25|" "|6|1|0|"-"|`
+	s3 := `|7607|true|"tags"|0|0|25|25|" "|6|0|0|"-"|`
 	w3 := &TQueryOptions{
 		ID:          7607,
 		Descending:  true,
@@ -148,7 +167,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByAuthor,
 		Theme:       QoThemeDark,
 	}
-	w1 := `|3524|true|"authors"|1|0|50|0|""|100|2|1|""|`
+	w1 := `|3524|true|"authors"|1|0|50|0|""|100|1|1|""|`
 	o2 := TQueryOptions{
 		ID:          1,
 		Descending:  false,
@@ -162,7 +181,7 @@ func TestTQueryOptions_String(t *testing.T) {
 		SortBy:      qoSortByLanguage,
 		Theme:       QoThemeLight,
 	}
-	w2 := `|1|false|"lang"|0|1|25|0|""|200|3|0|""|`
+	w2 := `|1|false|"lang"|0|1|25|0|""|200|2|0|""|`
 	tests := []struct {
 		name   string
 		fields TQueryOptions

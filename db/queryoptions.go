@@ -22,8 +22,7 @@ type (
 
 // Constants defining the ORDER_BY clause
 const (
-	qoSortUnsorted      = TSortType(iota)
-	qoSortByAcquisition // acquisition date
+	qoSortByAcquisition = TSortType(iota)
 	qoSortByAuthor
 	qoSortByLanguage
 	qoSortByPublisher
@@ -57,7 +56,7 @@ type (
 	// TQueryOptions hold properties configuring a query.
 	//
 	// This type is used by the HTTP pagehandler when receiving
-	// a page's data.
+	// a page request.
 	TQueryOptions struct {
 		ID          TID       // an entity ID to lookup
 		Descending  bool      // sort direction
@@ -90,6 +89,28 @@ const (
 	//                   |  + Descending
 	//                   + ID
 )
+
+// `clone()` copies the current object's properties to a new instance.
+//
+// NOTE: This method is merely a debugging aid.
+func (qo *TQueryOptions) clone() *TQueryOptions {
+	result := TQueryOptions{
+		ID:          qo.ID,
+		Descending:  qo.Descending,
+		Entity:      qo.Entity,
+		GuiLang:     qo.GuiLang,
+		Layout:      qo.Layout,
+		LimitLength: qo.LimitLength,
+		LimitStart:  qo.LimitStart,
+		Matching:    qo.Matching,
+		QueryCount:  qo.QueryCount,
+		SortBy:      qo.SortBy,
+		Theme:       qo.Theme,
+		VirtLib:     qo.VirtLib,
+	}
+
+	return &result
+} // clone()
 
 // DecLimit decrements the LIMIT-start value.
 func (qo *TQueryOptions) DecLimit() *TQueryOptions {
@@ -218,14 +239,6 @@ func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort TSortType, aIn
 	}
 } // sortSelectOptionsPrim()
 
-// String returns the options as a `|` delimited string.
-func (qo *TQueryOptions) String() string {
-	return fmt.Sprintf(qoStringPattern,
-		qo.ID, qo.Descending, qo.Entity, qo.GuiLang, qo.Layout,
-		qo.LimitLength, qo.LimitStart, qo.Matching,
-		qo.QueryCount, qo.SortBy, qo.Theme, qo.VirtLib)
-} // String()
-
 // SelectThemeOptions returns a list of two SELECT/OPTIONs.
 func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 	result := make(TStringMap, 2)
@@ -245,6 +258,14 @@ func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 func (qo *TQueryOptions) SelectVirtLibOptions() string {
 	return VirtLibOptions(qo.VirtLib)
 } // SelectVirtLibOptions()
+
+// String returns the options as a `|` delimited string.
+func (qo *TQueryOptions) String() string {
+	return fmt.Sprintf(qoStringPattern,
+		qo.ID, qo.Descending, qo.Entity, qo.GuiLang, qo.Layout,
+		qo.LimitLength, qo.LimitStart, qo.Matching,
+		qo.QueryCount, qo.SortBy, qo.Theme, qo.VirtLib)
+} // String()
 
 // Update returns a `TQueryOptions` instance with updated values
 // read from the `aRequest` data.
@@ -298,10 +319,8 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	}
 
 	if fsb := aRequest.FormValue("sortby"); 0 < len(fsb) {
-		var sb TSortType
+		var sb TSortType // defaults to `0` == `qoSortByAcquisition`
 		switch fsb {
-		case "acquisition":
-			sb = qoSortByAcquisition
 		case "authors":
 			sb = qoSortByAuthor
 		case "language":
@@ -320,8 +339,6 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			sb = qoSortByTime
 		case "title":
 			sb = qoSortByTitle
-		case "":
-			sb = qoSortUnsorted // just to actually use this const
 		}
 		if sb != qo.SortBy {
 			qo.LimitStart, qo.SortBy = 0, sb
