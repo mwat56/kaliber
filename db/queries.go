@@ -211,7 +211,41 @@ IFNULL((SELECT group_concat(a.name || "|" || a.id, ", ")
 	FROM authors a
 	JOIN books_authors_link bal ON(bal.author = a.id)
 	WHERE (bal.book = b.id)
-), "") authors
+), "") authors,
+IFNULL((SELECT group_concat(l.lang_code || "|" || l.id, ", ")
+	FROM books_languages_link bll
+	JOIN languages l ON(bll.lang_code = l.id)
+	WHERE (bll.book = b.id)
+), "") languages,
+IFNULL((SELECT group_concat(p.name || "|" || p.id)
+	FROM publishers p
+	JOIN books_publishers_link bpl ON(p.id = bpl.publisher)
+	WHERE (bpl.book = b.id)
+), "") publisher,
+IFNULL((SELECT r.rating
+	FROM ratings r
+	WHERE r.id IN (
+		SELECT brl.rating
+		from books_ratings_link brl
+		WHERE (brl.book = b.id)
+	)
+), 0) rating,
+IFNULL((SELECT group_concat(s.name || "|" || s.id, ", ")
+	FROM series s
+	JOIN books_series_link bsl ON(bsl.series = s.id)
+	WHERE (bsl.book = b.id)
+), "") series,
+IFNULL((SELECT MAX(data.uncompressed_size)
+	FROM data
+	WHERE (data.book = b.id)
+), 0) size,
+IFNULL((SELECT group_concat(t.name || "|" || t.id, ", ")
+	FROM tags t
+	JOIN books_tags_link btl ON(btl.tag = t.id)
+	WHERE (btl.book = b.id)
+), "") tags,
+b.pubdate,
+b.sort AS title_sort
 FROM books b `
 )
 
@@ -229,12 +263,15 @@ func doQueryGrid(aContext context.Context, aQuery string) (rList *TDocList, rErr
 	rList = NewDocList()
 	for rows.Next() {
 		var (
-			authors tPSVstring
-			visible bool
+			authors, languages, publisher, series, tags, titleSort tPSVstring
+			rating, size                                           int
+			pubdate                                                time.Time
+			visible                                                bool
 		)
 		doc := NewDocument()
 
-		_ = rows.Scan(&doc.ID, &doc.Title, &authors)
+		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &languages, &publisher, &rating, &series, &size, &tags, &pubdate, &titleSort)
+
 		if visible, _ = BookFieldVisible(`authors`); !visible {
 			_, _ = BookFieldVisible(`author_sort`)
 		}
@@ -295,6 +332,8 @@ func escapeQuery(aSource string) string {
 } // escapeQuery()
 
 var (
+	// `quHaving` defines a JOIN operation limiting the result-set
+	// to records matching a certain condition.
 	quHaving = map[string]string{
 		`all`:       ``,
 		`authors`:   `JOIN books_authors_link a ON(a.book = b.id) WHERE (a.author = %d) `,
@@ -326,7 +365,7 @@ func limit(aStart, aLength uint) string {
 //
 // The `aOrder` argument can be one of the following constants:
 //
-//	qoSortUnsorted      = TSortType(iota)
+//	qoSortByAcquisition = TSortType(iota)
 //	qoSortByAuthor
 //	qoSortByLanguage
 //	qoSortByPublisher
@@ -679,8 +718,9 @@ func QueryCustomColumns(aContext context.Context) (*TCustomColumnList, error) {
 
 const (
 	// see `QueryDocMini()`
-	quDocMiniQuery = `SELECT b.id, IFNULL((SELECT group_concat(d.format, ", ")
-FROM data d WHERE d.book = b.id), "") formats,
+	quDocMiniQuery = `SELECT b.id,
+IFNULL((SELECT group_concat(d.format, ", ")
+	FROM data d WHERE d.book = b.id), "") formats,
 b.path,
 b.title
 FROM books b
@@ -766,7 +806,6 @@ func QueryIDs(aContext context.Context) (rList *TDocList, rErr error) {
 		default:
 			rList.Add(doc)
 		}
-
 	}
 
 	return
@@ -796,7 +835,7 @@ func QuerySearch(aContext context.Context, aOptions *TQueryOptions) (rCount int,
 	select {
 	case <-aContext.Done():
 		rErr = aContext.Err()
-		return
+
 	default:
 		if 0 < rCount {
 			if QoLayoutList == aOptions.Layout {

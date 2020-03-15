@@ -363,6 +363,7 @@ func TestQueryBy(t *testing.T) {
 		ID:          0,
 		Descending:  false,
 		Entity:      "",
+		Layout:      QoLayoutGrid,
 		LimitLength: 1000,
 		LimitStart:  0,
 		Matching:    "",
@@ -372,15 +373,17 @@ func TestQueryBy(t *testing.T) {
 		ID:          3524,
 		Descending:  false,
 		Entity:      "authors",
+		Layout:      QoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
-		SortBy:      qoSortByAuthor,
+		SortBy:      qoSortByRating,
 	}
 	o2 := &TQueryOptions{
 		ID:          1,
 		Descending:  false,
 		Entity:      "languages",
+		Layout:      QoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -390,6 +393,7 @@ func TestQueryBy(t *testing.T) {
 		ID:          574,
 		Descending:  false,
 		Entity:      "publisher",
+		Layout:      QoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -399,6 +403,7 @@ func TestQueryBy(t *testing.T) {
 		ID:          519,
 		Descending:  false,
 		Entity:      "series",
+		Layout:      QoLayoutGrid,
 		LimitLength: 50,
 		LimitStart:  0,
 		Matching:    "",
@@ -413,6 +418,10 @@ func TestQueryBy(t *testing.T) {
 		Matching:    "",
 		SortBy:      qoSortByTags,
 	}
+	o6 := o5.clone()
+	o6.Layout = QoLayoutGrid
+	o6.SortBy = qoSortByAcquisition
+
 	type args struct {
 		aContext context.Context
 		aOption  *TQueryOptions
@@ -425,12 +434,13 @@ func TestQueryBy(t *testing.T) {
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
-		{" 0", args{ctx, o0}, 5560, 1000, false},
+		{" 0", args{ctx, o0}, 5561, 1000, false},
 		{" 1", args{ctx, o1}, 14, 14, false},
 		{" 2", args{ctx, o2}, 4618, 50, false},
 		{" 3", args{ctx, o3}, 42, 42, false},
-		{" 4", args{ctx, o4}, 390, 50, false},
+		{" 4", args{ctx, o4}, 391, 50, false},
 		{" 5", args{ctx, o5}, 447, 50, false},
+		{" 5", args{ctx, o6}, 447, 50, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -541,11 +551,17 @@ func TestQuerySearch(t *testing.T) {
 	openDBforTesting(ctx)
 
 	qo1 := NewQueryOptions(0)
+	qo1.Layout = QoLayoutGrid
 	qo1.Matching = `Golang`
+	qo1.SortBy = qoSortByLanguage
 	qo2 := NewQueryOptions(0)
+	qo2.Layout = QoLayoutGrid
 	qo2.Matching = `languages:"=eng"`
+	qo2.SortBy = qoSortBySize
 	qo3 := NewQueryOptions(0)
+	qo3.Layout = QoLayoutGrid
 	qo3.Matching = `languages:"=deu"`
+	qo3.SortBy = qoSortBySeries
 	type args struct {
 		aContext context.Context
 		aOption  *TQueryOptions
@@ -560,7 +576,7 @@ func TestQuerySearch(t *testing.T) {
 		// TODO: Add test cases.
 		{" 1", args{ctx, qo1}, 35, 24, false},
 		{" 2", args{ctx, qo2}, 4618, 24, false},
-		{" 3", args{ctx, qo3}, 930, 24, false},
+		{" 3", args{ctx, qo3}, 931, 24, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
