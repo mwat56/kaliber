@@ -119,6 +119,8 @@ which should produce an executable binary.
 	-dataDir string
 		<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
+	-delWhitespace
+		(optional) Delete superfluous whitespace in generated pages (default true)
 	-errorlog string
 		<filename> Name of the error logfile to write to
 		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/error.log")
@@ -211,6 +213,9 @@ There's an INI file which can take all the options (apart from the user handling
 	# and "views" sub-directories.
 	# NOTE: This should be an _absolute_ path name!
 	dataDir = ./
+
+	# Delete superfluous whitespace in generated pages.
+	delWhitespace = yes
 
 	# Name of the optional error logfile to write to.
 	# NOTE: a relative path/name will be combined with `dataDir` (above).

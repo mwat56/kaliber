@@ -21,6 +21,7 @@ import (
 	"github.com/mwat56/ini"
 	"github.com/mwat56/kaliber/db"
 	"github.com/mwat56/sessions"
+	"github.com/mwat56/whitespace"
 )
 
 type (
@@ -184,6 +185,10 @@ func InitConfig() {
 	flag.StringVar(&certPem, "certPem", certPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
+	delWhitespace, _ := AppArguments.AsBool("delWhitespace")
+	flag.BoolVar(&delWhitespace, "delWhitespace", delWhitespace,
+		"(optional) Delete superfluous whitespace in generated pages")
+
 	s, _ = AppArguments.Get("errorLog")
 	errorLog := absolute(dataDir, s)
 	flag.StringVar(&errorLog, "errorlog", errorLog,
@@ -316,6 +321,8 @@ func InitConfig() {
 		}
 	}
 	AppArguments.set("certPem", certPem)
+
+	whitespace.UseRemoveWhitespace = delWhitespace
 
 	if 0 < len(errorLog) {
 		errorLog = absolute(dataDir, errorLog)
