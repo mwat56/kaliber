@@ -109,19 +109,19 @@ func main() {
 	// Setup the errorpage handler:
 	handler := errorhandler.Wrap(ph, ph)
 
-	// Inspect `sessiondir` commandline argument and setup the session handler
+	// Inspect `sessiondir` config option and setup the session handler
 	if s, err = kaliber.AppArguments.Get("sessiondir"); (nil == err) && (0 < len(s)) {
 		// we assume, an error means: no automatic session handling
 		handler = sessions.Wrap(handler, s)
 	}
 
-	// Inspect `gzip` commandline argument and setup the Gzip handler:
+	// Inspect `gzip` config option and setup the Gzip handler:
 	if s, err = kaliber.AppArguments.Get("gzip"); (nil == err) && ("true" == s) {
 		// we assume, an error means: no gzip compression
 		handler = gziphandler.GzipHandler(handler)
 	}
 
-	// Inspect logging commandline arguments and setup the `ApacheLogger`:
+	// Inspect logging config options and setup the `ApacheLogger`:
 	if s, err = kaliber.AppArguments.Get("accessLog"); (nil == err) && (0 < len(s)) {
 		// we assume, an error means: no logfile
 		if s2, err2 := kaliber.AppArguments.Get("errorLog"); (nil == err2) && (0 < len(s2)) {
