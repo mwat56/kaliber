@@ -350,7 +350,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		aRequest.URL.Path = file
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
-	case "first":
+	case "first", "":
 		qo.LimitStart = 0
 		ph.handleQuery(aWriter, aRequest, qo, so)
 
@@ -392,6 +392,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "privacy", "datenschutz":
 		ph.handleReply("privacy", aWriter, so, qo, ph.basicTemplateData(qo))
 
+	case "qo":
+		// This gets called when user requests page source of
+		// a POST result page; try to handle it gracefully.
+		ph.handleQuery(aWriter, aRequest, qo, so)
+
 	case "robots.txt":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
 
@@ -425,19 +430,12 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "views": // files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
 
-	case "":
-		qo.ID = 0         // reset fields
-		qo.Entity = ""    // dito
-		qo.LimitStart = 0 //
-		qo.Matching = ""  //
-		ph.handleQuery(aWriter, aRequest, qo, so)
-
 	default:
 		// // if nothing matched (above) reply to the request
 		// // with an HTTP 404 not found error.
 		//http.NotFound(aWriter, aRequest)
 
-		// Redirect all invalid URLs to the NSA:
+		// Redirect all unknown/invalid URLs to the NSA:
 		http.Redirect(aWriter, aRequest, "https://www.nsa.gov/", http.StatusMovedPermanently)
 	} // switch
 } // handleGET()
