@@ -20,8 +20,15 @@ import (
 )
 
 /*
- * This file provides functions to sync the used database copy
- * with the original Calibre library.
+ * This file provides functions to sync the used database copy with the
+ * original Calibre library.
+ *
+ * To avoid any LOCKing problems when reading the Calibre database
+ * (which happened quite frequently) while it is edited by the original
+ * Calibre installation here we simply copy Calibre's database file into
+ * the user's cache directory.
+ * This way we can use R/O access without the fear that the database might
+ * be changed under our feet by other processes.
  *
  * Additionally there are functions to handle an external text file
  * for tracing all used SQL queries.
@@ -29,18 +36,16 @@ import (
 
 var (
 
-	// `syncCheck` Signal channel to check for database changes.
-	syncCheck = make(chan struct{}, 64)
+	// `syncCheckChan` Signal channel to check for database changes.
+	syncCheckChan = make(chan struct{}, 64)
 
-	// `syncCopied` Signal channel for a new database copy.
-	syncCopied = make(chan struct{}, 1)
+	// `syncCopiedChan` Signal channel for a new database copy.
+	syncCopiedChan = make(chan struct{}, 1)
 )
 
 // `copyDatabaseFile()` copies Calibre's original database file
 // to our cache directory.
 func copyDatabaseFile() (bool, error) {
-	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
-	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
 	var (
 		err          error
 		sFile, tFile *os.File
@@ -55,10 +60,12 @@ func copyDatabaseFile() (bool, error) {
 		}
 	}()
 
+	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
 	if sFI, err = os.Stat(sName); nil != err {
 		return false, err
 	}
 
+	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
 	if dFI, err = os.Stat(dName); nil == err {
 		if sFI.ModTime().Before(dFI.ModTime()) {
 			return false, nil
@@ -91,7 +98,16 @@ func copyDatabaseFile() (bool, error) {
 //	`aCopied` W/O channel to signal a new database copy.
 func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 	timer := time.NewTimer(time.Minute)
-	defer func() { _ = timer.Stop() }()
+	defer func() {
+		_ = timer.Stop()
+	}()
+
+	doCopyChk := func() {
+		if copied, err := copyDatabaseFile(); copied && (nil == err) {
+			aCopied <- struct{}{}
+		}
+		_ = timer.Reset(time.Minute)
+	}
 
 	for {
 		select {
@@ -99,16 +115,10 @@ func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 			if !more {
 				return // channel closed
 			}
-			if copied, err := copyDatabaseFile(); copied && (nil == err) {
-				aCopied <- struct{}{}
-			}
-			_ = timer.Reset(time.Minute)
+			doCopyChk()
 
 		case <-timer.C:
-			if copied, err := copyDatabaseFile(); copied && (nil == err) {
-				aCopied <- struct{}{}
-			}
-			_ = timer.Reset(time.Minute)
+			doCopyChk()
 		}
 	}
 } // goCheckFile()
@@ -117,10 +127,10 @@ func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
 
 var (
 	// The channel to send SQL to and read trace messages from.
-	dbSQLTraceChannel = make(chan string, 64)
+	syncSQLTraceChannel = make(chan string, 64)
 
 	// Optional file to log all SQL queries.
-	dbSQLTraceFile = ``
+	syncSQLTraceFile = ``
 )
 
 // `goSQLtrace()` runs in background to log `aQuery`
@@ -129,20 +139,20 @@ var (
 //	`aQuery` The SQL query to log.
 //	`aTime` The time at which the query was run.
 func goSQLtrace(aQuery string, aTime time.Time) {
-	if 0 == len(dbSQLTraceFile) {
+	if 0 == len(syncSQLTraceFile) {
 		return
 	}
-	aQuery = strings.ReplaceAll(aQuery, "\t", ` `)
-	aQuery = strings.ReplaceAll(aQuery, "\n", ` `)
+	aQuery = strings.Replace(aQuery, "\t", ` `, -1)
+	aQuery = strings.Replace(aQuery, "\n", ` `, -1)
 
-	dbSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
-		strings.ReplaceAll(aQuery, `  `, ` `)
+	syncSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
+		strings.Replace(aQuery, `  `, ` `, -1)
 } // goSQLtrace()
 
 // `goWriteSQLtrace()` performs the actual file writes.
 //
 // This function is called only once, handling all write requests
-// in background.
+// while running in background.
 //
 //	`aTraceLog` The name of the logfile to write to.
 //	`aSource` R/O channel to read the log messages to write.
@@ -203,21 +213,21 @@ func SetSQLtraceFile(aFilename string) {
 		var once sync.Once
 		once.Do(func() {
 			if path, err := filepath.Abs(aFilename); nil == err {
-				dbSQLTraceFile = path
+				syncSQLTraceFile = path
 				// start the background writer:
-				go goWriteSQLtrace(dbSQLTraceFile, dbSQLTraceChannel)
+				go goWriteSQLtrace(syncSQLTraceFile, syncSQLTraceChannel)
 			}
 		})
 
 		return
 	}
 
-	dbSQLTraceFile = ``
+	syncSQLTraceFile = ``
 } // SetSQLtraceFile()
 
-// SQLtraceFile returns the optional file used for logging all SQL queries.
+// SQLtraceFile returns the file used for the optional logging of SQL queries.
 func SQLtraceFile() string {
-	return dbSQLTraceFile
+	return syncSQLTraceFile
 } // SQLtraceFile()
 
 /* _EoF_ */

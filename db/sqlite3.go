@@ -73,10 +73,10 @@ func OpenDatabase(aContext context.Context) error {
 		return err
 	}
 	// signal for `dbSqliteDB.reOpen()`:
-	syncCopied <- struct{}{}
+	syncCopiedChan <- struct{}{}
 
 	// start monitoring the original database file:
-	go goCheckFile(syncCheck, syncCopied)
+	go goCheckFile(syncCheckChan, syncCopiedChan)
 
 	return dbSqliteDB.reOpen(aContext)
 } // OpenDatabase()
@@ -122,8 +122,7 @@ func (db *tDataBase) query(aContext context.Context, aQuery string) (rRows *sql.
 	if rErr = db.reOpen(aContext); nil != rErr {
 		return
 	}
-	// syncCheck <- struct{}{}
-
+	// syncCheckChan <- struct{}{}
 	go goSQLtrace(aQuery, time.Now())
 
 	rRows, rErr = db.DB.QueryContext(aContext, aQuery)
@@ -139,15 +138,15 @@ func (db *tDataBase) query(aContext context.Context, aQuery string) (rRows *sql.
 //	`aContext` The current request's context.
 func (db *tDataBase) reOpen(aContext context.Context) error {
 	select {
-	case _, more := <-syncCopied:
+	case _, more := <-syncCopiedChan:
 		if nil != db.DB {
 			_ = db.DB.Close()
 			db.DB = nil
 		}
-		var err error
 		if !more {
-			return err // channel closed
+			return nil // channel closed
 		}
+		var err error
 
 		//XXX Are there custom functions to inject?
 
@@ -161,7 +160,7 @@ func (db *tDataBase) reOpen(aContext context.Context) error {
 		if db.DB, err = sql.Open(`sqlite3`, dsn); nil != err {
 			return err
 		}
-		// db.Exec("PRAGMA xxx=yyy")
+		// db.DB.Exec("PRAGMA xxx=yyy")
 
 		go goSQLtrace(`-- reOpened `+dsn, time.Now())
 		return db.DB.PingContext(aContext)
