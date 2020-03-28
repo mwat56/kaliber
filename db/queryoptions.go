@@ -151,7 +151,8 @@ func (qo *TQueryOptions) Scan(aString string) *TQueryOptions {
 	return qo
 } // Scan()
 
-// SelectLanguageOptions returns a list of two SELECT/OPTIONs.
+// SelectLanguageOptions returns a list of two SELECT/OPTIONs
+// for the language choice.
 func (qo *TQueryOptions) SelectLanguageOptions() *TStringMap {
 	result := make(TStringMap, 2)
 	switch qo.GuiLang {
@@ -168,7 +169,8 @@ func (qo *TQueryOptions) SelectLanguageOptions() *TStringMap {
 	return &result
 } // SelectLanguageOptions()
 
-// SelectLayoutOptions returns a list of SELECT/OPTIONs.
+// SelectLayoutOptions returns a list of SELECT/OPTIONs
+// for the layout choice.
 func (qo *TQueryOptions) SelectLayoutOptions() *TStringMap {
 	result := make(TStringMap, 2)
 	if QoLayoutList == qo.Layout {
@@ -183,24 +185,29 @@ func (qo *TQueryOptions) SelectLayoutOptions() *TStringMap {
 } // SelectLayoutOptions()
 
 var (
-	optionSelectedLookup = map[bool]string{
+	// List of allowed documents per page values.
+	qoLimitList = [5]uint{9, 24, 48, 99, 249}
+
+	// Lookup table
+	qoSelectedLookup = map[bool]string{
 		true:  ` SELECTED`,
 		false: ``,
 	}
 )
 
-// SelectLimitOptions returns a list of SELECT/OPTIONs.
+// SelectLimitOptions returns a list of SELECT/OPTIONs
+// for the limit (documents per page) choice.
 func (qo *TQueryOptions) SelectLimitOptions() string {
-	iList := [6]uint{9, 24, 48, 99, 249, 498}
-	sList := make([]string, len(iList))
-	for idx, limit := range iList {
-		sList[idx] = fmt.Sprintf(`<option%s value="%d">%d</option>`, optionSelectedLookup[limit == qo.LimitLength], limit, limit)
+	sList := make([]string, len(qoLimitList))
+	for idx, limit := range qoLimitList {
+		sList[idx] = fmt.Sprintf(`<option%s value="%d">%d</option>`, qoSelectedLookup[limit == qo.LimitLength], limit, limit)
 	}
 
 	return strings.Join(sList, `\n`)
 } // SelectLimitOptions()
 
-// SelectOrderOptions returns a list of SELECT/OPTIONs.
+// SelectOrderOptions returns a list of SELECT/OPTIONs
+// for the order choice.
 func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 	result := make(TStringMap, 2)
 	if qo.Descending {
@@ -214,7 +221,8 @@ func (qo *TQueryOptions) SelectOrderOptions() *TStringMap {
 	return &result
 } // SelectOrderOptions()
 
-// SelectSortByOptions returns a list of SELECT/OPTIONs.
+// SelectSortByOptions returns a list of SELECT/OPTIONs
+// for the order choice.
 func (qo *TQueryOptions) SelectSortByOptions() *TStringMap {
 	result := make(TStringMap, 10)
 	qo.selectSortByPrim(&result, qoSortByAcquisition, "acquisition")
@@ -239,7 +247,8 @@ func (qo *TQueryOptions) selectSortByPrim(aMap *TStringMap, aSort TSortType, aIn
 	}
 } // sortSelectOptionsPrim()
 
-// SelectThemeOptions returns a list of two SELECT/OPTIONs.
+// SelectThemeOptions returns a list of SELECT/OPTIONs
+// for the theme choice.
 func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 	result := make(TStringMap, 2)
 	switch qo.Theme {
@@ -254,9 +263,10 @@ func (qo *TQueryOptions) SelectThemeOptions() *TStringMap {
 	return &result
 } // SelectThemeOptions()
 
-// SelectVirtLibOptions returns the SELECT/OPTIONs of virtual libraries.
+// SelectVirtLibOptions returns a list of SELECT/OPTIONs
+// for the virtual library choice.
 func (qo *TQueryOptions) SelectVirtLibOptions() string {
-	return VirtLibOptions(qo.VirtLib)
+	return VirtLibOptions(qo.VirtLib) // see `metadata.go`
 } // SelectVirtLibOptions()
 
 // String returns the options as a `|` delimited string.
@@ -269,6 +279,8 @@ func (qo *TQueryOptions) String() string {
 
 // Update returns a `TQueryOptions` instance with updated values
 // read from the `aRequest` data.
+//
+//	`aRequest` The current HTTP request.
 func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	// The form fields are defined/used in `02header.gohtml`
 	if lang := aRequest.FormValue("guilang"); 0 < len(lang) {
@@ -359,8 +371,9 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 
 	if vl := aRequest.FormValue("virtlib"); 0 < len(vl) {
 		if vl != qo.VirtLib {
-			if "-" == vl {
-				qo.VirtLib = ""
+			if `-` == vl {
+				qo.VirtLib = ``
+				qo.Matching = ``
 			} else {
 				qo.VirtLib = vl
 			}
@@ -373,6 +386,7 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 			}
 			qo.Entity, qo.ID, qo.LimitStart = "", 0, 0
 		}
+		// ELSE: nothing changed, leave `qo.Matching` alone
 	} else {
 		qo.VirtLib = ""
 	}
@@ -383,14 +397,25 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // NewQueryOptions returns a new `TQueryOptions` instance.
+//
+//	`aDocsPerPage` The number of documents per page to show.
 func NewQueryOptions(aDocsPerPage int) *TQueryOptions {
 	result := TQueryOptions{
-		Descending:  true,
-		LimitLength: 24,
-		SortBy:      qoSortByAcquisition,
+		Descending: true,
+		// SortBy: qoSortByAcquisition, // i.e. Default
 	}
+
 	if 0 < aDocsPerPage {
-		result.LimitLength = uint(aDocsPerPage)
+		var limit uint
+		for _, limit = range qoLimitList {
+			if limit >= uint(aDocsPerPage) {
+				break
+			}
+		}
+		// Use the last used loop value:
+		result.LimitLength = limit
+	} else {
+		result.LimitLength = 24
 	}
 
 	return &result

@@ -11,6 +11,55 @@ import (
 	"testing"
 )
 
+func TestNewQueryOptions(t *testing.T) {
+	w0 := &TQueryOptions{
+		Descending:  true,
+		LimitLength: 24,
+	}
+	w1 := &TQueryOptions{
+		Descending:  true,
+		LimitLength: 9,
+	}
+	w2 := w0
+	w3 := &TQueryOptions{
+		Descending:  true,
+		LimitLength: 48,
+	}
+	w4 := &TQueryOptions{
+		Descending:  true,
+		LimitLength: 99,
+	}
+	w5 := &TQueryOptions{
+		Descending:  true,
+		LimitLength: 249,
+	}
+	w6 := w5
+	type args struct {
+		aDocsPerPage int
+	}
+	tests := []struct {
+		name string
+		args args
+		want *TQueryOptions
+	}{
+		// TODO: Add test cases.
+		{" 0", args{0}, w0},
+		{" 1", args{1}, w1},
+		{" 2", args{10}, w2},
+		{" 3", args{30}, w3},
+		{" 4", args{60}, w4},
+		{" 5", args{160}, w5},
+		{" 6", args{660}, w6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewQueryOptions(tt.args.aDocsPerPage); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewQueryOptions() = {%v},\nwant {%v}", got, tt.want)
+			}
+		})
+	}
+} // TestNewQueryOptions()
+
 func TestTQueryOptions_clone(t *testing.T) {
 	qo1 := NewQueryOptions(9)
 	w1 := NewQueryOptions(9)
@@ -203,7 +252,7 @@ func TestTQueryOptions_String(t *testing.T) {
 
 func TestTQueryOptions_SelectLimitOptions(t *testing.T) {
 	qo1 := NewQueryOptions(0)
-	w1 := `<option value="9">9</option>\n<option SELECTED value="24">24</option>\n<option value="48">48</option>\n<option value="99">99</option>\n<option value="249">249</option>\n<option value="498">498</option>`
+	w1 := `<option value="9">9</option>\n<option SELECTED value="24">24</option>\n<option value="48">48</option>\n<option value="99">99</option>\n<option value="249">249</option>`
 	tests := []struct {
 		name   string
 		fields *TQueryOptions
