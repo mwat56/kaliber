@@ -6,10 +6,36 @@
 
 package db
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"reflect"
 	"testing"
 )
+
+func Test_escapeQuery(t *testing.T) {
+	type args struct {
+		source string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{" 1", args{""}, ""},
+		{" 2", args{"Hello World!"}, "Hello World!"},
+		{" 3", args{`"Hello World!"`}, `\"Hello World!\"`},
+		{" 4", args{`"Rock 'n' Roll!"`}, `\"Rock 'n' Roll!\"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := escapeQuery(tt.args.source); got != tt.want {
+				t.Errorf("escapeQuery() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // Test_escapeQuery()
 
 func Test_tExpression_buildSQL(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")

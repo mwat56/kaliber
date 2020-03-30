@@ -18,6 +18,52 @@ import (
  * This file provides helper functions and methods for database searches.
  */
 
+
+// `escapeQuery()` returns a string with some characters escaped.
+//
+// see: https://github.com/golang/go/issues/18478#issuecomment-357285669
+func escapeQuery(aSource string) string {
+	sLen := len(aSource)
+	if 0 == sLen {
+		return ``
+	}
+	var (
+		character byte
+		escape    bool
+		j         int
+	)
+	result := make([]byte, sLen<<1)
+	for i := 0; i < sLen; i++ {
+		character = aSource[i]
+		switch character {
+		case '\n', '\r', '\\', '"':
+			// We do not escape the apostrophe since it can be
+			// a legitimate part of the search term and we use
+			// double quotes to enclose those terms.
+			escape = true
+		case '\032': // Ctrl-Z
+			escape = true
+			character = 'Z'
+		default:
+		}
+
+		if escape {
+			escape = false
+			result[j] = '\\'
+			result[j+1] = character
+			j += 2
+		} else {
+			result[j] = character
+			j++
+		}
+	}
+
+	return string(result[0:j])
+} // escapeQuery()
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 type (
 	// TSearch provides text search capabilities.
 	TSearch struct {

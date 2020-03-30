@@ -36,30 +36,6 @@ func openDBforTesting(aContext context.Context) *TDataBase {
 	return result
 } // openDBforTesting()
 
-func Test_escapeQuery(t *testing.T) {
-	type args struct {
-		source string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-		{" 1", args{""}, ""},
-		{" 2", args{"Hello World!"}, "Hello World!"},
-		{" 3", args{`"Hello World!"`}, `\"Hello World!\"`},
-		{" 4", args{`"Rock 'n' Roll!"`}, `\"Rock 'n' Roll!\"`},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := escapeQuery(tt.args.source); got != tt.want {
-				t.Errorf("escape() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // Test_escapeQuery()
-
 func Test_prepAuthors(t *testing.T) {
 	w0 := &tAuthorList{}
 	a1 := "Willy Wichtig|1"
