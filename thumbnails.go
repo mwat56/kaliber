@@ -29,7 +29,9 @@ import (
  */
 
 // `goThumbCleanup()` removes orphaned thumbnails.
-func goThumbCleanup() {
+//
+//	`aDB` The DB handle to access the `Calibre` database.
+func goThumbCleanup(aDB *db.TDataBase) {
 	bd := db.CalibreCachePath()
 	dirNames, err := filepath.Glob(bd + "/*")
 	if nil != err {
@@ -38,7 +40,7 @@ func goThumbCleanup() {
 		return
 	}
 	for _, numDir := range dirNames {
-		checkThumbBase(numDir)
+		checkThumbBase(numDir, aDB)
 	}
 
 	// just mark that function as `used`:
@@ -46,7 +48,10 @@ func goThumbCleanup() {
 } // goThumbCleanup()
 
 // `checkThumbBase()`
-func checkThumbBase(aDirectory string) {
+//
+//	`aDirectory` The thumbnail directory to check.
+//	`aDB` The DB handle to access the `Calibre` database.
+func checkThumbBase(aDirectory string, aDB *db.TDataBase) {
 	subDirs, err := filepath.Glob(aDirectory + "/*")
 	if nil != err {
 		msg := fmt.Sprintf("filepath.Glob(%s): %v", aDirectory+"/*", err)
@@ -54,12 +59,15 @@ func checkThumbBase(aDirectory string) {
 		return
 	}
 	for _, subDir := range subDirs {
-		checkThumbDir(subDir)
+		checkThumbDir(subDir, aDB)
 	}
 } // checkThumbBase()
 
 // `checkThumbDir()` checks `aDirectory` for orphaned thumbnail files.
-func checkThumbDir(aDirectory string) {
+//
+//	`aDirectory` The thumbnail directory to check.
+//	`aDB` The DB handle to access the `Calibre` database.
+func checkThumbDir(aDirectory string, aDB *db.TDataBase) {
 	fileDirs, err := filepath.Glob(aDirectory + "/*.jpg")
 	if nil != err {
 		msg := fmt.Sprintf("filepath.Glob(%s): %v", aDirectory+"/*.jpg", err)
@@ -67,46 +75,51 @@ func checkThumbDir(aDirectory string) {
 		return
 	}
 	for _, fName := range fileDirs {
-		checkThumbFile(fName)
+		checkThumbFile(fName, aDB)
 	}
 } // checkThumbDir()
 
 // `checkThumbFile()` deletes orphaned thumbnail files.
-func checkThumbFile(aFilename string) {
+//
+//	`aFilename` The thumbnail file to check.
+//	`aDB` The DB handle to access the `Calibre` database.
+func checkThumbFile(aFilename string, aDB *db.TDataBase) {
+	var msg string
 	baseName := path.Base(aFilename)
 	docID, err := strconv.Atoi(baseName[:len(baseName)-4])
 	if nil != err {
-		msg := fmt.Sprintf("strconv.Atoi(%s): %v", baseName[:len(baseName)-4], err)
+		msg = fmt.Sprintf("strconv.Atoi(%s): %v", baseName[:len(baseName)-4], err)
 		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
-	doc := db.QueryDocument(context.Background(), docID)
+	doc := aDB.QueryDocument(context.Background(), docID)
 	if nil == doc {
 		// remove thumbnail for non-existing document
 		if err = os.Remove(aFilename); nil != err {
-			msg := fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
+			msg = fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
 			apachelogger.Err("checkThumbFile()", msg)
 		}
 		return
 	}
+
 	cFile, err := doc.CoverFile()
 	if nil != err {
-		msg := fmt.Sprintf("doc.CoverFile(%d): %v", docID, err)
+		msg = fmt.Sprintf("doc.CoverFile(%d): %v", docID, err)
 		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
 	tFI, err := os.Stat(aFilename)
 	if nil != err {
-		msg := fmt.Sprintf("os.Stat(%s): %v", aFilename, err)
+		msg = fmt.Sprintf("os.Stat(%s): %v", aFilename, err)
 		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
 
 	cFI, err := os.Stat(cFile)
 	if nil != err {
-		msg := fmt.Sprintf("os.Stat(%s): %v", cFile, err)
+		msg = fmt.Sprintf("os.Stat(%s): %v", cFile, err)
 		apachelogger.Err("checkThumbFile()", msg)
 		return
 	}
@@ -114,11 +127,11 @@ func checkThumbFile(aFilename string) {
 	if tFI.ModTime().Before(cFI.ModTime()) {
 		// remove outdated thumbnail
 		if err = os.Remove(aFilename); nil != err {
-			msg := fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
+			msg = fmt.Sprintf("os.Remove(%s): %v", aFilename, err)
 			apachelogger.Err("checkThumbFile()", msg)
 		}
 		if err = makeThumbnail(cFile, aFilename); nil != err {
-			msg := fmt.Sprintf("makeThumbnail(%s): %v", aFilename, err)
+			msg = fmt.Sprintf("makeThumbnail(%s): %v", aFilename, err)
 			apachelogger.Err("checkThumbFile()", msg)
 		}
 	}
@@ -127,6 +140,8 @@ func checkThumbFile(aFilename string) {
 // `makeThumbDir()` creates the directory for the document's thumbnail.
 //
 // The directory is created with filemode `0775` (`drwxrwxr-x`).
+//
+//	`aDoc` The document for which to make a thumbnail directory.
 func makeThumbDir(aDoc *db.TDocument) error {
 	fMode := os.ModeDir | 0775
 	fName := thumbnailName(aDoc)
@@ -137,6 +152,9 @@ func makeThumbDir(aDoc *db.TDocument) error {
 
 // `makeThumbnail()` generates a thumbnail for `aSrcName` and stores it
 // in `aDstName`.
+//
+//	`aSrcName` The filename of a document's cover image.
+//	`aDstName` The name of the generated thumbnail file.
 func makeThumbnail(aSrcName, aDstName string) error {
 	var (
 		sImg         image.Image
@@ -197,6 +215,8 @@ func makeThumbPrim(img image.Image) image.Image {
 } // makeThumbPrim()
 
 // Thumbnail generates a thumbnail of the document's cover.
+//
+//	`aDoc` The document to check the thumbnail for.
 func Thumbnail(aDoc *db.TDocument) (string, error) {
 	var (
 		err      error
@@ -232,7 +252,9 @@ func Thumbnail(aDoc *db.TDocument) (string, error) {
 	return dName, nil
 } // Thumbnail()
 
-// `thumbnailName()` returns the name of thumbnail file of `aDoc`.
+// `thumbnailName()` returns the name of the thumbnail file of `aDoc`.
+//
+//	`aDoc` The document for which to compute the thumbnail name.
 func thumbnailName(aDoc *db.TDocument) string {
 	name := fmt.Sprintf("%06d", aDoc.ID)
 
@@ -240,8 +262,11 @@ func thumbnailName(aDoc *db.TDocument) string {
 } // thumbnailName()
 
 // `thumbnailRemove()` deletes the thumbnail of `aDoc`.
+//
+// Note that this function is only needed for during testing.
+//
+//	`aDoc` The document to remove the thumbnail for.
 func thumbnailRemove(aDoc *db.TDocument) error {
-	//XXX This function is only needed for during testing.
 	fName := thumbnailName(aDoc)
 	err := os.Remove(fName)
 	if nil == err {
@@ -254,9 +279,20 @@ func thumbnailRemove(aDoc *db.TDocument) error {
 	return err
 } // thumbnailRemove()
 
-// ThumbnailUpdate creates thumbnails for all existing documents
+// ThumbnailUpdate creates thumbnails for all existing documents.
 func ThumbnailUpdate() {
-	docList, err := db.QueryIDs(context.Background())
+	// Since this maintenance tasks does not depend on a certain
+	// page request we can use `context.Background()` here and
+	// open a separate DB connetion.
+	ctx := context.Background()
+	dbHandle, err := db.OpenDatabase(ctx)
+	if nil != err {
+		msg := fmt.Sprintf("OpenDatabase(): %v", err)
+		apachelogger.Err("ThumbnailUpdate()", msg)
+		return
+	}
+
+	docList, err := dbHandle.QueryIDs(ctx)
 	if nil != err {
 		return
 	}
@@ -267,15 +303,17 @@ func ThumbnailUpdate() {
 		}
 	}
 
-	// delete/update all orphaned/outdated thumbnails:
-	go goThumbCleanup()
+	// Delete/update all orphaned/outdated thumbnails:
+	go goThumbCleanup(dbHandle)
 } // ThumbnailUpdate()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // SetThumbWidth set the new width for generated thumbnails.
 //
-// If `aWidth` is smaller than `64` it's increased.
+// If `aWidth` is smaller than `64` it's increased to `64`.
+//
+//	`aWidth` The new thumbnail width to use.
 func SetThumbWidth(aWidth uint) uint {
 	if 64 > aWidth {
 		aWidth = 64

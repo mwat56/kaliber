@@ -271,6 +271,14 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	if qos, ok := so.GetString("QOS"); ok {
 		qo.Scan(qos)
 	}
+
+	dbHandle, err := db.OpenDatabase(aRequest.Context())
+	if nil != err {
+		msg := fmt.Sprintf("db.OpenDatabase(): %v", err)
+		apachelogger.Err("TPageHandler.handleGET()", msg)
+		return
+	}
+
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
 	case "authors", "format", "languages", "publisher", "series", "tags":
@@ -281,11 +289,11 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		if 0 < qo.ID {
 			qo.Matching = path + `:"=` + parts[1] + `"`
 		}
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "back":
 		qo.DecLimit()
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "certs": // these files are handled internally
 		http.Redirect(aWriter, aRequest, "/", http.StatusMovedPermanently)
@@ -296,7 +304,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		doc := db.QueryDocMini(aRequest.Context(), id)
+		doc := dbHandle.QueryDocMini(aRequest.Context(), id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -319,7 +327,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
-		doc := db.QueryDocument(aRequest.Context(), id)
+		doc := dbHandle.QueryDocument(aRequest.Context(), id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -337,7 +345,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "file":
 		parts := strings.Split(tail, `/`)
 		qo.ID, _ = strconv.Atoi(parts[0])
-		doc := db.QueryDocMini(aRequest.Context(), qo.ID)
+		doc := dbHandle.QueryDocMini(aRequest.Context(), qo.ID)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -352,7 +360,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 	case "first", "":
 		qo.LimitStart = 0
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "fonts":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
@@ -372,22 +380,22 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		} else {
 			qo.LimitStart = qo.QueryCount - qo.LimitLength
 		}
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "licence", "license", "lizenz":
 		ph.handleReply("licence", aWriter, so, qo, ph.basicTemplateData(qo))
 
 	case "next":
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "post":
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "prev":
 		// Since the current LimitStart points to the _next_ query
 		// start we have to decrement the value twice to go _before_.
 		qo.DecLimit().DecLimit()
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "privacy", "datenschutz":
 		ph.handleReply("privacy", aWriter, so, qo, ph.basicTemplateData(qo))
@@ -395,7 +403,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	case "qo":
 		// This gets called when user requests page source of
 		// a POST result page; try to handle it gracefully.
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	case "robots.txt":
 		ph.staticFS.ServeHTTP(aWriter, aRequest)
@@ -409,7 +417,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			dummy string
 		)
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
-		doc := db.QueryDocMini(aRequest.Context(), id)
+		doc := dbHandle.QueryDocMini(aRequest.Context(), id)
 		if nil == doc {
 			http.NotFound(aWriter, aRequest)
 			return
@@ -442,6 +450,13 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 
 // `handlePOST()` process the HTTP POST requests.
 func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.Request) {
+	dbHandle, err := db.OpenDatabase(aRequest.Context())
+	if nil != err {
+		msg := fmt.Sprintf("db.OpenDatabase(): %v", err)
+		apachelogger.Err("TPageHandler.handlePOST()", msg)
+		return
+	}
+
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
 	case "qo": // the only valid POST destination
@@ -454,7 +469,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		// Since the query options hold the LimitStart of the
 		// _next_ query we have to go back here one page:
 		qo.DecLimit()
-		ph.handleQuery(aWriter, aRequest, qo, so)
+		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	default:
 		// // if nothing matched (above) reply to the request
@@ -467,16 +482,22 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 } // handlePOST()
 
 // `handleQuery()` serves the logical web-root directory.
-func (ph *TPageHandler) handleQuery(aWriter http.ResponseWriter, aRequest *http.Request, aOption *db.TQueryOptions, aSession *sessions.TSession) {
+//
+//	`aWriter`
+//	`aRequest`
+//	`aOption`
+//	`aSession`
+//	`aDB` The DB handle to access the `Calibre` database.
+func (ph *TPageHandler) handleQuery(aWriter http.ResponseWriter, aRequest *http.Request, aOption *db.TQueryOptions, aSession *sessions.TSession, aDB *db.TDataBase) {
 	var (
 		count   int
 		doclist *db.TDocList
 		err     error
 	)
 	if 0 < len(aOption.Matching) {
-		count, doclist, err = db.QuerySearch(aRequest.Context(), aOption)
+		count, doclist, err = aDB.QuerySearch(aRequest.Context(), aOption)
 	} else {
-		count, doclist, err = db.QueryBy(aRequest.Context(), aOption)
+		count, doclist, err = aDB.QueryBy(aRequest.Context(), aOption)
 	}
 	if nil != err {
 		msg := fmt.Sprintf("QueryBy/QuerySearch: %v", err)

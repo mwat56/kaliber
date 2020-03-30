@@ -26,6 +26,7 @@ func setup4Testing() {
 	ucd, _ := os.UserCacheDir()
 	db.SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
 	db.SetCalibreLibraryPath(libPath)
+	db.SetSQLtraceFile("./DebugTrace.sql")
 } // setup4Testing
 
 func Test_makeThumbDir(t *testing.T) {
@@ -148,10 +149,11 @@ func TestThumbnailRemove(t *testing.T) {
 
 func Test_goThumbCleanup(t *testing.T) {
 	setup4Testing()
-	if err := db.OpenDatabase(context.TODO()); nil != err {
+	ctx := context.TODO()
+	dbHandle, err := db.OpenDatabase(ctx)
+	if nil != err {
 		log.Fatalf("OpenDatabase(): %v", err)
 	}
-	db.SetSQLtraceFile("./SQLtrace.sql")
 	tests := []struct {
 		name string
 	}{
@@ -160,12 +162,17 @@ func Test_goThumbCleanup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			goThumbCleanup()
+			goThumbCleanup(dbHandle)
 		})
 	}
 } // Test_goThumbCleanup()
 
 func Test_checkThumbFile(t *testing.T) {
+	ctx := context.TODO()
+	dbHandle, err := db.OpenDatabase(ctx)
+	if nil != err {
+		log.Fatalf("OpenDatabase(): %v", err)
+	}
 	type args struct {
 		aFilename string
 	}
@@ -177,7 +184,7 @@ func Test_checkThumbFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			checkThumbFile(tt.args.aFilename)
+			checkThumbFile(tt.args.aFilename, dbHandle)
 		})
 	}
 }

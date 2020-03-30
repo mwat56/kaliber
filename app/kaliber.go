@@ -24,7 +24,6 @@ import (
 	"github.com/mwat56/apachelogger"
 	"github.com/mwat56/errorhandler"
 	"github.com/mwat56/kaliber"
-	"github.com/mwat56/kaliber/db"
 	"github.com/mwat56/sessions"
 )
 
@@ -93,11 +92,6 @@ func main() {
 	)
 	Me, _ := filepath.Abs(os.Args[0])
 	kaliber.InitConfig()
-
-	if err = db.OpenDatabase(context.Background()); nil != err {
-		kaliber.ShowHelp()
-		fatal(fmt.Sprintf("%s: %v", Me, err))
-	}
 
 	// Handle commandline user/password maintenance:
 	userCmdline()
