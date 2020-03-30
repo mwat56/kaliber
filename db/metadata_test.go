@@ -43,86 +43,6 @@ func Test_BookFieldVisible(t *testing.T) {
 	}
 } // Test_BookFieldVisible()
 
-func Test_GetMetaFieldValue(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre")
-	type args struct {
-		aField string
-		aKey   string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    interface{}
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", args{"authors", "is_category"}, true, false},
-		{" 2", args{"authors", "table"}, "authors", false},
-		{" 3", args{"#genre", "is_category"}, true, false},
-		{" 4", args{"#genre", "is_custom"}, true, false},
-		{" 5", args{"#genre", "table"}, "custom_column_1", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := MetaFieldValue(tt.args.aField, tt.args.aKey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetMetaFieldValue() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetMetaFieldValue() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // Test_GetMetaFieldValue()
-
-func Test_GetVirtLibList(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre")
-	wl1 := map[string]string{}
-	tests := []struct {
-		name    string
-		want    map[string]string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-		{" 1", wl1, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := VirtualLibraryList()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetVirtLibList() error = %v,\nwantErr %v", err, tt.wantErr)
-				return
-			}
-			if 0 == len(got) {
-				t.Errorf("GetVirtLibList() = %v, want %v", len(got), "> 0")
-			}
-		})
-	}
-} // Test_GetVirtLibList()
-
-func Test_GetVirtLibOptions(t *testing.T) {
-	SetCalibreLibraryPath("/var/opt/Calibre")
-	type args struct {
-		aSelected string
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-		{" 1", args{""}},
-		{" 2", args{"Warentest"}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := VirtLibOptions(tt.args.aSelected); 0 == len(got) {
-				t.Errorf("GetVirtLibOptions() = %v,\nwant %v", got, "> 0")
-			}
-		})
-	}
-} // Test_GetVirtLibOptions()
-
 func Test_mdGetFieldData(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
 	var w1 map[string]interface{}
@@ -285,3 +205,83 @@ func Test_mdVirtualLibDefinitions(t *testing.T) {
 		})
 	}
 } // Test_mdVirtualLibDefinitions()
+
+func Test_MetaFieldValue(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
+	type args struct {
+		aField string
+		aKey   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    interface{}
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", args{"authors", "is_category"}, true, false},
+		{" 2", args{"authors", "table"}, "authors", false},
+		{" 3", args{"#genre", "is_category"}, true, false},
+		{" 4", args{"#genre", "is_custom"}, true, false},
+		{" 5", args{"#genre", "table"}, "custom_column_1", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := MetaFieldValue(tt.args.aField, tt.args.aKey)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetMetaFieldValue() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetMetaFieldValue() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // Test_MetaFieldValue()
+
+func Test_VirtualLibraryList(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
+	wl1 := map[string]string{}
+	tests := []struct {
+		name    string
+		want    map[string]string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{" 1", wl1, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := VirtualLibraryList()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("VirtualLibraryList() error = %v,\nwantErr %v", err, tt.wantErr)
+				return
+			}
+			if 0 == len(got) {
+				t.Errorf("VirtualLibraryList() = %v, want %v", len(got), "> 0")
+			}
+		})
+	}
+} // Test_VirtualLibraryList()
+
+func Test_VirtLibOptions(t *testing.T) {
+	SetCalibreLibraryPath("/var/opt/Calibre")
+	type args struct {
+		aSelected string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{" 1", args{""}},
+		{" 2", args{"Warentest"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := VirtLibOptions(tt.args.aSelected); 0 == len(got) {
+				t.Errorf("GetVirtLibOptions() = %v,\nwant %v", got, "> 0")
+			}
+		})
+	}
+} // Test_VirtLibOptions()

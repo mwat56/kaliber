@@ -22,16 +22,16 @@ import (
 
 const (
 	// Name of the JSON section holding the names of book fields.
-	mdBookDisplayFields = "book_display_fields"
+	mdBookDisplayFields = `book_display_fields`
 
 	// Name of the JSON section holding e.g. user-defined field definitions.
-	mdFieldMetadata = "field_metadata"
+	mdFieldMetadata = `field_metadata`
 
 	// Name of the JSON section holding the virtual library names to hide..
-	mdHiddenVirtualLibraries = "virt_libs_hidden"
+	mdHiddenVirtualLibraries = `virt_libs_hidden`
 
 	// Name of the JSON section holding the virtual library definitions.
-	mdVirtualLibraries = "virtual_libraries"
+	mdVirtualLibraries = `virtual_libraries`
 )
 
 type (
