@@ -278,6 +278,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		apachelogger.Err("TPageHandler.handleGET()", msg)
 		return
 	}
+	defer dbHandle.Close()
 
 	path, tail := URLparts(aRequest.URL.Path)
 	switch path {
@@ -456,6 +457,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 		apachelogger.Err("TPageHandler.handlePOST()", msg)
 		return
 	}
+	defer dbHandle.Close()
 
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
@@ -547,7 +549,7 @@ func (ph *TPageHandler) handleReply(aPage string, aWriter http.ResponseWriter, a
 // NeedAuthentication returns `true` if authentication is needed,
 // or `false` otherwise.
 //
-//	`aRequest` is the request to check.
+//	`aRequest` is the web request to check.
 func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
 	if nil == ph.usrList {
 		return false
