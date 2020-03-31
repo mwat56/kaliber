@@ -36,7 +36,7 @@ type (
 	// TDataBase An opaque structure providing the properties and
 	// methods to access the `Calibre` database.
 	TDataBase struct {
-		*sql.DB // the embedded database connection
+		sqlDB *sql.DB // the embedded database connection
 	}
 )
 
@@ -418,19 +418,30 @@ type (
 	tPSVstring = string
 )
 
+// Close terminates the database connection.
+func (db *TDataBase) Close() (rErr error) {
+	if nil != db.sqlDB {
+		rErr = db.sqlDB.Close()
+		db.sqlDB = nil
+		go goSQLtrace(`-- closed DB connection`, time.Now()) //FIXME REMOVE
+	}
+
+	return
+} // Close()
+
 // `doQueryAll()` returns a list of documents with all available fields
 // and an `error` in case of problems.
 //
 //	`aContext` The current request's context.
 //	`aQuery` The SQL query to run.
-func (db *TDataBase) doQueryAll(aContext context.Context, aQuery string) (result *TDocList, rErr error) {
+func (db *TDataBase) doQueryAll(aContext context.Context, aQuery string) (rList *TDocList, rErr error) {
 	var rows *sql.Rows
 	if rows, rErr = db.query(aContext, aQuery); nil != rErr {
 		return
 	}
 	defer rows.Close()
 
-	result = NewDocList()
+	rList = NewDocList()
 	for rows.Next() {
 		var (
 			authors, formats, identifiers, languages,
@@ -507,7 +518,7 @@ func (db *TDataBase) doQueryAll(aContext context.Context, aQuery string) (result
 			rErr = aContext.Err()
 			return
 		default:
-			result.Add(doc)
+			rList.Add(doc)
 		}
 	}
 
@@ -684,12 +695,19 @@ func (db *TDataBase) doQueryGrid(aContext context.Context, aQuery string) (rList
 //	`aContext` The current request's context.
 //	`aQuery` The SQL query to run.
 func (db *TDataBase) query(aContext context.Context, aQuery string) (rRows *sql.Rows, rErr error) {
-	if rErr = db.reOpen(aContext); nil != rErr {
+	select {
+	case <-aContext.Done():
+		rErr = aContext.Err()
 		return
+
+	default:
+		if rErr = db.reOpen(aContext); nil != rErr {
+			return
+		}
 	}
 	go goSQLtrace(aQuery, time.Now())
 
-	rRows, rErr = db.DB.QueryContext(aContext, aQuery)
+	rRows, rErr = db.sqlDB.QueryContext(aContext, aQuery)
 
 	return
 } // query()
@@ -932,10 +950,7 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 func (db *TDataBase) reOpen(aContext context.Context) error {
 	select {
 	case _, more := <-syncCopiedChan:
-		if nil != db.DB {
-			_ = db.DB.Close()
-			db.DB = nil
-		}
+		_ = db.Close()
 		if !more {
 			return nil // channel closed
 		}
@@ -951,13 +966,19 @@ func (db *TDataBase) reOpen(aContext context.Context) error {
 		dsn := `file:` +
 			filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
 			`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-		if db.DB, err = sql.Open(`sqlite3`, dsn); nil != err {
-			return err
-		}
-		// db.DB.Exec("PRAGMA xxx=yyy")
+		select {
+		case <-aContext.Done():
+			return aContext.Err()
 
-		go goSQLtrace(`-- reOpened `+dsn, time.Now())
-		return db.DB.PingContext(aContext)
+		default:
+			if db.sqlDB, err = sql.Open(`sqlite3`, dsn); nil != err {
+				return err
+			}
+		}
+		// db.sqlDB.Exec("PRAGMA xxx=yyy")
+
+		go goSQLtrace(`-- reOpened `+dsn, time.Now()) //FIXME REMOVE
+		return db.sqlDB.PingContext(aContext)
 
 	default:
 		return nil
