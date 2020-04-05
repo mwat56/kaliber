@@ -25,6 +25,8 @@
 	- [Libraries](#libraries)
 	- [Licence](#licence)
 
+----
+
 ## Note
 
 > **Please _note_ that this is a work in progress.**
@@ -418,3 +420,5 @@ The following external libraries were used building `Kaliber`:
 > This software is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 >
 > You should have received a copy of the GNU General Public License along with this program. If not, see the [GNU General Public License](http://www.gnu.org/licenses/gpl.html) for details.
+
+----
