@@ -135,7 +135,7 @@ func main() {
 		Handler:           handler,
 		IdleTimeout:       2 * time.Minute,
 		ReadHeaderTimeout: 20 * time.Second,
-		ReadTimeout:       30 * time.Second,
+		ReadTimeout:       time.Minute,
 		WriteTimeout:      20 * time.Minute, // enough time for book download
 	}
 	if (nil == err) && (0 < len(s)) { // values from logfile test
