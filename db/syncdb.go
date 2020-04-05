@@ -41,11 +41,17 @@ var (
 
 	// `syncCopiedChan` Signal channel for a new database copy.
 	syncCopiedChan = make(chan struct{}, 1)
+
+	// Guard against parallel database copies.
+	syncCopyMtx = new(sync.Mutex)
 )
 
 // `copyDatabaseFile()` copies Calibre's original database file
 // to our cache directory.
 func copyDatabaseFile() (bool, error) {
+	syncCopyMtx.Lock()
+	defer syncCopyMtx.Unlock()
+
 	var (
 		err          error
 		sFile, tFile *os.File
