@@ -35,10 +35,6 @@ import (
  */
 
 var (
-
-	// `syncCheckChan` Signal channel to check for database changes.
-	syncCheckChan = make(chan struct{}, 64)
-
 	// `syncCopiedChan` Signal channel for a new database copy.
 	syncCopiedChan = make(chan struct{}, 1)
 
@@ -95,36 +91,26 @@ func copyDatabaseFile() (bool, error) {
 	return true, os.Rename(tName, dName)
 } // copyDatabaseFile()
 
-// `goCheckFile()` checks in background whether the original database
-// file has changed.
+// `goCheckFile()` checks in background once a minute whether the
+// original database file has changed.
 // If so, that file is copied to the cache directory from where it is
-// read and used by the `dbSQLiteDB` instance.
+// read and used by the `db.TDatabase` instance.
 //
-//	`aCheck` R/O channel to check for changes.
 //	`aCopied` W/O channel to signal a new database copy.
-func goCheckFile(aCheck <-chan struct{}, aCopied chan<- struct{}) {
+func goCheckFile(aCopied chan<- struct{}) {
 	timer := time.NewTimer(time.Minute)
 	defer func() {
 		_ = timer.Stop()
 	}()
 
-	doCopyChk := func() {
-		if copied, err := copyDatabaseFile(); copied && (nil == err) {
-			aCopied <- struct{}{}
-		}
-		_ = timer.Reset(time.Minute)
-	}
-
+	//lint:ignore S1000 - We can't use `range` here
 	for {
 		select {
-		case _, more := <-aCheck:
-			if !more {
-				return // channel closed
-			}
-			doCopyChk()
-
 		case <-timer.C:
-			doCopyChk()
+			if copied, err := copyDatabaseFile(); copied && (nil == err) {
+				aCopied <- struct{}{}
+			}
+			_ = timer.Reset(time.Minute)
 		}
 	}
 } // goCheckFile()
