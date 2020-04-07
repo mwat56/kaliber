@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3" // anonymous import
@@ -67,19 +68,30 @@ func CalibrePreferencesFile() string {
 	return filepath.Join(dbCalibreLibraryPath, dbCalibrePreferencesFile)
 } // CalibrePreferencesFile()
 
+var (
+	// Make sure the database file monitoring is run only once.
+	dbRunFileCheckOnce sync.Once
+)
+
 // OpenDatabase establishes a new database connection.
 //
-//	`aContext` The current HTTP request's context.
+//	`aContext` The current web request's context.
 func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
+	var copied bool
 	// Prepare the local database copy:
-	if _, rErr = copyDatabaseFile(); nil != rErr {
+	copied, rErr = copyDatabaseFile()
+	if nil != rErr {
 		return
 	}
-	// Signal for `rDB.reOpen()`:
-	syncCopiedChan <- struct{}{}
+	if copied {
+		// Signal for `rDB.reOpen()`:
+		syncCopiedChan <- struct{}{}
+	}
 
-	// Start monitoring the original database file:
-	go goCheckFile(syncCheckChan, syncCopiedChan)
+	dbRunFileCheckOnce.Do(func() {
+		// Start monitoring the original database file:
+		go goCheckFile(syncCopiedChan)
+	})
 
 	rDB = &TDataBase{}
 	rErr = rDB.reOpen(aContext)
@@ -846,11 +858,11 @@ func (db *TDataBase) QueryDocMini(aContext context.Context, aID TID) (rDoc *TDoc
 //	`aContext` The current web request's context.
 //	`aID` The document ID to lookup.
 func (db *TDataBase) QueryDocument(aContext context.Context, aID TID) *TDocument {
-	list, _ := db.doQueryAll(aContext, dbBaseQuery+
+	list, err := db.doQueryAll(aContext, dbBaseQuery+
 		`WHERE b.id=`+
 		strconv.FormatInt(int64(aID), 10)+
 		` LIMIT 1`)
-	if 0 < len(*list) {
+	if (nil == err) && (0 < len(*list)) {
 		doc := (*list)[0]
 
 		return &doc
@@ -948,24 +960,24 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 //
 //	`aContext` The current request's context.
 func (db *TDataBase) reOpen(aContext context.Context) error {
+	var err error
+	//XXX Are there custom functions to inject?
+
+	// `cache=shared` is essential to avoid running out of file
+	// handles since each query seems to hold its own file handle.
+	// `loc=auto` gets time.Time with current locale.
+	// `mode=ro` is self-explanatory since we don't change the DB
+	// in any way.
+	dsn := `file:` +
+		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
+		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
+
 	select {
 	case _, more := <-syncCopiedChan:
 		_ = db.Close()
 		if !more {
 			return nil // channel closed
 		}
-		var err error
-
-		//XXX Are there custom functions to inject?
-
-		// `cache=shared` is essential to avoid running out of file
-		// handles since each query seems to hold its own file handle.
-		// `loc=auto` gets time.Time with current locale.
-		// `mode=ro` is self-explanatory since we don't change the DB
-		// in any way.
-		dsn := `file:` +
-			filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
-			`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
 		select {
 		case <-aContext.Done():
 			return aContext.Err()
@@ -976,11 +988,19 @@ func (db *TDataBase) reOpen(aContext context.Context) error {
 			}
 		}
 		// db.sqlDB.Exec("PRAGMA xxx=yyy")
-
 		go goSQLtrace(`-- reOpened `+dsn, time.Now()) //FIXME REMOVE
+
 		return db.sqlDB.PingContext(aContext)
 
 	default:
+		if nil == db.sqlDB {
+			if db.sqlDB, err = sql.Open(`sqlite3`, dsn); nil != err {
+				return err
+			}
+			go goSQLtrace(`-- opened `+dsn, time.Now()) //FIXME REMOVE
+
+			return db.sqlDB.PingContext(aContext)
+		}
 		return nil
 	}
 } // reOpen()
