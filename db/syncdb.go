@@ -86,7 +86,7 @@ func copyDatabaseFile() (bool, error) {
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return false, err
 	}
-	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
+	go goSQLtrace(`-- copied ` + sName + ` to ` + dName)
 
 	return true, os.Rename(tName, dName)
 } // copyDatabaseFile()
@@ -119,7 +119,7 @@ func goCheckFile(aCopied chan<- struct{}) {
 
 var (
 	// The channel to send SQL to and read trace messages from.
-	syncSQLTraceChannel = make(chan string, 64)
+	syncSQLTraceChannel = make(chan string, 127)
 
 	// Optional file to log all SQL queries.
 	syncSQLTraceFile = ``
@@ -129,71 +129,88 @@ var (
 // (if a tracefile is set).
 //
 //	`aQuery` The SQL query to log.
-//	`aTime` The time at which the query was run.
-func goSQLtrace(aQuery string, aTime time.Time) {
+func goSQLtrace(aQuery string) {
 	if 0 == len(syncSQLTraceFile) {
 		return
 	}
+	when := time.Now()
 	aQuery = strings.Replace(aQuery, "\t", ` `, -1)
 	aQuery = strings.Replace(aQuery, "\n", ` `, -1)
 
-	syncSQLTraceChannel <- aTime.Format(`2006-01-02 15:04:05 `) +
+	syncSQLTraceChannel <- when.Format(`2006-01-02 15:04:05.000 `) +
 		strings.Replace(aQuery, `  `, ` `, -1)
 } // goSQLtrace()
+
+const (
+	threeSex = 3 * time.Second
+)
+
+var (
+	// Mode of opening the logfile(s).
+	syncOpenFlags = os.O_CREATE | os.O_APPEND | os.O_WRONLY | os.O_SYNC
+)
 
 // `goWriteSQLtrace()` performs the actual file writes.
 //
 // This function is called only once, handling all write requests
 // while running in background.
 //
-//	`aTraceLog` The name of the logfile to write to.
 //	`aSource` R/O channel to read the log messages to write.
-func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
+func goWriteSQLtrace(aSource <-chan string) {
 	var (
-		err  error
-		file *os.File
-		more bool
-		txt  string
+		err        error
+		file       *os.File
+		fileCloser *time.Timer
+		// more       bool
+		// txt        string
 	)
 	defer func() {
 		if (nil != file) && (os.Stderr != file) {
 			_ = file.Close()
 		}
+		if nil != fileCloser {
+			_ = fileCloser.Stop()
+		}
 	}()
 
-	// Interval to look for new messages to arrive.
-	sleepDuration := time.Second * 3
-
 	// Let the application initialise:
-	time.Sleep(sleepDuration)
+	time.Sleep(threeSex)
+	fileCloser = time.NewTimer(threeSex)
 
 	for { // wait for strings to write
 		select {
-		case txt, more = <-aSource:
+		case txt, more := <-aSource:
 			if !more { // channel closed
 				log.Println(`queries.goWriteSQLtrace(): message channel closed`)
 				return
 			}
-			if nil == file {
-				if file, err = os.OpenFile(aTraceLog,
-					os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640); /* #nosec G302 */ nil != err {
-					file = os.Stderr // a last resort
+			if 0 < len(syncSQLTraceFile) {
+				if nil == file {
+					if file, err = os.OpenFile(syncSQLTraceFile,
+						syncOpenFlags, 0640); /* #nosec G302 */ nil != err {
+						file = os.Stderr // a last resort
+					}
 				}
+				fmt.Fprintln(file, txt)
+				fileCloser.Reset(threeSex)
 			}
-			fmt.Fprintln(file, txt)
 
-		default:
-			if nil == file {
-				time.Sleep(sleepDuration)
-			} else {
+		case <-fileCloser.C:
+			if nil != file {
 				if os.Stderr != file {
 					_ = file.Close()
 				}
 				file = nil
 			}
+			fileCloser.Reset(threeSex)
 		}
 	}
 } // goWriteSQLtrace()
+
+var (
+	// Make sure the filename is set only once.
+	syncFilenameOnce sync.Once
+)
 
 // SetSQLtraceFile sets the filename to use for logging SQL queries.
 //
@@ -202,13 +219,12 @@ func goWriteSQLtrace(aTraceLog string, aSource <-chan string) {
 //	`aFilename` the tracefile to use; if empty tracing is disabled.
 func SetSQLtraceFile(aFilename string) {
 	if 0 < len(aFilename) {
-		var once sync.Once
-		once.Do(func() {
-			if path, err := filepath.Abs(aFilename); nil == err {
-				syncSQLTraceFile = path
-				// start the background writer:
-				go goWriteSQLtrace(syncSQLTraceFile, syncSQLTraceChannel)
-			}
+		if path, err := filepath.Abs(aFilename); nil == err {
+			syncSQLTraceFile = path
+		}
+		syncFilenameOnce.Do(func() {
+			// start the background writer:
+			go goWriteSQLtrace(syncSQLTraceChannel)
 		})
 
 		return

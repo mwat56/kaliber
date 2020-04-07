@@ -435,7 +435,7 @@ func (db *TDataBase) Close() (rErr error) {
 	if nil != db.sqlDB {
 		rErr = db.sqlDB.Close()
 		db.sqlDB = nil
-		go goSQLtrace(`-- closed DB connection`, time.Now()) //FIXME REMOVE
+		go goSQLtrace(`-- closed DB connection`) //FIXME REMOVE
 	}
 
 	return
@@ -717,7 +717,7 @@ func (db *TDataBase) query(aContext context.Context, aQuery string) (rRows *sql.
 			return
 		}
 	}
-	go goSQLtrace(aQuery, time.Now())
+	go goSQLtrace(aQuery)
 
 	rRows, rErr = db.sqlDB.QueryContext(aContext, aQuery)
 
@@ -988,7 +988,7 @@ func (db *TDataBase) reOpen(aContext context.Context) error {
 			}
 		}
 		// db.sqlDB.Exec("PRAGMA xxx=yyy")
-		go goSQLtrace(`-- reOpened `+dsn, time.Now()) //FIXME REMOVE
+		go goSQLtrace(`-- reOpened `+dsn) //FIXME REMOVE
 
 		return db.sqlDB.PingContext(aContext)
 
@@ -997,7 +997,7 @@ func (db *TDataBase) reOpen(aContext context.Context) error {
 			if db.sqlDB, err = sql.Open(`sqlite3`, dsn); nil != err {
 				return err
 			}
-			go goSQLtrace(`-- opened `+dsn, time.Now()) //FIXME REMOVE
+			go goSQLtrace(`-- opened `+dsn) //FIXME REMOVE
 
 			return db.sqlDB.PingContext(aContext)
 		}
