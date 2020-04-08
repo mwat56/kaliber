@@ -266,15 +266,7 @@ func (ph *TPageHandler) basicTemplateData(aOptions *db.TQueryOptions) *TemplateD
 
 // `handleGET()` processes the HTTP GET requests.
 func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Request) {
-	var (
-		path, tail string
-	)
-	qo := db.NewQueryOptions(ph.docsPerPage) // in `queryoptions.go`
-	so := sessions.GetSession(aRequest)
-	if qos, ok := so.GetString("QOS"); ok {
-		qo.Scan(qos)
-	}
-
+	path, tail := URLparts(aRequest.URL.Path)
 	doHandleQuery := func(aWriter http.ResponseWriter, aRequest *http.Request, aOption *db.TQueryOptions, aSession *sessions.TSession) {
 		dbHandle, err := db.OpenDatabase(aRequest.Context())
 		if nil != err {
@@ -284,10 +276,15 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		defer dbHandle.Close()
 
-		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
+		ph.handleQuery(aWriter, aRequest, aOption, aSession, dbHandle)
 	} // doHandleQuery()
 
-	path, tail = URLparts(aRequest.URL.Path)
+	qo := db.NewQueryOptions(ph.docsPerPage) // in `queryoptions.go`
+	so := sessions.GetSession(aRequest)
+	if qos, ok := so.GetString("QOS"); ok {
+		qo.Scan(qos)
+	}
+
 	switch path {
 	case "authors", "format", "languages", "publisher", "series", "tags":
 		parts := strings.Split(tail, `/`)
