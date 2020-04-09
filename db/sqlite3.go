@@ -11,6 +11,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -433,7 +434,8 @@ type (
 // Close terminates the database connection.
 func (db *TDataBase) Close() (rErr error) {
 	if nil != db.sqlDB {
-		rErr = db.sqlDB.Close()
+		// rErr = db.sqlDB.Close()
+		Pool.Put(db.sqlDB)
 		db.sqlDB = nil
 		go goSQLtrace(`-- closed DB connection`) //FIXME REMOVE
 	}
@@ -959,50 +961,32 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 // is established.
 //
 //	`aContext` The current request's context.
-func (db *TDataBase) reOpen(aContext context.Context) error {
-	var err error
-	//XXX Are there custom functions to inject?
-
-	// `cache=shared` is essential to avoid running out of file
-	// handles since each query seems to hold its own file handle.
-	// `loc=auto` gets time.Time with current locale.
-	// `mode=ro` is self-explanatory since we don't change the DB
-	// in any way.
-	dsn := `file:` +
-		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
-		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-
+func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
 	select {
 	case _, more := <-syncCopiedChan:
-		_ = db.Close()
+		Pool.Clear()
+		db.sqlDB = nil
 		if !more {
-			return nil // channel closed
+			rErr = errors.New(`syncCopiedChan closed`)
+			return
 		}
-		select {
-		case <-aContext.Done():
-			return aContext.Err()
+		if db.sqlDB, rErr = Pool.Get(aContext); nil == rErr {
+			go goSQLtrace(`-- opened DB`) //FIXME REMOVE
 
-		default:
-			if db.sqlDB, err = sql.Open(`sqlite3`, dsn); nil != err {
-				return err
-			}
+			rErr = db.sqlDB.PingContext(aContext)
 		}
-		// db.sqlDB.Exec("PRAGMA xxx=yyy")
-		go goSQLtrace(`-- reOpened `+dsn) //FIXME REMOVE
-
-		return db.sqlDB.PingContext(aContext)
 
 	default:
 		if nil == db.sqlDB {
-			if db.sqlDB, err = sql.Open(`sqlite3`, dsn); nil != err {
-				return err
-			}
-			go goSQLtrace(`-- opened `+dsn) //FIXME REMOVE
+			if db.sqlDB, rErr = Pool.Get(aContext); nil == rErr {
+				go goSQLtrace(`-- reOpened DB`) //FIXME REMOVE
 
-			return db.sqlDB.PingContext(aContext)
+				rErr = db.sqlDB.PingContext(aContext)
+			}
 		}
-		return nil
 	}
+
+	return
 } // reOpen()
 
 /* _EoF_ */
