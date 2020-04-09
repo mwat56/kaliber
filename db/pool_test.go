@@ -6,6 +6,8 @@
 
 package db
 
+//lint:file-ignore ST1017 - I prefer Yoda conditions
+
 import (
 	"context"
 	"crypto/md5"
@@ -108,3 +110,26 @@ func TestTDBpool_Clear(t *testing.T) {
 		})
 	}
 } // TestTDBpool_Clear()
+
+func TestTDBpool_Len(t *testing.T) {
+	ctx := context.Background()
+	prepDBforTesting(ctx)
+
+	conn, _ := Pool.open(ctx)
+	_ = Pool.Put(conn)
+
+	tests := []struct {
+		name string
+		want int
+	}{
+		// TODO: Add test cases.
+		{" 1", 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Pool.Len(); got != tt.want {
+				t.Errorf("TDBpool.Len() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+} // TestTDBpool_Len()

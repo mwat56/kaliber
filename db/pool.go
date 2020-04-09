@@ -10,7 +10,7 @@ package db
 
 /*
  * This file implements a simple connection pool to recycle
- * used connections.
+ * used SQLite connections.
  */
 
 import (
@@ -107,6 +107,14 @@ func (p *TDBpool) Get(aContext context.Context) (rConn *sql.DB, rErr error) {
 	return
 } // Get()
 
+// Len returns the current number of elements in the Pool.
+func (p *TDBpool) Len() int {
+	p.pMtx.Lock()
+	defer p.pMtx.Unlock()
+
+	return len(p.pList)
+} // Len()
+
 // `open()` establishes a new database connection.
 //
 //	`aContext` The current request's context.
@@ -125,17 +133,13 @@ func (p *TDBpool) open(aContext context.Context) (rConn *sql.DB, rErr error) {
 	select {
 	case <-aContext.Done():
 		rErr = aContext.Err()
-		return
 
 	default:
-		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil != rErr {
-			return
+		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
+			// rConn.Exec("PRAGMA xxx=yyy")
+			rErr = rConn.PingContext(aContext)
 		}
 	}
-	// rConn.Exec("PRAGMA xxx=yyy")
-
-	go goSQLtrace(`-- newOpen ` + dsn) //FIXME REMOVE
-	rErr = rConn.PingContext(aContext)
 
 	return
 } // open()
