@@ -16,7 +16,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"path/filepath"
 	"sync"
 )
 
@@ -24,24 +23,67 @@ type (
 	// A List of database connections.
 	tDBlist []*sql.DB
 
+	// TConnCreator defines the interface that's supposed to create
+	// and close database connections.
+	TConnCreator interface {
+
+		// OnClear is called once for each element in the pool
+		// when the list needs to be emptied.
+		//
+		// Usually the implementation will just close the connection.
+		//
+		//	`aDB` The database connection to be closed.
+		OnClear(aDB *sql.DB) error
+
+		// OnNew is called whenever an additional new database connection
+		// is required.
+		//
+		// If the operation could not be performned successfully the returned
+		// database pointer should be `nil` and the error must not be `nil`.
+		//
+		// In case of success the returned database should point to a valid
+		// database instance and the returned error must be `nil`.
+		//
+		//	`aContext` The current web request's context.
+		OnNew(aContext context.Context) (*sql.DB, error)
+	}
+
 	// TDBpool The list of database connections.
 	TDBpool struct {
-		pList tDBlist
-		pMtx  *sync.Mutex
+		pList        tDBlist      // The actual list of available connections
+		pMtx         *sync.Mutex  // A guard against concurrent write accesses
+		pConnCreator TConnCreator // The object creating the connections
 	}
 )
 
 var (
-	// Pool The list of database connections.
+	// The list of database connections.
 	//
-	// NOTE: This variable as such should be considered R/O.
-	// To retrieve or store a certain connection use the `Get()`
-	// and `Put()` methods respectively.
-	Pool = &TDBpool{
-		pList: make(tDBlist, 0, 63),
-		pMtx:  new(sync.Mutex),
-	}
+	// NOTE: This variable as such must be considered R/O.
+	pConnPool *TDBpool
+
+	// Guard for repetitive calls to `NewPool()`.
+	pInitPoolOnce sync.Once
 )
+
+// NewPool returns the list of database connections.
+//
+// To retrieve or store a certain connection use the return value's
+// `Get()` and `Put()` methods respectively.
+//
+//	`aCreator` The object that's supposed to create and close
+// database connections.
+func NewPool(aCreator TConnCreator) *TDBpool {
+	pInitPoolOnce.Do(func() {
+		pConnPool = &TDBpool{
+			pConnCreator: aCreator,
+			pList:        make(tDBlist, 0, 127),
+			pMtx:         new(sync.Mutex),
+		}
+	})
+
+	return pConnPool
+} // NewPool()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -54,51 +96,50 @@ func (p *TDBpool) Clear() *TDBpool {
 
 	for idx, conn := range p.pList {
 		if nil != conn {
-			_ = conn.Close()
+			_ = p.pConnCreator.OnClear(conn)
 		}
-		p.pList[idx] = nil
+		p.pList[idx] = nil // clear reference
 	}
 	p.pList = p.pList[:0] // empty the list
 
 	return p
 } // Clear()
 
-// Get selects a single database connection from the Pool, removes it
+// Get selects a single database connection from the list, removes it
 // from the Pool, and returns it to the caller.
 //
-// Callers should not assume any relation between values passed to Put and
-// the values returned by Get.
+// Callers should not assume any relation between values passed to `Put()`
+// and the values returned by `Get()`.
 //
 //	`aContext` The current request's context.
 func (p *TDBpool) Get(aContext context.Context) (rConn *sql.DB, rErr error) {
 	p.pMtx.Lock()
 	defer p.pMtx.Unlock()
 
-	// There are 3 cases to consider:
+	// There are three cases to consider:
 	//
 	// (1) the list is empty,
 	// (2) the list has one entry,
 	// (3) the list has more than one entry.
 	//
-	// We unroll these cases here to handle each case most efficiently.
+	// We unroll these cases here to handle each most efficiently.
 
 	sLen := len(p.pList)
 	if 0 == sLen { // case (1)
-		rConn, rErr = p.open(aContext)
+		rConn, rErr = p.pConnCreator.OnNew(aContext)
 		return
 	}
 
 	select {
 	case <-aContext.Done():
 		rErr = aContext.Err()
-		return
 
 	default:
 		rConn = p.pList[0]
-		p.pList[0] = nil // erase element
+		p.pList[0] = nil // remove reference
 
 		if 1 == sLen { // case (2)
-			p.pList = p.pList[:0] // empty the list list
+			p.pList = p.pList[:0] // empty the list
 		} else { // case (3)
 			p.pList = p.pList[1:] // remove first item from list
 		}
@@ -107,55 +148,22 @@ func (p *TDBpool) Get(aContext context.Context) (rConn *sql.DB, rErr error) {
 	return
 } // Get()
 
-// Len returns the current number of elements in the Pool.
-func (p *TDBpool) Len() int {
+// Put adds `aConnection` to the list returning the new number
+// of elements in the Pool.
+//
+// To just get the current number of connections in the pool
+// use `nil` as the method's argument.
+//
+//	`aConnection` The database connection to add to the pool.
+func (p *TDBpool) Put(aConnection *sql.DB) int {
 	p.pMtx.Lock()
 	defer p.pMtx.Unlock()
 
-	return len(p.pList)
-} // Len()
-
-// `open()` establishes a new database connection.
-//
-//	`aContext` The current request's context.
-func (p *TDBpool) open(aContext context.Context) (rConn *sql.DB, rErr error) {
-	//XXX Are there custom functions to inject?
-
-	// `cache=shared` is essential to avoid running out of file
-	// handles since each query seems to hold its own file handle.
-	// `loc=auto` gets time.Time with current locale.
-	// `mode=ro` is self-explanatory since we don't change the DB
-	// in any way.
-	dsn := `file:` +
-		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
-		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-
-	select {
-	case <-aContext.Done():
-		rErr = aContext.Err()
-
-	default:
-		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
-			// rConn.Exec("PRAGMA xxx=yyy")
-			rErr = rConn.PingContext(aContext)
-		}
-	}
-
-	return
-} // open()
-
-// Put adds `aConnection` to the pool.
-//
-//	`aConnection` The database connection to add to the pool.
-func (p *TDBpool) Put(aConnection *sql.DB) *TDBpool {
 	if nil != aConnection {
-		p.pMtx.Lock()
-		defer p.pMtx.Unlock()
-
 		p.pList = append(p.pList, aConnection)
 	}
 
-	return p
+	return len(p.pList)
 } // Put()
 
 /* _EoF_ */

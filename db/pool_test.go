@@ -26,13 +26,16 @@ func prepDBforTesting(aContext context.Context) {
 	SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
 	SetCalibreLibraryPath(libPath)
 	SetSQLtraceFile("./SQLtrace.sql")
+	_, _ = OpenDatabase(aContext)
+
+	// _ = NewPool(mock, mock)
 } // prepDBforTesting()
 
 func TestTDBpool_Put(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 	var conn1 *sql.DB
-	conn2, _ := Pool.open(ctx)
+	conn2, _ := pConnPool.Get(ctx)
 
 	type args struct {
 		aConnection *sql.DB
@@ -40,15 +43,16 @@ func TestTDBpool_Put(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *TDBpool
+		want int
 	}{
 		// TODO: Add test cases.
-		{" 1", args{conn1}, Pool},
-		{" 2", args{conn2}, Pool},
+		{" 1", args{conn1}, 0},
+		{" 2", args{conn2}, 1},
+		{" 3", args{conn2}, 2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Pool.Put(tt.args.aConnection); !reflect.DeepEqual(got, tt.want) {
+			if got := pConnPool.Put(tt.args.aConnection); got != tt.want {
 				t.Errorf("TDBpool.Put() = %v, want %v", got, tt.want)
 			}
 		})
@@ -73,7 +77,7 @@ func TestTDBpool_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRConn, err := Pool.Get(tt.args.aContext)
+			gotRConn, err := pConnPool.Get(tt.args.aContext)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TDBpool.Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -81,7 +85,7 @@ func TestTDBpool_Get(t *testing.T) {
 			if nil == gotRConn {
 				t.Errorf("TDBpool.Get() = %v, want (!nil)", gotRConn)
 			} else {
-				_ = Pool.Put(gotRConn)
+				_ = pConnPool.Put(gotRConn)
 			}
 		})
 	}
@@ -91,45 +95,22 @@ func TestTDBpool_Clear(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 
-	conn, _ := Pool.open(ctx)
-	_ = Pool.Put(conn)
+	conn, _ := pConnPool.Get(ctx)
+	_ = pConnPool.Put(conn)
 
 	tests := []struct {
 		name string
 		want *TDBpool
 	}{
 		// TODO: Add test cases.
-		{" 1", Pool},
-		{" 2", Pool},
+		{" 1", pConnPool},
+		{" 2", pConnPool},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Pool.Clear(); !reflect.DeepEqual(got, tt.want) {
+			if got := pConnPool.Clear(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("TDBpool.Clear() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 } // TestTDBpool_Clear()
-
-func TestTDBpool_Len(t *testing.T) {
-	ctx := context.Background()
-	prepDBforTesting(ctx)
-
-	conn, _ := Pool.open(ctx)
-	_ = Pool.Put(conn)
-
-	tests := []struct {
-		name string
-		want int
-	}{
-		// TODO: Add test cases.
-		{" 1", 1},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Pool.Len(); got != tt.want {
-				t.Errorf("TDBpool.Len() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-} // TestTDBpool_Len()

@@ -38,7 +38,8 @@ type (
 	// TDataBase An opaque structure providing the properties and
 	// methods to access the `Calibre` database.
 	TDataBase struct {
-		sqlDB *sql.DB // the embedded database connection
+		sqlDB    *sql.DB  // the used database connection
+		sqlConns *TDBpool // reference of the connection pool
 	}
 )
 
@@ -48,9 +49,6 @@ var (
 
 	// Pathname to the original `Calibre` database
 	dbCalibreLibraryPath = ``
-
-	// // The active `tDatabase` instance initialised by `OpenDatabase()`.
-	// dbSqliteDB TDataBase
 )
 
 // CalibreCachePath returns the directory of the copied `Calibre` database.
@@ -95,6 +93,7 @@ func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
 	})
 
 	rDB = &TDataBase{}
+	rDB.sqlConns = NewPool(rDB)
 	rErr = rDB.reOpen(aContext)
 
 	return
@@ -434,10 +433,9 @@ type (
 // Close terminates the database connection.
 func (db *TDataBase) Close() (rErr error) {
 	if nil != db.sqlDB {
-		// rErr = db.sqlDB.Close()
-		Pool.Put(db.sqlDB)
-		db.sqlDB = nil
-		go goSQLtrace(`-- closed DB connection`) //FIXME REMOVE
+		len := strconv.Itoa(db.sqlConns.Put(db.sqlDB))
+		db.sqlDB = nil                                     // clear reference
+		go goSQLtrace(`-- recycling DB connection ` + len) //FIXME REMOVE
 	}
 
 	return
@@ -677,14 +675,17 @@ func (db *TDataBase) doQueryGrid(aContext context.Context, aQuery string) (rList
 	rList = NewDocList()
 	for rows.Next() {
 		var (
-			authors, languages, publisher, series, tags, titleSort tPSVstring
-			rating, size                                           int
-			pubdate                                                time.Time
-			visible                                                bool
+			authors, languages, publisher,
+			series, tags, titleSort tPSVstring
+			rating, size int
+			pubdate      time.Time
+			visible      bool
 		)
 		doc := NewDocument()
 
-		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &languages, &publisher, &rating, &series, &size, &tags, &pubdate, &titleSort)
+		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &languages,
+			&publisher, &rating, &series, &size, &tags, &pubdate,
+			&titleSort)
 
 		if visible, _ = BookFieldVisible(`authors`); !visible {
 			_, _ = BookFieldVisible(`author_sort`)
@@ -702,6 +703,56 @@ func (db *TDataBase) doQueryGrid(aContext context.Context, aQuery string) (rList
 
 	return
 } // doQueryGrid()
+
+// OnClear is called when the connection pool is cleared/emptied.
+//
+// NOTE: This method is called internally and not meant to be called
+// from outside.
+//
+//	`aDB` The database connection to be closed.
+func (db *TDataBase) OnClear(aDB *sql.DB) error {
+	go goSQLtrace(`-- closing DB`) //REMOVE
+	return aDB.Close()
+} // OnClear()
+
+// OnNew is called when a new database connection is required.
+//
+// If the operation could not be performned successfully the returned
+// database pointer should be `nil` and the error must not be `nil`.
+//
+// In case of success the returned database should point to a valid
+// database instance and the returned error must be `nil`.
+//
+// NOTE: This method is called internally and not meant to be called
+// from outside.
+//
+//	`aContext` The current web request's context.
+func (db *TDataBase) OnNew(aContext context.Context) (rConn *sql.DB, rErr error) {
+	//XXX Are there custom functions to inject?
+
+	// `cache=shared` is essential to avoid running out of file
+	// handles since each query seems to hold its own file handle.
+	// `loc=auto` gets time.Time with current locale.
+	// `mode=ro` is self-explanatory since we don't change the DB
+	// in any way.
+	dsn := `file:` +
+		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
+		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
+
+	select {
+	case <-aContext.Done():
+		rErr = aContext.Err()
+
+	default:
+		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
+			// rConn.Exec("PRAGMA xxx=yyy")
+			go goSQLtrace(`-- opened DB`) //REMOVE
+			rErr = rConn.PingContext(aContext)
+		}
+	}
+
+	return
+} // OnNew()
 
 // `query()` executes a query that returns rows, typically a SELECT.
 // The `args` are for any placeholder parameters in the query.
@@ -778,12 +829,14 @@ const (
 
 type (
 	// TCustomColumn contains info about a user-defined data field.
+	//
+	// The member fields should be considered R/O.
 	TCustomColumn struct {
 		ID                    int
 		Label, Name, Datatype string
 	}
 
-	// TCustomColumnList is a list/slice of `TCustomColumnRec`.
+	// TCustomColumnList is a list of `TCustomColumn` instances.
 	TCustomColumnList []TCustomColumn
 )
 
@@ -962,27 +1015,28 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 //
 //	`aContext` The current request's context.
 func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
+	defer func() {
+		if err := recover(); err != nil {
+			rErr = fmt.Errorf("%v", err)
+		}
+	}()
+
 	select {
 	case _, more := <-syncCopiedChan:
-		Pool.Clear()
-		db.sqlDB = nil
+		db.sqlConns.Clear()
+		db.sqlDB = nil                                // clear reference
+		go goSQLtrace(`-- closed all DB connections`) //FIXME REMOVE
+
 		if !more {
 			rErr = errors.New(`syncCopiedChan closed`)
 			return
 		}
-		if db.sqlDB, rErr = Pool.Get(aContext); nil == rErr {
-			go goSQLtrace(`-- opened DB`) //FIXME REMOVE
 
-			rErr = db.sqlDB.PingContext(aContext)
-		}
+		db.sqlDB, rErr = db.sqlConns.Get(aContext)
 
 	default:
 		if nil == db.sqlDB {
-			if db.sqlDB, rErr = Pool.Get(aContext); nil == rErr {
-				go goSQLtrace(`-- reOpened DB`) //FIXME REMOVE
-
-				rErr = db.sqlDB.PingContext(aContext)
-			}
+			db.sqlDB, rErr = db.sqlConns.Get(aContext)
 		}
 	}
 
