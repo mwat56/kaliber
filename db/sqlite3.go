@@ -91,7 +91,7 @@ func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
 	var copied bool
 
 	// Prepare the local database copy:
-	if copied, rErr = copyDatabaseFile(); nil != rErr {
+	if copied, rErr = syncDatabaseFile(); nil != rErr {
 		return
 	}
 	if copied {

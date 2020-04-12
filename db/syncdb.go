@@ -42,55 +42,6 @@ var (
 	syncCopyMtx = new(sync.Mutex)
 )
 
-// `copyDatabaseFile()` copies Calibre's original database file
-// to our cache directory.
-func copyDatabaseFile() (bool, error) {
-	syncCopyMtx.Lock()
-	defer syncCopyMtx.Unlock()
-
-	var (
-		err          error
-		sFile, tFile *os.File
-		sFI, dFI     os.FileInfo
-	)
-	defer func() {
-		if nil != sFile {
-			_ = sFile.Close()
-		}
-		if nil != tFile {
-			_ = tFile.Close()
-		}
-	}()
-
-	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
-	if sFI, err = os.Stat(sName); nil != err {
-		return false, err
-	}
-
-	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
-	if dFI, err = os.Stat(dName); nil == err {
-		if sFI.ModTime().Before(dFI.ModTime()) {
-			return false, nil
-		}
-	}
-
-	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
-		return false, err
-	}
-
-	tName := dName + `~`
-	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
-		return false, err
-	}
-
-	if _, err = io.Copy(tFile, sFile); nil != err {
-		return false, err
-	}
-	go goSQLtrace(`-- copied ` + sName + ` to ` + dName)
-
-	return true, os.Rename(tName, dName)
-} // copyDatabaseFile()
-
 // `goCheckFile()` checks in background once a minute whether the
 // original database file has changed.
 // If so, that file is copied to the cache directory from where it is
@@ -107,7 +58,7 @@ func goCheckFile(aCopied chan<- struct{}) {
 	for {
 		select {
 		case <-timer.C:
-			if copied, err := copyDatabaseFile(); copied && (nil == err) {
+			if copied, err := syncDatabaseFile(); copied && (nil == err) {
 				aCopied <- struct{}{}
 			}
 			_ = timer.Reset(time.Minute)
@@ -237,5 +188,54 @@ func SetSQLtraceFile(aFilename string) {
 func SQLtraceFile() string {
 	return syncSQLTraceFile
 } // SQLtraceFile()
+
+// `syncDatabaseFile()` copies Calibre's original database file
+// to the configured cache directory.
+func syncDatabaseFile() (bool, error) {
+	syncCopyMtx.Lock()
+	defer syncCopyMtx.Unlock()
+
+	var (
+		err          error
+		sFile, tFile *os.File
+		sFI, dFI     os.FileInfo
+	)
+	defer func() {
+		if nil != sFile {
+			_ = sFile.Close()
+		}
+		if nil != tFile {
+			_ = tFile.Close()
+		}
+	}()
+
+	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
+	if sFI, err = os.Stat(sName); nil != err {
+		return false, err
+	}
+
+	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
+	if dFI, err = os.Stat(dName); nil == err {
+		if sFI.ModTime().Before(dFI.ModTime()) {
+			return false, nil
+		}
+	}
+
+	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
+		return false, err
+	}
+
+	tName := dName + `~`
+	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
+		return false, err
+	}
+
+	if _, err = io.Copy(tFile, sFile); nil != err {
+		return false, err
+	}
+	go goSQLtrace(`-- copied ` + sName + ` to ` + dName)
+
+	return true, os.Rename(tName, dName)
+} // syncDatabaseFile()
 
 /* _EoF_ */
