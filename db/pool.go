@@ -23,36 +23,23 @@ type (
 	// A List of database connections.
 	tDBlist []*sql.DB
 
-	// TConnCreator defines the interface that's supposed to create
-	// and close database connections.
-	TConnCreator interface {
-
-		// OnClear is called once for each element in the pool
-		// when the list needs to be emptied.
-		//
-		// Usually the implementation will just close the connection.
-		//
-		//	`aDB` The database connection to be closed.
-		OnClear(aDB *sql.DB) error
-
-		// OnNew is called whenever an additional new database connection
-		// is required.
-		//
-		// If the operation could not be performned successfully the returned
-		// database pointer should be `nil` and the error must not be `nil`.
-		//
-		// In case of success the returned database should point to a valid
-		// database instance and the returned error must be `nil`.
-		//
-		//	`aContext` The current web request's context.
-		OnNew(aContext context.Context) (*sql.DB, error)
-	}
+	// TOnNewFunc is called whenever an additional new database connection
+	// is required.
+	//
+	// If the operation could not be performned successfully the returned
+	// database pointer should be `nil` and the error must not be `nil`.
+	//
+	// In case of success the returned database should point to a valid
+	// database instance and the returned error must be `nil`.
+	//
+	//	`aContext` The current web request's context.
+	TOnNewFunc func(aContext context.Context) (*sql.DB, error)
 
 	// TDBpool The list of database connections.
 	TDBpool struct {
-		pList        tDBlist      // The actual list of available connections
-		pMtx         *sync.Mutex  // A guard against concurrent write accesses
-		pConnCreator TConnCreator // The object creating the connections
+		pList  tDBlist     // The actual list of available connections
+		pMtx   *sync.Mutex // A guard against concurrent write accesses
+		pOnNew TOnNewFunc  // The object creating the connections
 	}
 )
 
@@ -73,14 +60,17 @@ var (
 //
 //	`aCreator` The object that's supposed to create and close
 // database connections.
-func NewPool(aCreator TConnCreator) *TDBpool {
+func NewPool(aCreator TOnNewFunc) *TDBpool {
 	pInitPoolOnce.Do(func() {
 		pConnPool = &TDBpool{
-			pConnCreator: aCreator,
-			pList:        make(tDBlist, 0, 127),
-			pMtx:         new(sync.Mutex),
+			pList:  make(tDBlist, 0, 127),
+			pMtx:   new(sync.Mutex),
+			pOnNew: aCreator,
 		}
 	})
+
+	//TODO implement background monitor to check size of list and
+	// call `Clear()` if size>127
 
 	return pConnPool
 } // NewPool()
@@ -96,7 +86,7 @@ func (p *TDBpool) Clear() *TDBpool {
 
 	for idx, conn := range p.pList {
 		if nil != conn {
-			_ = p.pConnCreator.OnClear(conn)
+			_ = conn.Close()
 		}
 		p.pList[idx] = nil // clear reference
 	}
@@ -126,7 +116,7 @@ func (p *TDBpool) Get(aContext context.Context) (rConn *sql.DB, rErr error) {
 
 	sLen := len(p.pList)
 	if 0 == sLen { // case (1)
-		rConn, rErr = p.pConnCreator.OnNew(aContext)
+		rConn, rErr = p.pOnNew(aContext)
 		return
 	}
 

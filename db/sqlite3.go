@@ -43,6 +43,77 @@ type (
 	}
 )
 
+// `doOnNew()` is called when a new database connection is required.
+//
+// If the operation could not be performned successfully the returned
+// database pointer should be `nil` and the error must not be `nil`.
+//
+// In case of success the returned database should point to a valid
+// database instance and the returned error must be `nil`.
+//
+//	`aContext` The current web request's context.
+func doOnNew(aContext context.Context) (rConn *sql.DB, rErr error) {
+	//XXX Are there custom functions to inject?
+
+	// `cache=shared` is essential to avoid running out of file
+	// handles since each query seems to hold its own file handle.
+	// `loc=auto` gets time.Time with current locale.
+	// `mode=ro` is self-explanatory since we don't change the DB
+	// in any way.
+	dsn := `file:` +
+		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
+		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
+
+	select {
+	case <-aContext.Done():
+		rErr = aContext.Err()
+
+	default:
+		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
+			// rConn.Exec("PRAGMA xxx=yyy")
+			go goSQLtrace(`-- opened DB`) //REMOVE
+			rErr = rConn.PingContext(aContext)
+		}
+	}
+
+	return
+} // doOnNew()
+
+var (
+	// Make sure the database file monitoring is started only once.
+	dbRunFileCheckOnce sync.Once
+)
+
+// OpenDatabase returns a new database connection.
+//
+//	`aContext` The current web request's context.
+func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
+	var copied bool
+
+	// Prepare the local database copy:
+	if copied, rErr = copyDatabaseFile(); nil != rErr {
+		return
+	}
+	if copied {
+		// Signal for `rDB.reOpen()`:
+		syncCopiedChan <- struct{}{}
+	}
+
+	dbRunFileCheckOnce.Do(func() {
+		// Start monitoring the original database file:
+		go goCheckFile(syncCopiedChan)
+	})
+
+	rDB = &TDataBase{
+		sqlConns: NewPool(doOnNew),
+	}
+	rErr = rDB.reOpen(aContext)
+
+	return
+} // OpenDatabase()
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 var (
 	// Pathname to the cached `Calibre` database
 	dbCalibreCachePath = ``
@@ -66,38 +137,6 @@ func CalibreLibraryPath() string {
 func CalibrePreferencesFile() string {
 	return filepath.Join(dbCalibreLibraryPath, dbCalibrePreferencesFile)
 } // CalibrePreferencesFile()
-
-var (
-	// Make sure the database file monitoring is run only once.
-	dbRunFileCheckOnce sync.Once
-)
-
-// OpenDatabase establishes a new database connection.
-//
-//	`aContext` The current web request's context.
-func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
-	var copied bool
-	// Prepare the local database copy:
-	copied, rErr = copyDatabaseFile()
-	if nil != rErr {
-		return
-	}
-	if copied {
-		// Signal for `rDB.reOpen()`:
-		syncCopiedChan <- struct{}{}
-	}
-
-	dbRunFileCheckOnce.Do(func() {
-		// Start monitoring the original database file:
-		go goCheckFile(syncCopiedChan)
-	})
-
-	rDB = &TDataBase{}
-	rDB.sqlConns = NewPool(rDB)
-	rErr = rDB.reOpen(aContext)
-
-	return
-} // OpenDatabase()
 
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
 //
@@ -431,14 +470,13 @@ type (
 )
 
 // Close terminates the database connection.
-func (db *TDataBase) Close() (rErr error) {
+func (db *TDataBase) Close() {
 	if nil != db.sqlDB {
-		len := strconv.Itoa(db.sqlConns.Put(db.sqlDB))
-		db.sqlDB = nil                                     // clear reference
-		go goSQLtrace(`-- recycling DB connection ` + len) //FIXME REMOVE
-	}
+		pLen := strconv.Itoa(db.sqlConns.Put(db.sqlDB))
+		db.sqlDB = nil // clear reference
 
-	return
+		go goSQLtrace(`-- recycling DB connection ` + pLen) //FIXME REMOVE
+	}
 } // Close()
 
 // `doQueryAll()` returns a list of documents with all available fields
@@ -704,56 +742,6 @@ func (db *TDataBase) doQueryGrid(aContext context.Context, aQuery string) (rList
 	return
 } // doQueryGrid()
 
-// OnClear is called when the connection pool is cleared/emptied.
-//
-// NOTE: This method is called internally and not meant to be called
-// from outside.
-//
-//	`aDB` The database connection to be closed.
-func (db *TDataBase) OnClear(aDB *sql.DB) error {
-	go goSQLtrace(`-- closing DB`) //REMOVE
-	return aDB.Close()
-} // OnClear()
-
-// OnNew is called when a new database connection is required.
-//
-// If the operation could not be performned successfully the returned
-// database pointer should be `nil` and the error must not be `nil`.
-//
-// In case of success the returned database should point to a valid
-// database instance and the returned error must be `nil`.
-//
-// NOTE: This method is called internally and not meant to be called
-// from outside.
-//
-//	`aContext` The current web request's context.
-func (db *TDataBase) OnNew(aContext context.Context) (rConn *sql.DB, rErr error) {
-	//XXX Are there custom functions to inject?
-
-	// `cache=shared` is essential to avoid running out of file
-	// handles since each query seems to hold its own file handle.
-	// `loc=auto` gets time.Time with current locale.
-	// `mode=ro` is self-explanatory since we don't change the DB
-	// in any way.
-	dsn := `file:` +
-		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
-		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-
-	select {
-	case <-aContext.Done():
-		rErr = aContext.Err()
-
-	default:
-		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
-			// rConn.Exec("PRAGMA xxx=yyy")
-			go goSQLtrace(`-- opened DB`) //REMOVE
-			rErr = rConn.PingContext(aContext)
-		}
-	}
-
-	return
-} // OnNew()
-
 // `query()` executes a query that returns rows, typically a SELECT.
 // The `args` are for any placeholder parameters in the query.
 //
@@ -1015,16 +1003,14 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 //
 //	`aContext` The current request's context.
 func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
-	defer func() {
-		if err := recover(); err != nil {
-			rErr = fmt.Errorf("%v", err)
-		}
-	}()
-
 	select {
 	case _, more := <-syncCopiedChan:
+		if nil != db.sqlDB {
+			_ = db.sqlDB.Close()
+			db.sqlDB = nil // clear reference
+		}
 		db.sqlConns.Clear()
-		db.sqlDB = nil                                // clear reference
+
 		go goSQLtrace(`-- closed all DB connections`) //FIXME REMOVE
 
 		if !more {
