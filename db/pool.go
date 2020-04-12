@@ -17,6 +17,7 @@ import (
 	"context"
 	"database/sql"
 	"sync"
+	"time"
 )
 
 type (
@@ -53,6 +54,25 @@ var (
 	pInitPoolOnce sync.Once
 )
 
+// `goMonitorPool()` checks the size of the connection pool.
+func goMonitorPool() {
+	chkInterval := time.Minute * 10
+	chkTimer := time.NewTimer(chkInterval)
+	defer chkTimer.Stop()
+
+	//lint:ignore S1000 - We can't use `range` here
+	for {
+		select {
+		case <-chkTimer.C:
+			pLen := pConnPool.Put(nil)
+			if 127 < pLen {
+				pConnPool.Clear()
+			}
+			chkTimer.Reset(chkInterval)
+		}
+	}
+} // goMonitorPool()
+
 // NewPool returns the list of database connections.
 //
 // To retrieve or store a certain connection use the return value's
@@ -67,10 +87,8 @@ func NewPool(aCreator TOnNewFunc) *TDBpool {
 			pMtx:   new(sync.Mutex),
 			pOnNew: aCreator,
 		}
+		go goMonitorPool()
 	})
-
-	//TODO implement background monitor to check size of list and
-	// call `Clear()` if size>127
 
 	return pConnPool
 } // NewPool()
