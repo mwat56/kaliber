@@ -78,8 +78,7 @@ func goMonitorPool() {
 // To retrieve or store a certain connection use the return value's
 // `Get()` and `Put()` methods respectively.
 //
-//	`aCreator` The object that's supposed to create and close
-// database connections.
+//	`aCreator` The object that's supposed to create database connections.
 func NewPool(aCreator TOnNewFunc) *TDBpool {
 	pInitPoolOnce.Do(func() {
 		pConnPool = &TDBpool{

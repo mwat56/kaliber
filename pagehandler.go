@@ -272,6 +272,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		if nil != err {
 			msg := fmt.Sprintf("db.OpenDatabase(): %v", err)
 			apachelogger.Err(`TPageHandler.handleGET('`+path+`')`, msg)
+
 			return
 		}
 		defer dbHandle.Close()
@@ -345,6 +346,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			return
 		}
 		defer dbHandle.Close()
+
 		_, _ = fmt.Sscanf(tail, "%d/%s", &id, &dummy)
 		qo.ID = id
 		doc := dbHandle.QueryDocument(aRequest.Context(), id)
@@ -509,6 +511,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 			return
 		}
 		defer dbHandle.Close()
+
 		ph.handleQuery(aWriter, aRequest, qo, so, dbHandle)
 
 	default:

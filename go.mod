@@ -15,7 +15,7 @@ require (
 	github.com/mwat56/whitespace v0.2.1
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71 // indirect
-	golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4 // indirect
+	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 )
 
 replace github.com/mwat56/kaliber/db => ./db

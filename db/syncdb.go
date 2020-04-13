@@ -112,8 +112,6 @@ func goWriteSQLtrace(aSource <-chan string) {
 		err        error
 		file       *os.File
 		fileCloser *time.Timer
-		// more       bool
-		// txt        string
 	)
 	defer func() {
 		if (nil != file) && (os.Stderr != file) {
