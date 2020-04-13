@@ -293,9 +293,9 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 		qo.GuiLang = QoLangGerman
 	}
 
-	if lt := aRequest.FormValue("layout"); 0 < len(lt) {
+	if layout := aRequest.FormValue("layout"); 0 < len(layout) {
 		var l uint8 // default to `0` == `qoLayoutList`
-		if "grid" == lt {
+		if "grid" == layout {
 			l = QoLayoutGrid
 		}
 		qo.Layout = l
@@ -370,34 +370,25 @@ func (qo *TQueryOptions) Update(aRequest *http.Request) *TQueryOptions {
 	}
 
 	if vl := aRequest.FormValue("virtlib"); 0 < len(vl) {
-		if vl != qo.VirtLib {
-			oldLib := qo.VirtLib
-			if `-` == vl {
-				qo.VirtLib = ``
-			} else {
-				qo.VirtLib = vl
-			}
-			if vlList, err := VirtualLibraryList(); nil == err {
-				if "" != vl {
-					if vld, ok := vlList[vl]; ok {
-						qo.Matching = vld
-					}
-				} else if `` != oldLib {
-					// Check whether the former library matches
-					// correspond with the current matches and
-					// if so clean the matches.
-					if vld, ok := vlList[oldLib]; ok {
-						if vld == qo.Matching {
-							qo.Matching = ``
-						}
-					}
-				}
-			}
-			qo.Entity, qo.ID, qo.LimitStart = "", 0, 0
+		oldLib := qo.VirtLib
+		if `-` == vl {
+			qo.VirtLib = ``
+		} else {
+			qo.VirtLib = vl
 		}
-		// ELSE: nothing changed, leave `qo.Matching` alone
+		// Explicitly given matches have priority over library:
+		if 0 < len(qo.Matching) {
+			qo.VirtLib = ``
+		} else if vlList, err := VirtualLibraryList(); nil == err {
+			if vld, ok := vlList[vl]; ok {
+				qo.Matching = vld
+			}
+		}
+		if vl != oldLib {
+			qo.Entity, qo.ID, qo.LimitStart = ``, 0, 0
+		}
 	} else {
-		qo.VirtLib = ""
+		qo.VirtLib = ``
 	}
 
 	return qo
