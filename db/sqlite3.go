@@ -71,7 +71,7 @@ func doOnNew(aContext context.Context) (rConn *sql.DB, rErr error) {
 	default:
 		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
 			// rConn.Exec("PRAGMA xxx=yyy")
-			go goSQLtrace(`-- opened DB`) //REMOVE
+			go goSQLtrace(`-- opened DB`, time.Now()) //REMOVE
 			rErr = rConn.PingContext(aContext)
 		}
 	}
@@ -475,7 +475,7 @@ func (db *TDataBase) Close() {
 		pLen := strconv.Itoa(db.sqlConns.Put(db.sqlDB))
 		db.sqlDB = nil // clear reference
 
-		go goSQLtrace(`-- recycling DB connection ` + pLen) //FIXME REMOVE
+		go goSQLtrace(`-- recycling DB connection ` + pLen, time.Now()) //FIXME REMOVE
 	}
 } // Close()
 
@@ -758,7 +758,7 @@ func (db *TDataBase) query(aContext context.Context, aQuery string) (rRows *sql.
 			return
 		}
 	}
-	go goSQLtrace(aQuery)
+	go goSQLtrace(aQuery, time.Now())
 
 	rRows, rErr = db.sqlDB.QueryContext(aContext, aQuery)
 
@@ -1011,7 +1011,7 @@ func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
 		}
 		db.sqlConns.Clear()
 
-		go goSQLtrace(`-- closed all DB connections`) //FIXME REMOVE
+		go goSQLtrace(`-- closed all DB connections`, time.Now()) //FIXME REMOVE
 
 		if !more {
 			rErr = errors.New(`syncCopiedChan closed`)

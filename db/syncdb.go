@@ -24,10 +24,10 @@ import (
  * This file provides functions to sync the used database copy with the
  * original Calibre library.
  *
- * To avoid any LOCKing problems when reading the Calibre database
- * (which happened quite frequently) while it is edited by the original
- * Calibre installation here we simply copy Calibre's database file into
- * the user's cache directory.
+ * To avoid any LOCKing problems (which happened quite frequently)
+ * when reading the Calibre database while it is edited by the original
+ * Calibre installation here we simply copy Calibre's database file
+ * into the user's cache directory.
  * This way we can use R/O access without the fear that the database might
  * be changed under our feet by other processes.
  *
@@ -81,23 +81,22 @@ var (
 // (if a tracefile is set).
 //
 //	`aQuery` The SQL query to log.
-func goSQLtrace(aQuery string) {
+//	`aWhen` The time when the query started.
+func goSQLtrace(aQuery string, aWhen time.Time) {
 	if 0 == len(syncSQLTraceFile) {
 		return
 	}
-	when := time.Now()
 	aQuery = strings.Replace(aQuery, "\t", ` `, -1)
 	aQuery = strings.Replace(aQuery, "\n", ` `, -1)
 
-	syncSQLTraceChannel <- when.Format(`2006-01-02 15:04:05.000 `) +
+	syncSQLTraceChannel <- aWhen.Format(`2006-01-02 15:04:05.000 `) +
 		strings.Replace(aQuery, `  `, ` `, -1)
 } // goSQLtrace()
 
 const (
-	threeSex = 3 * time.Second
-)
+	// Timer interval to look for trace file closing.
+	syncSex = time.Second << 2 // four seconds
 
-var (
 	// Mode of opening the logfile(s).
 	syncOpenFlags = os.O_CREATE | os.O_APPEND | os.O_WRONLY | os.O_SYNC
 )
@@ -124,8 +123,8 @@ func goWriteSQLtrace(aSource <-chan string) {
 	}()
 
 	// Let the application initialise:
-	time.Sleep(threeSex)
-	fileCloser = time.NewTimer(threeSex)
+	time.Sleep(syncSex)
+	fileCloser = time.NewTimer(syncSex)
 
 	for { // wait for strings to write
 		select {
@@ -142,7 +141,7 @@ func goWriteSQLtrace(aSource <-chan string) {
 					}
 				}
 				fmt.Fprintln(file, txt)
-				fileCloser.Reset(threeSex)
+				fileCloser.Reset(syncSex)
 			}
 
 		case <-fileCloser.C:
@@ -152,7 +151,7 @@ func goWriteSQLtrace(aSource <-chan string) {
 				}
 				file = nil
 			}
-			fileCloser.Reset(threeSex)
+			fileCloser.Reset(syncSex)
 		}
 	}
 } // goWriteSQLtrace()
@@ -190,6 +189,11 @@ func SQLtraceFile() string {
 
 // `syncDatabaseFile()` copies Calibre's original database file
 // to the configured cache directory.
+//
+// The `bool` return value signals whether the database file was actually
+// copied or not.
+// the `error` return value is either `nil` in case of success or the
+// occurred error.
 func syncDatabaseFile() (bool, error) {
 	syncCopyMtx.Lock()
 	defer syncCopyMtx.Unlock()
@@ -232,7 +236,7 @@ func syncDatabaseFile() (bool, error) {
 	if _, err = io.Copy(tFile, sFile); nil != err {
 		return false, err
 	}
-	go goSQLtrace(`-- copied ` + sName + ` to ` + dName)
+	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
 
 	return true, os.Rename(tName, dName)
 } // syncDatabaseFile()
