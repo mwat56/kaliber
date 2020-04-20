@@ -155,16 +155,16 @@ func (doc *TDocument) CoverAbs(aRelative bool) (string, error) {
 	}
 	filenames, err := filepath.Glob(dir + "/cover.*")
 	if nil != err {
-		return "", err
+		return ``, err
 	}
 	if 0 == len(filenames) {
-		return "", errors.New(`TDocument.coverAbs(): no matching filenames found`)
+		return ``, errors.New(`TDocument.CoverAbs(): no matching filenames found in ` + dir)
 	}
 	if !aRelative {
 		return filenames[0], nil
 	}
 	if dir, err = filepath.Rel(CalibreLibraryPath(), filenames[0]); nil != err {
-		return "", err
+		return ``, err
 	}
 
 	return dir, nil
