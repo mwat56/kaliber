@@ -56,7 +56,7 @@ var (
 
 // `goMonitorPool()` checks the size of the connection pool.
 func goMonitorPool() {
-	chkInterval := time.Minute * 10
+	chkInterval := time.Minute << 3
 	chkTimer := time.NewTimer(chkInterval)
 	defer chkTimer.Stop()
 
