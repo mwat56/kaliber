@@ -126,6 +126,8 @@ func main() {
 		// err = nil // for use by test for `apachelogger.SetErrLog()` (below)
 	} else if s, err = kaliber.AppArguments.Get("errorLog"); (nil == err) && (0 < len(s)) {
 		handler = apachelogger.Wrap(handler, "", s)
+	} else {
+		handler = apachelogger.Wrap(handler, "", "")
 	}
 
 	// We need a `server` reference to use it in `setupSignals()`
@@ -133,10 +135,11 @@ func main() {
 	server := &http.Server{
 		Addr:              ph.Address(),
 		Handler:           handler,
-		IdleTimeout:       2 * time.Minute,
+		IdleTimeout:       1,
 		ReadHeaderTimeout: 20 * time.Second,
-		ReadTimeout:       time.Minute,
-		WriteTimeout:      20 * time.Minute, // enough time for book download
+		ReadTimeout:       20 * time.Second,
+		// enough time for book download with little bandwidth:
+		WriteTimeout: 20 * time.Minute,
 	}
 	if (nil == err) && (0 < len(s)) { // values from logfile test
 		apachelogger.SetErrLog(server)
