@@ -8,6 +8,10 @@ package db
 
 //lint:file-ignore ST1017 - I prefer Yoda conditions
 
+/*
+ * This file provides functions to access Calibre`s metadata store.
+ */
+
 import (
 	"encoding/json"
 	"errors"
@@ -16,6 +20,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/mwat56/apachelogger"
 )
@@ -38,63 +43,80 @@ type (
 	// tBookDisplayFieldsList is the `book_display_fields` metadata list.
 	tBookDisplayFieldsList map[string]bool
 
-	// TVirtLibList is the `virtual_libraries` JSON metadata section.
+	tInterfaceList map[string]interface{}
+
+	// TVirtLibList is the `virtual_libraries` JSON metadata section
+	// indexed by virt.library name.
 	TVirtLibList map[string]string
 )
 
 var (
 	// cache of "book_display_fields" list
-	mdBookDisplayFieldsList tBookDisplayFieldsList
+	mdBookDisplayFieldsList    tBookDisplayFieldsList
+	mdBookDisplayFieldsListMtx = new(sync.RWMutex)
 
 	// cache of "field_metadata" list
-	mdFieldsMetadataList *map[string]interface{}
+	mdFieldsMetadataList    *tInterfaceList // map[string]interface{}
+	mdFieldsMetadataListMtx = new(sync.RWMutex)
 
 	// list of virtual libraries to hide
-	mdHiddenVirtLibs map[string]interface{}
+	mdHiddenVirtLibs    *tInterfaceList // map[string]interface{}
+	mdHiddenVirtLibsMtx = new(sync.RWMutex)
 
 	// cache of all DB metadata preferences
-	mdMetadataDbPrefs *map[string]interface{}
+	mdMetadataDbPrefs    *tInterfaceList // map[string]interface{}
+	mdMetadataDbPrefsMtx = new(sync.RWMutex)
 
 	// virtual libraries list
-	mdVirtLibList TVirtLibList
+	mdVirtLibList    TVirtLibList
+	mdVirtLibListMtx = new(sync.RWMutex)
 
 	// raw virtual libraries list
-	mdVirtLibsRaw *map[string]interface{}
+	mdVirtLibsRaw    *tInterfaceList // map[string]interface{}
+	mdVirtLibsRawMtx = new(sync.RWMutex)
 )
 
 // `mdGetFieldData()` returns a list of field definitions for `aField`.
-func mdGetFieldData(aField string) (map[string]interface{}, error) {
-	var result map[string]interface{}
+func mdGetFieldData(aField string) (rList tInterfaceList /* map[string]interface{} */, rErr error) {
 	if 0 == len(aField) {
-		return result, nil
+		return
 	}
-	if err := mdReadFieldMetadata(); nil != err {
-		msg := fmt.Sprintf("mdReadFieldMetadata(): %v", err)
-		return nil, errors.New(msg)
+	if rErr = mdReadFieldMetadata(); nil != rErr {
+		msg := fmt.Sprintf("mdReadFieldMetadata(): %v", rErr)
+		rErr = errors.New(msg)
+		return
 	}
+	mdFieldsMetadataListMtx.RLock()
+	defer mdFieldsMetadataListMtx.RUnlock()
 
 	fmd := *mdFieldsMetadataList
 	fd, ok := fmd[aField]
 	if !ok {
 		return nil, errors.New("no such JSON section: " + aField)
 	}
-	result = fd.(map[string]interface{})
+	lst := fd.(map[string]interface{})
+	rList = tInterfaceList(lst)
 
-	return result, nil
+	return
 } // mdGetFieldData()
 
 // `mdReadBookDisplayFields()`
 func mdReadBookDisplayFields() error {
-	if nil != mdBookDisplayFieldsList {
-		return nil // field metadata already read
-	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
 		return errors.New(msg)
 	}
-	section, ok := (*mdMetadataDbPrefs)[mdBookDisplayFields]
+
+	section, ok := mdGetMetadataDbPref(mdBookDisplayFields)
 	if !ok {
 		return errors.New("no such JSON section: " + mdBookDisplayFields)
+	}
+
+	mdBookDisplayFieldsListMtx.Lock()
+	defer mdBookDisplayFieldsListMtx.Unlock()
+
+	if nil != mdBookDisplayFieldsList {
+		return nil // field metadata already read
 	}
 
 	data := section.([]interface{})
@@ -111,59 +133,85 @@ func mdReadBookDisplayFields() error {
 
 // `mdReadFieldMetadata()`
 func mdReadFieldMetadata() error {
-	if nil != mdFieldsMetadataList {
-		return nil // field metadata already read
-	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
 		return errors.New(msg)
 	}
-	section, ok := (*mdMetadataDbPrefs)[mdFieldMetadata]
+
+	section, ok := mdGetMetadataDbPref(mdFieldMetadata)
 	if !ok {
 		return errors.New("no such JSON section: " + mdFieldMetadata)
 	}
+
+	mdFieldsMetadataListMtx.Lock()
+	defer mdFieldsMetadataListMtx.Unlock()
+
+	if nil != mdFieldsMetadataList {
+		return nil // field metadata already read
+	}
+
 	fmd := section.(map[string]interface{})
-	mdFieldsMetadataList = &fmd
+	msi := tInterfaceList(fmd)
+	mdFieldsMetadataList = &msi
 
 	return nil
 } // mdReadFieldMetadata()
 
 // `mdReadHiddenVirtualLibraries()` reads the list ob hidden libraries to hide.
 func mdReadHiddenVirtualLibraries() error {
-	if nil != mdHiddenVirtLibs {
-		return nil
-	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
 		apachelogger.Err("mdReadHiddenVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 
-	section, ok := (*mdMetadataDbPrefs)[mdHiddenVirtualLibraries]
+	section, ok := mdGetMetadataDbPref(mdHiddenVirtualLibraries)
 	if !ok {
 		msg := "no such JSON section: " + mdHiddenVirtualLibraries
 		apachelogger.Err("mdReadHiddenVirtualLibraries", msg)
 		return errors.New(msg)
 	}
 
+	mdHiddenVirtLibsMtx.Lock()
+	defer mdHiddenVirtLibsMtx.Unlock()
+
+	if nil != mdHiddenVirtLibs {
+		return nil
+	}
+
 	hvl := section.([]interface{})
 	if 0 == len(hvl) {
 		return nil
 	}
-	mdHiddenVirtLibs = make(map[string]interface{}, len(hvl))
+	result := make(tInterfaceList /* map[string]interface{} */, len(hvl))
 	for _, val := range hvl {
 		lib := val.(string)
-		mdHiddenVirtLibs[lib] = struct{}{}
+		result[lib] = struct{}{}
 	}
+	mdHiddenVirtLibs = &result
 
 	return nil
 } // mdReadHiddenVirtualLibraries()
 
+// `mdGetMetadataDbPref()` returns the preferences section indexed by `aKey`.
+func mdGetMetadataDbPref(aKey string) (rSection interface{}, rOK bool) {
+	mdMetadataDbPrefsMtx.RLock()
+	defer mdMetadataDbPrefsMtx.RUnlock()
+
+	rSection, rOK = (*mdMetadataDbPrefs)[aKey]
+
+	return
+} // mdGetMetadataDbPref()
+
 // `mdReadMetadataFile()` returns a map of the JSON data read.
 func mdReadMetadataFile() error {
+	mdMetadataDbPrefsMtx.Lock()
+	defer mdMetadataDbPrefsMtx.Unlock()
+
 	if nil != mdMetadataDbPrefs {
 		return nil // metadata already read
 	}
+
 	fName := CalibrePreferencesFile()
 	srcFile, err := os.OpenFile(fName, os.O_RDONLY, 0)
 	if nil != err {
@@ -172,7 +220,7 @@ func mdReadMetadataFile() error {
 	}
 	defer srcFile.Close()
 
-	var jsData map[string]interface{}
+	var jsData tInterfaceList // map[string]interface{}
 	dec := json.NewDecoder(srcFile)
 	if err := dec.Decode(&jsData); err != nil {
 		msg := fmt.Sprintf("json.NewDecoder.Decode(): %v", err)
@@ -196,23 +244,29 @@ func mdReadMetadataFile() error {
 
 // `mdReadVirtualLibraries()` reads the raw virt.library definitions.
 func mdReadVirtualLibraries() error {
-	if nil != mdVirtLibsRaw {
-		return nil
-	}
 	if err := mdReadMetadataFile(); nil != err {
 		msg := fmt.Sprintf("mdReadMetadataFile(): %v", err)
-		apachelogger.Err("mdReadVirtualLibraries", msg)
+		apachelogger.Err("mdReadVirtualLibraries()", msg)
 		return errors.New(msg)
 	}
 
-	section, ok := (*mdMetadataDbPrefs)[mdVirtualLibraries]
+	section, ok := mdGetMetadataDbPref(mdVirtualLibraries)
 	if !ok {
 		msg := "no such JSON section: " + mdVirtualLibraries
-		apachelogger.Err("mdReadVirtualLibraries", msg)
+		apachelogger.Err("mdReadVirtualLibraries()", msg)
 		return errors.New(msg)
 	}
+
+	mdVirtLibsRawMtx.Lock()
+	defer mdVirtLibsRawMtx.Unlock()
+
+	if nil != mdVirtLibsRaw {
+		return nil
+	}
+
 	vlr := section.(map[string]interface{})
-	mdVirtLibsRaw = &vlr
+	msi := tInterfaceList(vlr)
+	mdVirtLibsRaw = &msi
 
 	return nil
 } // mdReadVirtualLibraries()
@@ -221,20 +275,24 @@ func mdReadVirtualLibraries() error {
 func mdVirtLibDefinitions() (*TVirtLibList, error) {
 	if err := mdReadVirtualLibraries(); nil != err {
 		msg := fmt.Sprintf("mdReadVirtualLibraries(): %v", err)
-		apachelogger.Err("mdVirtualLibDefinitions", msg)
+		apachelogger.Err("mdVirtualLibDefinitions()", msg)
 		return nil, errors.New(msg)
 	}
 	if err := mdReadHiddenVirtualLibraries(); nil != err {
 		msg := fmt.Sprintf("mdReadHiddenVirtualLibraries(): %v", err)
-		apachelogger.Err("mdVirtualLibDefinitions", msg)
+		apachelogger.Err("mdVirtualLibDefinitions()", msg)
 		return nil, errors.New(msg)
 	}
+
+	mdVirtLibsRawMtx.RLock()
+	defer mdVirtLibsRawMtx.RUnlock()
 
 	m := *mdVirtLibsRaw
 	result := make(TVirtLibList, len(m))
 	for key, value := range m {
+		//FIXME MUTEX
 		if nil != mdHiddenVirtLibs {
-			if _, ok := mdHiddenVirtLibs[key]; ok {
+			if _, ok := (*mdHiddenVirtLibs)[key]; ok {
 				continue
 			}
 		}
@@ -258,26 +316,28 @@ func mdVirtLibDefinitions() (*TVirtLibList, error) {
 //
 //	`aFieldname` The name of the field/column to check.
 func BookFieldVisible(aFieldname string) (bool, error) {
-	if nil == mdBookDisplayFieldsList {
-		if err := mdReadBookDisplayFields(); nil != err {
-			msg := fmt.Sprintf("mdReadBookDisplayFields(): %v", err)
-			apachelogger.Err("md.BookFieldVisible", msg)
-			return true, errors.New(msg)
-		}
+	if err := mdReadBookDisplayFields(); nil != err {
+		msg := fmt.Sprintf("mdReadBookDisplayFields(): %v", err)
+		apachelogger.Err("md.BookFieldVisible()", msg)
+		return true, errors.New(msg)
 	}
+	mdBookDisplayFieldsListMtx.RLock()
+	defer mdBookDisplayFieldsListMtx.RUnlock()
+
 	if result, ok := mdBookDisplayFieldsList[aFieldname]; ok {
 		return result, nil
 	}
 
 	msg := "field name doesn't exist: " + aFieldname
-	apachelogger.Err("md.BookFieldVisible", msg)
+	apachelogger.Err("md.BookFieldVisible()", msg)
+
 	return true, errors.New(msg)
 } // BookFieldVisible()
 
 // MetaFieldValue returns the value of `aField` of `aSection`.
 //
-//	aSection Name of the field's metadata section.
-//	aField Name of the data field within `aSection`.
+//	`aSection` Name of the field's metadata section.
+//	`aField` Name of the data field within `aSection`.
 func MetaFieldValue(aSection, aField string) (interface{}, error) {
 	if (0 == len(aSection)) || (0 == len(aField)) {
 		msg := fmt.Sprintf(`md.MetaFieldValue(): empty arguments ("%s". "%s")`, aSection, aField)
@@ -304,7 +364,7 @@ func MetaFieldValue(aSection, aField string) (interface{}, error) {
 
 // VirtLibOptions returns the SELECT/OPTIONs of the virtual libraries.
 //
-//	aSelected Name of the currently selected library.
+//	`aSelected` Name of the currently selected library.
 func VirtLibOptions(aSelected string) string {
 	_, err := VirtualLibraryList()
 	if nil != err {
@@ -312,6 +372,8 @@ func VirtLibOptions(aSelected string) string {
 		apachelogger.Err("md.VirtLibOptions", msg)
 		return ""
 	}
+	mdVirtLibListMtx.RLock()
+	defer mdVirtLibListMtx.RUnlock()
 
 	list := make([]string, 0, len(mdVirtLibList)+1)
 	if (0 == len(aSelected)) || ("-" == aSelected) {
@@ -344,13 +406,17 @@ var (
 // VirtualLibraryList returns a list of virtual library definitions
 // and SQL code to access them.
 func VirtualLibraryList() (TVirtLibList, error) {
+	mdVirtLibListMtx.Lock()
+	defer mdVirtLibListMtx.Unlock()
+
 	if nil != mdVirtLibList {
 		return mdVirtLibList, nil
 	}
+
 	jsList, err := mdVirtLibDefinitions()
 	if nil != err {
 		msg := fmt.Sprintf("mdVirtLibDefinitions(): %v", err)
-		apachelogger.Err("md.VirtualLibraryList", msg)
+		apachelogger.Err("md.VirtualLibraryList()", msg)
 		return nil, err
 	}
 

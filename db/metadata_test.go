@@ -45,14 +45,14 @@ func Test_BookFieldVisible(t *testing.T) {
 
 func Test_mdGetFieldData(t *testing.T) {
 	SetCalibreLibraryPath("/var/opt/Calibre")
-	var w1 map[string]interface{}
+	var w1 tInterfaceList // map[string]interface{}
 	type args struct {
 		aKey string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    map[string]interface{}
+		want    tInterfaceList // map[string]interface{}
 		wantErr bool
 	}{
 		// TODO: Add test cases.
