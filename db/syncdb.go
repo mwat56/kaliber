@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	// sqlite "github.com/mattn/go-sqlite3"
 )
 
 /*
@@ -130,7 +131,7 @@ func goWriteSQLtrace(aSource <-chan string) {
 		select {
 		case txt, more := <-aSource:
 			if !more { // channel closed
-				log.Println(`queries.goWriteSQLtrace(): message channel closed`)
+				log.Println(`syncdb.goWriteSQLtrace(): trace channel closed`)
 				return
 			}
 			if 0 < len(syncSQLTraceFile) {
@@ -235,5 +236,60 @@ func syncDatabaseFile() (bool, error) {
 
 	return true, os.Rename(tName, dName)
 } // syncDatabaseFile()
+
+/*
+func syncBackupDataBase() (bool, error) {
+	syncCopyMtx.Lock()
+	defer syncCopyMtx.Unlock()
+
+	var (
+		backup           sqlite.SQLiteBackup
+		dstConn, srcConn *sql.DB
+		destConn         *sqlite.SQLiteConn
+		done             bool
+		err              error
+		sFI, dFI         os.FileInfo
+	)
+	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
+	if sFI, err = os.Stat(sName); nil != err {
+		return false, err
+	}
+
+	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
+	if dFI, err = os.Stat(dName); nil == err {
+		if sFI.ModTime().Before(dFI.ModTime()) {
+			return false, nil
+		}
+	} // ELSE: the dest file doesn't exist yet
+
+	if srcConn, err = sql.Open(`sqlite3`, `file:`+sName+`?cache=shared&mode=ro`); nil != err {
+		return false, err
+	}
+	defer srcConn.Close()
+
+	tName := dName + `~`
+	if dstConn, err = sql.Open(`sqlite3`, `file:`+tName); nil != err {
+		return false, err
+	}
+	defer dstConn.Close()
+
+	if backup, err = dstConn.Backup(`main`, srcConn, `main`); nil != err {
+		return false, err
+	}
+	defer backup.Close()
+
+	if done, err = backup.Step(-1); nil != err {
+		return false, err
+	}
+
+	if !done {
+		return false, errors.New(`Problem backing up ` + sName + ` to ` + tName)
+	}
+
+	go goSQLtrace(`-- copied ` + sName + ` to ` + dName)
+
+	return true, os.Rename(tName, dName)
+} // syncBackupDataBase()
+*/
 
 /* _EoF_ */
