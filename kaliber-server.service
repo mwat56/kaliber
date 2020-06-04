@@ -1,5 +1,6 @@
 [Unit]
 Description=Kaliber eBook Server
+Documentation=https://github.com/mwat56/kaliber/
 After=network.target
 
 [Service]
