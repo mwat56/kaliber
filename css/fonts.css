@@ -4,73 +4,75 @@
 	font-family: "Noto Sans";
 	font-weight: normal;
 	font-style: normal;
-	src: url(/fonts/NotoSans-Regular.ttf);
+	src: local('Noto Sans Regular'), local('Noto-Sans-Regular'), url(/fonts/NotoSans-Regular.ttf) format('truetype');
 }
 @font-face {
-	font-family: "Noto Sans Bold";
+	font-family: "Noto Sans";
 	font-style: normal;
 	font-weight: bold;
-	src: url(/fonts/NotoSans-Bold.ttf);
+	src: local('Noto Sans Bold'), local('Noto-Sans-Bold'), url(/fonts/NotoSans-Bold.ttf) format('truetype');
 }
 @font-face {
-	font-family: "Noto Sans BoldItal";
+	font-family: "Noto Sans";
 	font-weight: bold;
 	font-style: italic;
-	src: url(/fonts/NotoSans-BoldItalic.ttf);
+	src: local('Noto Sans BoldItalic'), local('Noto-Sans-BoldItalic'), url(/fonts/NotoSans-BoldItalic.ttf) format('truetype');
 }
 @font-face {
-	font-family: "Noto Sans Ital";
+	font-family: "Noto Sans";
 	font-weight: normal;
 	font-style: italic;
-	src: url(/fonts/NotoSans-Italic.ttf);
+	src: local('Noto Sans Italic'), local('Noto-Sans-Italic'), url('/fonts/NotoSans-Italic.ttf') format('truetype');
 }
+
 @font-face {
 	font-family: "Noto Serif";
 	font-weight: normal;
 	font-style: normal;
-	src: url(/fonts/NotoSerif-Regular.ttf);
+	src: local('Noto Serif Regular'), local('Noto-Serif-Regular'), url('/fonts/NotoSerif-Regular.ttf') format('truetype');
 }
 @font-face {
 	font-family: "Noto Serif Bold";
 	font-style: normal;
 	font-weight: bold;
-	src: url(/fonts/NotoSerif-Bold.ttf);
+	src: local('Noto Serif Bold'), local('Noto-Serif-Bold'), url('/fonts/NotoSerif-Bold.ttf') format('truetype');
 }
 @font-face {
-	font-family: "Noto Serif BoldItal";
+	font-family: "Noto Serif";
 	font-weight: bold;
 	font-style: italic;
-	src: url(/fonts/NotoSerif-BoldItalic.ttf);
+	src: local('Noto Serif BoldItalic'), local('Noto-Serif-BoldItalic'), url('/fonts/NotoSerif-BoldItalic.ttf') format('truetype');
 }
 @font-face {
-	font-family: "Noto Serif Ital";
+	font-family: "Noto Serif";
 	font-weight: normal;
 	font-style: italic;
-	src: url(/fonts/NotoSerif-Italic.ttf);
+	src: local('Noto Serif Italic'), local('Noto-Serif-Italic'), url('/fonts/NotoSerif-Italic.ttf') format('truetype');
 }
+
 @font-face {
 	font-family: "Hack Mono";
 	font-weight: normal;
 	font-style: normal;
-	src: url(/fonts/Hack-Regular.ttf);
+	src: local('Hack Mono Regular'), local('Hack-Mono-Regular'), url('/fonts/Hack-Regular.ttf') format('truetype');
 }
 @font-face {
-	font-family: "Hack Mono Bold";
+	font-family: "Hack Mono";
 	font-style: normal;
 	font-weight: bold;
-	src: url(/fonts/Hack-Bold.ttf);
+	src: local('Hack Mono Bold'), local('Hack-Mono-Bold'), url('/fonts/Hack-Bold.ttf') format('truetype');
 }
 @font-face {
-	font-family: "Hack Mono BoldItal";
+	font-family: "Hack Mono";
 	font-weight: bold;
 	font-style: italic;
-	src: url(/fonts/Hack-BoldItalic.ttf);
+	src: local('Hack Mono BoldItalic'), local('Hack-Mono-BoldItalic'), url('/fonts/Hack-BoldItalic.ttf') format('truetype');
 }
 @font-face {
-	font-family: "Hack Mono Ital";
+	font-family: "Hack Mono";
 	font-weight: normal;
 	font-style: italic;
-	src: url(/fonts/Hack-Italic.ttf);
+	src: local('Hack Mono Italic'), local('Hack-Mono-Italic'), url('/fonts/Hack-Italic.ttf') format('truetype');
 }
 
 html, body, p {
@@ -88,16 +90,16 @@ div#search_box {
 	font-family: "Noto Sans", sans-serif;
 }
 em, .em, i, .italic {
-	font-family: "Noto Serif Ital", serif;
+	font-family: "Noto Serif Italic", serif;
 }
 h1, h2, h3, h4, h5, h6 {
 	font-family: "Noto Serif Bold", serif;
 }
 h5 {
-	font-family: "Noto Serif BoldItal", serif;
+	font-family: "Noto Serif BoldItalic", serif;
 }
 pre em, pre .em, pre i, pre.italic {
-	font-family: "Hack Mono Ital", monospace;
+	font-family: "Hack Mono Italic", monospace;
 }
 pre b, pre.bold, pre strong, pre.strong {
 	font-family: "Hack Mono Bold", monospace;
