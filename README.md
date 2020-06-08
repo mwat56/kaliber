@@ -82,7 +82,7 @@ The overall layout of the web-pages served by `Kaliber` is intentionally kept si
 * Fulltext search as well as datafield-based searches;
 * Ordered in either `ascending` or `descending` direction;
 * Selectable number of books per page;
-* Sortable by `author`, `date`, `language`, `publisher`, `rating`, `series`, `size`, `tags`, or `title`;
+* Sortable by `acquisition`, `author`, `language`, `published`, `publisher`, `rating`, `series`, `size`, `tags`, or `title`;
 * Anonymised access logging;
 * Optional user/password based access control.
 
