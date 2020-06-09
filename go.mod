@@ -9,12 +9,12 @@ require (
 	github.com/mwat56/errorhandler v1.1.6
 	github.com/mwat56/ini v1.3.8
 	github.com/mwat56/jffs v0.1.1
-	github.com/mwat56/kaliber/db v0.0.0-20200413173747-0c15ddb66a49
+	github.com/mwat56/kaliber/db v0.0.0-20200604195220-39900307dfd0
 	github.com/mwat56/passlist v1.3.1
 	github.com/mwat56/sessions v0.3.10
 	github.com/mwat56/whitespace v0.2.1
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed // indirect
+	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
 )
 

@@ -35,7 +35,8 @@ func TestTDBpool_Put(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 	var conn1 *sql.DB
-	conn2, _ := pConnPool.Get(ctx)
+	conn2, _ := doOnNew(ctx)
+	_ = NewPool(doOnNew)
 
 	type args struct {
 		aConnection *sql.DB
