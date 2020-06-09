@@ -11,7 +11,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -38,8 +37,8 @@ type (
 	// TDataBase An opaque structure providing the properties and
 	// methods to access the `Calibre` database.
 	TDataBase struct {
-		sqlDB    *sql.DB  // the used database connection
 		sqlConns *TDBpool // reference of the connection pool
+		sqlDB    *sql.DB  // the used database connection
 	}
 )
 
@@ -101,7 +100,7 @@ func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
 
 	dbRunFileCheckOnce.Do(func() {
 		// Start monitoring the original database file:
-		go goCheckFile(syncCopiedChan)
+		go goSyncFile()
 	})
 
 	rDB = &TDataBase{
@@ -475,7 +474,7 @@ func (db *TDataBase) Close() {
 		pLen := strconv.Itoa(db.sqlConns.Put(db.sqlDB))
 		db.sqlDB = nil // clear reference
 
-		go goSQLtrace(`-- recycling DB connection ` + pLen, time.Now()) //FIXME REMOVE
+		go goSQLtrace(`-- recycling DB connection `+pLen, time.Now()) //FIXME REMOVE
 	}
 } // Close()
 
@@ -1004,7 +1003,7 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 //	`aContext` The current request's context.
 func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
 	select {
-	case _, more := <-syncCopiedChan:
+	case <-syncCopiedChan:
 		if nil != db.sqlDB {
 			_ = db.sqlDB.Close()
 			db.sqlDB = nil // clear reference
@@ -1012,11 +1011,6 @@ func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
 		db.sqlConns.Clear()
 
 		go goSQLtrace(`-- closed all DB connections`, time.Now()) //FIXME REMOVE
-
-		if !more {
-			rErr = errors.New(`syncCopiedChan closed`)
-			return
-		}
 
 		db.sqlDB, rErr = db.sqlConns.Get(aContext)
 

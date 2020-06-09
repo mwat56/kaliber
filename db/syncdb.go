@@ -37,35 +37,35 @@ import (
 
 var (
 	// `syncCopiedChan` Signal channel for a new database copy.
-	syncCopiedChan = make(chan struct{}, 1)
+	// `goSyncFile()` writes to the channel whenever the database
+	// file was copied so others (`TDataBase.reOpen()`) can check.
+	syncCopiedChan = make(chan struct{}, 2)
 
 	// Guard against parallel database copies.
 	syncCopyMtx = new(sync.Mutex)
 )
 
-// `goCheckFile()` checks in background once a minute whether the
+// `goSyncFile()` checks in background once a minute whether the
 // original database file has changed.
 // If so, that file is copied to the cache directory from where it is
 // read and used by the `db.TDatabase` instance.
-//
-//	`aCopied` W/O channel to signal a new database copy.
-func goCheckFile(aCopied chan<- struct{}) {
+func goSyncFile() {
 	timer := time.NewTimer(time.Minute)
 	defer func() {
 		_ = timer.Stop()
 	}()
 
-	//lint:ignore S1000 - We can't use `range` here
+	//lint:ignore S1000 - We won't use `range` here
 	for {
 		select {
 		case <-timer.C:
 			if copied, err := syncDatabaseFile(); copied && (nil == err) {
-				aCopied <- struct{}{}
+				syncCopiedChan <- struct{}{}
 			}
 			_ = timer.Reset(time.Minute)
 		}
 	}
-} // goCheckFile()
+} // goSyncFile()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
