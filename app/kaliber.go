@@ -43,19 +43,19 @@ func userCmdline() {
 
 	// All the following `kaliber.xxxUser()` calls terminate the program
 	if 0 < len(kaliber.AppArgs.UserAdd) {
-		kaliber.AddUser(kaliber.AppArgs.UserAdd, kaliber.AppArgs.PassFile)
+		kaliber.UserAdd(kaliber.AppArgs.UserAdd, kaliber.AppArgs.PassFile)
 	}
 	if 0 < len(kaliber.AppArgs.UserCheck) {
-		kaliber.CheckUser(kaliber.AppArgs.UserCheck, kaliber.AppArgs.PassFile)
+		kaliber.UserCheck(kaliber.AppArgs.UserCheck, kaliber.AppArgs.PassFile)
 	}
 	if 0 < len(kaliber.AppArgs.UserDelete) {
-		kaliber.DeleteUser(kaliber.AppArgs.UserDelete, kaliber.AppArgs.PassFile)
+		kaliber.UserDelete(kaliber.AppArgs.UserDelete, kaliber.AppArgs.PassFile)
 	}
 	if kaliber.AppArgs.UserList {
 		kaliber.ListUsers(kaliber.AppArgs.PassFile)
 	}
 	if 0 < len(kaliber.AppArgs.UserUpdate) {
-		kaliber.UpdateUser(kaliber.AppArgs.UserUpdate, kaliber.AppArgs.PassFile)
+		kaliber.UserUpdate(kaliber.AppArgs.UserUpdate, kaliber.AppArgs.PassFile)
 	}
 } // userCmdline()
 
