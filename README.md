@@ -30,7 +30,7 @@
 ## Note
 
 > **Please _note_ that this is a work in progress.**
-> Changes – even API breaking changes – can happen at any time.
+> Changes – even API breaking changes – might happen at any time.
 
 ## Purpose
 
@@ -77,13 +77,13 @@ The overall layout of the web-pages served by `Kaliber` is intentionally kept si
 
 * Simplicity of use;
 * Barrier-free (no JavaScript required);
-* Books list layout either `Cover Grid` or `Data List`;
-* Easy navigation (`First`, `Prev`, `Next`, `Last` button/links);
+* Books list layout either _`Cover Grid`_ or _`Data List`_;
+* Easy navigation (_`First`, `Prev`, `Next`, `Last`_ button/links);
 * Fulltext search as well as datafield-based searches;
-* Ordered in either `ascending` or `descending` direction;
+* Ordered in either _`ascending`_ or _`descending`_ direction;
 * Selectable number of books per page;
-* Sortable by `acquisition`, `author`, `language`, `published`, `publisher`, `rating`, `series`, `size`, `tags`, or `title`;
-* Anonymised access logging;
+* Sortable by _`acquisition`, `author`, `language`, `published`, `publisher`, `rating`, `series`, `size`, `tags`_, or _`title`_;
+* Anonymised access logging (_privacy by default_);
 * Optional user/password based access control.
 
 ## Installation
@@ -94,7 +94,7 @@ You can use `Go` to install this package for you:
 
 ## Usage
 
-After downloading this package you go to its directory and compile
+After downloading this package you go to its directory and compile, e.g.
 
     cd $GOPATH/src/github.com/mwat56/kaliber
     go build app/kaliber.go
@@ -109,9 +109,9 @@ which should produce an executable binary.
 
 	-accessLog string
 		<filename> Name of the access logfile to write to
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/access.log")
+		(default "/home/matthias/kaliber/access.log")
 	-authAll
-		<boolean> whether to require authentication for all pages  (default true)
+		<boolean> whether to require authentication for all pages
 	-booksPerPage int
 		<number> the default number of books shown per page  (default 24)
 	-certKey string
@@ -120,22 +120,22 @@ which should produce an executable binary.
 		<fileName> the name of the TLS certificate PEM
 	-dataDir string
 		<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber")
+		(default "/home/matthias/kaliber")
 	-delWhitespace
 		(optional) Delete superfluous whitespace in generated pages (default true)
 	-errorlog string
 		<filename> Name of the error logfile to write to
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/error.log")
+		(default "/home/matthias/kaliber/error.log")
 	-gzip
 		<boolean> use gzip compression for server responses (default true)
 	-ini string
 		<fileName> the path/filename of the INI file to use
 		(default "/home/matthias/.kaliber.ini")
 	-lang string
-		the default language to use  (default "de")
+		the default language to use  (default "en")
 	-libraryName string
 		Name of this Library (shown on every page)
-		(default "MeiBucks")
+			(default "MeiBucks")
 	-libraryPath string
 		<pathname> Path name of/to the Calibre library
 		(default "/var/opt/Calibre")
@@ -149,13 +149,12 @@ which should produce an executable binary.
 		<hostName> Name of host/domain to secure by BasicAuth
 		(default "eBooks Host")
 	-sessionTTL int
-		<seconds> Number of seconds an unused session keeps valid  (default 1200)
+		<seconds> Number of seconds an unused session keeps valid (default 1200)
 	-sidName string
 		<name> The name of the session ID to use
 		(default "sid")
 	-sqlTrace string
 		<filename> Name of the SQL logfile to write to
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sqlTrace.sql")
 	-theme string
 		<name> The display theme to use ('light' or 'dark')
 		(default "dark")
@@ -167,7 +166,7 @@ which should produce an executable binary.
 		<userName> User delete: remove a username from the password file
 	-uf string
 		<fileName> Passwords file storing user/passwords for BasicAuth
-		(default "/home/matthias/devel/Go/src/github.com/mwat56/kaliber/pwaccess.db")
+		(default "/home/matthias/kaliber/pwaccess.db")
 	-ul
 		<boolean> User list: show all users in the password file
 	-uu string
@@ -178,6 +177,8 @@ which should produce an executable binary.
 	$ _
 
 As you can see there are quite a few options available, but almost all of them are optional since they come with reasonable default values most of which can be set in the accompanying INI-file (in fact, the "default" values shown above are coming from the INI-file used).
+
+> Please _note_ that the default values shown above vary depending on the system where `kaliber` is called and especially on the contents of the INI file (it's read before the help text is produced).
 
 ### INI file
 
@@ -190,10 +191,13 @@ There's an INI file which can take all the options (apart from the user handling
 	[Default]
 
 	# Name of the optional access logfile to write to.
-	# NOTE: a relative path/name will be combined with `dataDir` (below).
-	accessLog = ./access.log
+	#
+	# NOTE: a relative path/name will be appended to `dataDir` (below).
+	# (Normally this is either empty or the name of the logfile to use.)
+	accessLog = /dev/stdout
 
 	# Authenticate user for all pages and documents.
+	#
 	# If `false` only the download links need user authentication
 	# (see `passFile` below).
 	authAll = false
@@ -203,16 +207,21 @@ There's an INI file which can take all the options (apart from the user handling
 
 	# Path-/filename of the TLS certificate's private key to enable
 	# TLS/HTTPS (if empty standard HTTP is used).
-	# NOTE: a relative path/name will be combined with `dataDir` (below).
+	#
+	# NOTE: a relative path/name will be appended to `dataDir` (below).
+	# (Normally this is either empty or the name of the key-file to use.)
 	certKey = ./certs/server.key
 
 	# Path-/filename of the TLS (server) certificate to enable TLS/HTTPS
 	# (if empty standard HTTP is used).
-	# NOTE: A relative path/name will be combined with `dataDir` (below).
+	#
+	# NOTE: A relative path/name will be appended to `dataDir` (below).
+	# (Normally this is either empty or the name of the cert-file to use.)
 	certPem = ./certs/server.pem
 
 	# The directory root for the "css", "fonts", "img", "sessions",
 	# and "views" sub-directories.
+	#
 	# NOTE: This should be an _absolute_ path name!
 	dataDir = ./
 
@@ -220,10 +229,12 @@ There's an INI file which can take all the options (apart from the user handling
 	delWhitespace = yes
 
 	# Name of the optional error logfile to write to.
-	# NOTE: a relative path/name will be combined with `dataDir` (above).
-	errorLog = ./error.log
+	#
+	# NOTE: a relative path/name will be appended to `dataDir` (above).
+	# (Normally this is either empty or the name of the logfile to use.)
+	errorLog = /dev/stderr
 
-	# Use gzip compression for server responses.
+	# Use GZip compression for server responses.
 	gzip = true
 
 	# The default UI language to use ("de" or "en").
@@ -233,13 +244,17 @@ There's an INI file which can take all the options (apart from the user handling
 	libraryName = "MeiBucks"
 
 	# Path of Calibre library.
-	# NOTE: this must be the absolute pathname io the Calibre library.
+	#
+	# NOTE: this _must_ be the absolute pathname to your Calibre library.
 	libraryPath = "/var/opt/Calibre"
 
 	# The host's IP number to listen at.
+	#
+	# The special value "0" means to listen on all available interfaces.
 	listen = 127.0.0.1
 
 	# Whether or not log a stack trace for recovered runtime errors.
+	#
 	# NOTE: This is merely a debugging aid and should normally be `false`.
 	logStack = true
 
@@ -247,7 +262,8 @@ There's an INI file which can take all the options (apart from the user handling
 	port = 8383
 
 	# Password file for HTTP Basic Authentication.
-	# NOTE: a relative path/name will be combined with `dataDir` (above).
+	#
+	# NOTE: a relative path/name will be appended to `dataDir` (above).
 	passFile = ./pwaccess.db
 
 	# Name of host/domain to secure by BasicAuth.
@@ -260,7 +276,9 @@ There's an INI file which can take all the options (apart from the user handling
 	sidName = sid
 
 	# Optional (debugging) SQL trace file.
-	# NOTE: a relative path/name will be combined with `dataDir` (above).
+	#
+	# NOTE: a relative path/name will be appended to `dataDir` (above).
+	# (Normally this will be empty and used only for debugging purposes.)
 	sqlTrace = ./sqlTrace.sql
 
 	# Default web/display theme to use ("dark" or "light").
@@ -286,15 +304,16 @@ Why, you may ask, would you need an username/password file anyway?
 Well, there may be several reasons one of which could be Copyright problems.
 
 If not all your books are in the public domain and Copyright-free in most countries you may _not make them publicly available_.
-In that case you're most likely the only actual remote user allowed to access the books in your library.
+In that case you're most likely the only actual user allowed to access the books in your library.
 Depending on your country's legislation you may or may not include your family members.
 If in doubt please consult a Copyright expert.
 
-The `authAll` commandline option (and INI setting) allows you to specify whether access to _all_ pages require user authentication; if that flag is `false` then only the download links require authentication, if `true` _any_ access requires a given username/password pair.
+The `authAll` commandline option (and INI setting) allows you to specify whether access to _all_ pages requires user authentication; if that flag is `false` then only the download links require authentication, if `true` _any_ access requires a given username/password pair.
 
-Whenever there's no password file given (either in the INI file `passfile` or the command-line `-uf`) all functionality requiring authentication will be _disabled_ which in turn means that everybody can access your library.
+Whenever there's no password file given (either in the INI file `passfile` or the command-line `-uf`) all functionality requiring authentication will be _disabled_ which in turn means that everybody can freely access your library.
+This is probably _not_ what you want.
 
-_Note_ that the password file generated and used by this system resembles the `htpasswd` used by the _Apache_ web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
+> _Note_ that the password file generated and used by this application resembles the `htpasswd` used by the _Apache_ web-server, but both files are _not_ interchangeable because the actual encryption algorithms used by both are different.
 
 #### User/password file & handling
 
@@ -309,7 +328,7 @@ Only usable from the commandline are the `-uXX` options, most of which need an u
         added 'testuser1' to list
     $ _
 
-Since we have the `passfile` setting already in our INI file [(see above)](#ini-file) we can forget the `-uf` option for the next options.
+Since we have the `passfile` setting already in our INI file [(see above)](#ini-file) we can omit the `-uf` option for the next options.
 
 With `-uc` you can check a user's password:
 
@@ -321,13 +340,13 @@ With `-uc` you can check a user's password:
 
 This `-uc` you'll probably never actually use – it was just easy to implement.
 
-If you want to remove a user the `-ud` will do the trick:
+If you want to remove a user then `-ud` will do the trick:
 
     $ ./kaliber -ud testuser1
         removed 'testuser1' from list
     $ _
 
-When you want to know which users are stored in your password file `-ul` is your friend:
+When you want to know which users are stored in your password file then `-ul` is your friend:
 
     $ ./kaliber -ul
     matthias
@@ -360,7 +379,7 @@ First we added (`-ua`) a new user, then we updated the password (`-uu`), and fin
 
 ## Directory structure
 
-Under the directory given with the `datadir =` entry in the INI file (or the `-datadir` commandline option) there are several sub-directories expected:
+Under the directory given with the `datadir` entry in the INI file (or the `-datadir` commandline option) there are several sub-directories expected:
 
 * `css`: containing the CSS files used,
 * `fonts`: containing the fonts used,
@@ -369,7 +388,7 @@ Under the directory given with the `datadir =` entry in the INI file (or the `-d
 * `views`: the Go templates used to generate the pages.
 
 All of this directories and files are part of the `Kaliber` package.
-You can use them as is or customise them as you see fit to suit your needs.
+You can use them _as is_ or customise them as you see fit to suit your needs.
 However, please note: _I will not support any customisations_, you're on your own with that – and you should know what you're doing.
 
 ## Caveats
@@ -379,9 +398,10 @@ There are some `Calibre` features which are not available (yet) with `Kaliber` a
 * _custom columns_ defined by the respective `Calibre` user;
 * _different/multiple libraries_ for the user to switch between;
 * [_OPDS_](https://en.wikipedia.org/wiki/OPDS) formatted access;
-* _book uploads_ are not planned to be included.
+* _book uploads_ are not planned to be included;
+* monitoring your read progress is unlikely to be implemented here (I feel that that's the book reader's responsibility, not the server's).
 
-Once I figure out how they are realised by `Calibre` I expect they find their way into `Kaliber` as well (provided I find actually time to do it).
+Once I figure out how they are realised by `Calibre` I expect some may find their way into `Kaliber` as well (provided I find actually time to do it).
 
 ## Logging
 

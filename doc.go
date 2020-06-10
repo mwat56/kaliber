@@ -20,6 +20,21 @@ along with this program. If not, see the
 [GNU General Public License](http://www.gnu.org/licenses/gpl.html)
 for details.
 
+----
+
+NOTE: While formally this is a library (`package`) in reality it's sort
+of a toolbox for the `main` package (the file of which is in the `app`
+sub-directory). In other words: this library is not supposed to be
+imported into other projects.
+
+The publicly documented functions and methods are an arbitrary selection.
+In fact, most of the functionality of this `library` is implemented in
+private functions. Most of the `public` functions/methods are only public
+because they may be called from outside the source code file they were
+written in.
+
+	For a real understanding you're encouraged to read the source code and the comments therein.
+
 */
 package kaliber
 
