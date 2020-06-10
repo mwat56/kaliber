@@ -25,59 +25,216 @@ import (
 )
 
 type (
-	// tArguments is the list structure for the cmdline argument values
-	// merged with the key-value pairs from the INI file.
+	// TAppArgs Commandline arguments and INI values.
+	TAppArgs struct {
+		AccessLog     string
+		AuthAll       bool
+		BooksPerPage  int
+		CertKey       string
+		CertPem       string
+		DataDir       string
+		DelWhitespace bool
+		ErrorLog      string
+		GZip          bool
+		// Intl          string
+		Lang       string
+		LibName    string
+		LibPath    string
+		Listen     string
+		LogStack   bool
+		PassFile   string
+		Port       int
+		Realm      string
+		SessionDir string
+		SessionTTL int
+		SidName    string
+		SQLTrace   string
+		Theme      string
+		UserAdd    string
+		UserCheck  string
+		UserDelete string
+		UserList   bool
+		UserUpdate string
+	}
+
+	// List structure for the INI values.
 	tArguments struct {
 		ini.TSection // embedded INI section
 	}
 )
 
-// Get returns the value associated with `aKey` and `nil` if found,
-// or an empty string and an error.
-//
-//	`aKey` The requested value's key to lookup.
-func (al *tArguments) Get(aKey string) (string, error) {
-	if result, ok := al.AsString(aKey); ok {
-		return result, nil
-	}
+var (
+	// AppArgs Commandline arguments and INI values.
+	//
+	// This structure should be considered R/O after it was
+	// set up by a call to `InitConfig()`.
+	AppArgs TAppArgs
 
-	//lint:ignore ST1005 – capitalisation wanted
-	return "", fmt.Errorf("Missing config value: %s", aKey)
-} // Get()
-
-// `set()` adds/sets another key-value pair.
-//
-// If `aValue` is empty then `aKey` gets removed.
-func (al *tArguments) set(aKey, aValue string) {
-	if 0 < len(aValue) {
-		al.AddKey(aKey, aValue)
-	} else {
-		al.RemoveKey(aKey)
-	}
-} // set()
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+	// `appArguments` is the merged list for the INI values.
+	appArguments tArguments
+)
 
 // `absolute()` returns `aDir` as an absolute path.
+//
+// If `aDir` starts with a slash (`/`) it's returned after cleaning.
+// Otherwise `aBaseDir` gets prepended to `aDir` and returned after cleaning.
+//
+//	`aBaseDir` The base directory to prepend to `aDir`.
+//	`aDir` The directory to make absolute.
 func absolute(aBaseDir, aDir string) string {
 	if 0 == len(aDir) {
 		return aDir
 	}
 	if '/' == aDir[0] {
-		s, _ := filepath.Abs(aDir)
-		return s
+		return filepath.Clean(aDir)
 	}
 
 	return filepath.Join(aBaseDir, aDir)
 } // absolute()
 
-var (
-	// AppArguments is the merged list for the cmdline arguments
-	// and INI values for the application.
-	AppArguments tArguments
-)
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// `readIniData()` returns the config values read from INI file(s).
+/*
+func init() {
+	// see: https://github.com/microsoft/vscode-go/issues/2734
+	testing.Init() // workaround for Go 1.13
+	InitConfig()
+} // init()
+*/
+
+// InitConfig sets up and reads all configuration data from INI files
+// and commandline arguments.
+func InitConfig() {
+	readIniFiles()
+	setFlags()
+	parseFlags()
+	readFlags()
+} // InitConfig()
+
+// `parseFlags()` parses the commandline arguments.
+func parseFlags() {
+	flag.Usage = ShowHelp
+	flag.Parse()
+} // parseFlags()
+
+// `readFlags()` checks all available configurations flags.
+func readFlags() {
+	if 0 == AppArgs.BooksPerPage {
+		AppArgs.BooksPerPage = 24
+	}
+
+	if 0 == len(AppArgs.DataDir) {
+		log.Fatalln("Error: Missing `dataDir` value")
+	}
+	AppArgs.DataDir, _ = filepath.Abs(AppArgs.DataDir)
+	if f, err := os.Stat(AppArgs.DataDir); nil != err {
+		log.Fatalf("`dataDir` == `%s` problem: %v", AppArgs.DataDir, err)
+	} else if !f.IsDir() {
+		log.Fatalf("Error: `dataDir` not a directory `%s`", AppArgs.DataDir)
+	}
+
+	if 0 < len(AppArgs.AccessLog) {
+		AppArgs.AccessLog = absolute(AppArgs.DataDir, AppArgs.AccessLog)
+	}
+
+	if 0 < len(AppArgs.CertKey) {
+		AppArgs.CertKey = absolute(AppArgs.DataDir, AppArgs.CertKey)
+		if fi, err := os.Stat(AppArgs.CertKey); (nil != err) || (0 >= fi.Size()) {
+			AppArgs.CertKey = ``
+		}
+	}
+
+	if 0 < len(AppArgs.CertPem) {
+		AppArgs.CertPem = absolute(AppArgs.DataDir, AppArgs.CertPem)
+		if fi, err := os.Stat(AppArgs.CertPem); (nil != err) || (0 >= fi.Size()) {
+			AppArgs.CertPem = ``
+		}
+	}
+
+	whitespace.UseRemoveWhitespace = AppArgs.DelWhitespace
+
+	if 0 < len(AppArgs.ErrorLog) {
+		AppArgs.ErrorLog = absolute(AppArgs.DataDir, AppArgs.ErrorLog)
+	}
+
+	if 0 < len(AppArgs.Lang) {
+		AppArgs.Lang = strings.ToLower(AppArgs.Lang)
+	}
+	switch AppArgs.Lang {
+	case `de`, `en`:
+	default:
+		AppArgs.Lang = "en"
+	}
+
+	if 0 == len(AppArgs.LibName) {
+		AppArgs.LibName = time.Now().Format("2006:01:02:15:04:05")
+	}
+
+	if 0 == len(AppArgs.LibPath) {
+		log.Fatalln("Error: Missing `libPath` value")
+	}
+	AppArgs.LibPath, _ = filepath.Abs(AppArgs.LibPath)
+	if f, err := os.Stat(AppArgs.LibPath); nil != err {
+		log.Fatalf("`libPath` == `%s` problem: %v", AppArgs.LibPath, err)
+	} else if !f.IsDir() {
+		log.Fatalf("Error: `libPath` not a directory `%s`", AppArgs.LibPath)
+	}
+
+	// To allow for use of multiple libraries we add the MD5
+	// of the libraryPath to our cache path.
+	s := fmt.Sprintf("%x", md5.Sum([]byte(AppArgs.LibPath))) // #nosec G401
+	if ucd, err := os.UserCacheDir(); (nil != err) || (0 == len(ucd)) {
+		db.SetCalibreCachePath(filepath.Join(AppArgs.DataDir, "img", s))
+	} else {
+		db.SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+	}
+	db.SetCalibreLibraryPath(AppArgs.LibPath)
+
+	if (0 == len(AppArgs.Listen)) || (`0` == AppArgs.Listen) {
+		AppArgs.Listen = `127.0.0.1`
+	}
+
+	if 0 >= AppArgs.Port {
+		AppArgs.Port = 8383
+	}
+
+	if 0 == len(AppArgs.Realm) {
+		AppArgs.Realm = `eBooks Host`
+	}
+
+	AppArgs.SessionDir = absolute(AppArgs.DataDir, `sessions`)
+
+	if 0 == len(AppArgs.SidName) {
+		AppArgs.SidName = "sid"
+	}
+	sessions.SetSIDname(AppArgs.SidName)
+
+	if 0 >= AppArgs.SessionTTL {
+		AppArgs.SessionTTL = 1200
+	}
+	sessions.SetSessionTTL(AppArgs.SessionTTL)
+
+	if 0 < len(AppArgs.SQLTrace) {
+		AppArgs.SQLTrace = absolute(AppArgs.DataDir, AppArgs.SQLTrace)
+	}
+	db.SetSQLtraceFile(AppArgs.SQLTrace)
+
+	if 0 < len(AppArgs.Theme) {
+		AppArgs.Theme = strings.ToLower(AppArgs.Theme)
+	}
+	switch AppArgs.Theme {
+	case `dark`, `light`:
+		// accepted values
+	default:
+		AppArgs.Theme = `dark`
+	}
+
+	if 0 < len(AppArgs.PassFile) {
+		AppArgs.PassFile = absolute(AppArgs.DataDir, AppArgs.PassFile)
+	}
+} // readFlags()
+
+// `readIniFiles()` processes the config values read from INI file(s).
 //
 // The steps here are:
 //	(1) read the local `./.kaliber.ini`,
@@ -85,36 +242,38 @@ var (
 //	(3) read the user-local `~/.kaliber.ini`,
 //	(4) read the user-local `~/.config/kaliber.ini`,
 //	(5) read the `-ini` commandline argument.
-func readIniData() {
+func readIniFiles() {
 	// (1) ./
-	fName, _ := filepath.Abs("./kaliber.ini")
+	fName, _ := filepath.Abs(`./kaliber.ini`)
 	ini1, err := ini.New(fName)
 	if nil == err {
-		ini1.AddSectionKey("", "iniFile", fName)
+		ini1.AddSectionKey(``, `iniFile`, fName)
 	}
 
 	// (2) /etc/
-	fName = "/etc/kaliber.ini"
+	fName = `/etc/kaliber.ini`
 	if ini2, err2 := ini.New(fName); nil == err2 {
 		ini1.Merge(ini2)
-		ini1.AddSectionKey("", "iniFile", fName)
+		ini1.AddSectionKey(``, `iniFile`, fName)
 	}
 
 	// (3) ~user/
 	if fName, _ = os.UserHomeDir(); 0 < len(fName) {
-		fName, _ = filepath.Abs(filepath.Join(fName, ".kaliber.ini"))
+		fName, _ = filepath.Abs(filepath.Join(fName, `.kaliber.ini`))
 		if ini2, err2 := ini.New(fName); nil == err2 {
 			ini1.Merge(ini2)
-			ini1.AddSectionKey("", "iniFile", fName)
+			ini2.Clear()
+			ini1.AddSectionKey(``, `iniFile`, fName)
 		}
 	}
 
 	// (4) ~/.config/
 	if confDir, err3 := os.UserConfigDir(); nil == err3 {
-		fName, _ = filepath.Abs(filepath.Join(confDir, "kaliber.ini"))
+		fName, _ = filepath.Abs(filepath.Join(confDir, `kaliber.ini`))
 		if ini2, err2 := ini.New(fName); nil == err2 {
 			ini1.Merge(ini2)
-			ini1.AddSectionKey("", "iniFile", fName)
+			ini2.Clear()
+			ini1.AddSectionKey(``, `iniFile`, fName)
 		}
 	}
 
@@ -129,285 +288,183 @@ func readIniData() {
 				fName, _ = filepath.Abs(os.Args[i])
 				if ini2, _ := ini.New(fName); nil == err {
 					ini1.Merge(ini2)
-					ini1.AddSectionKey("", "iniFile", fName)
+					ini2.Clear()
+					ini1.AddSectionKey(``, `iniFile`, fName)
 				}
 			}
 			break
 		}
 	}
 
-	AppArguments = tArguments{*ini1.GetSection("")}
-} // readIniData()
+	appArguments = tArguments{*ini1.GetSection(``)}
+} // readIniFiles()
 
-/*
-func init() {
-	// see: https://github.com/microsoft/vscode-go/issues/2734
-	testing.Init() // workaround for Go 1.13
-	InitConfig()
-} // init()
-*/
-
-// InitConfig reads the commandline arguments into a list
-// structure merging it with key-value pairs read from INI file(s).
-//
-// The steps here are:
-//	(a) read the INI file(s),
-//	(b) merge the commandline arguments with the INI values
-// into the global `AppArguments` variable.
-func InitConfig() {
-	readIniData()
-
-	authBool, _ := AppArguments.AsBool("authAll")
-	flag.BoolVar(&authBool, "authAll", authBool,
+// `setFlags()` sets up the flags for the commandline arguments.
+func setFlags() {
+	var (
+		ok bool
+		s  string // temp. value
+	)
+	if AppArgs.AuthAll, ok = appArguments.AsBool(`authAll`); !ok {
+		AppArgs.AuthAll = true
+	}
+	flag.BoolVar(&AppArgs.AuthAll, `authAll`, AppArgs.AuthAll,
 		"<boolean> whether to require authentication for all pages ")
 
-	bppInt, _ := AppArguments.AsInt("booksPerPage")
-	flag.IntVar(&bppInt, "booksPerPage", bppInt,
+	if AppArgs.BooksPerPage, ok = appArguments.AsInt(`booksPerPage`); (!ok) || (0 >= AppArgs.BooksPerPage) {
+		AppArgs.BooksPerPage = 24
+	}
+	flag.IntVar(&AppArgs.BooksPerPage, `booksPerPage`, AppArgs.BooksPerPage,
 		"<number> the default number of books shown per page ")
 
-	s, _ := AppArguments.Get("dataDir")
-	dataDir, _ := filepath.Abs(s)
-	flag.StringVar(&dataDir, "dataDir", dataDir,
+	if s, ok = appArguments.AsString("dataDir"); (ok) && (0 < len(s)) {
+		AppArgs.DataDir, _ = filepath.Abs(s)
+	} else {
+		AppArgs.DataDir, _ = filepath.Abs(`./`)
+	}
+	flag.StringVar(&AppArgs.DataDir, "dataDir", AppArgs.DataDir,
 		"<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories\n")
 
-	s, _ = AppArguments.Get("accessLog")
-	accessLog := absolute(dataDir, s)
-	flag.StringVar(&accessLog, "accessLog", accessLog,
+	if s, ok = appArguments.AsString("accessLog"); (ok) && (0 < len(s)) {
+		AppArgs.AccessLog = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.AccessLog, "accessLog", AppArgs.AccessLog,
 		"<filename> Name of the access logfile to write to\n")
 
-	s, _ = AppArguments.Get("certKey")
-	certKey := absolute(dataDir, s)
-	flag.StringVar(&certKey, "certKey", certKey,
+	if s, ok = appArguments.AsString("certKey"); (ok) && (0 < len(s)) {
+		AppArgs.CertKey = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.CertKey, "certKey", AppArgs.CertKey,
 		"<fileName> the name of the TLS certificate key\n")
 
-	s, _ = AppArguments.Get("certPem")
-	certPem := absolute(dataDir, s)
-	flag.StringVar(&certPem, "certPem", certPem,
+	if s, ok = appArguments.AsString("certPem"); (ok) && (0 < len(s)) {
+		AppArgs.CertPem = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.CertPem, "certPem", AppArgs.CertPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
-	delWhitespace, _ := AppArguments.AsBool("delWhitespace")
-	flag.BoolVar(&delWhitespace, "delWhitespace", delWhitespace,
+	if AppArgs.DelWhitespace, ok = appArguments.AsBool("delWhitespace"); !ok {
+		AppArgs.DelWhitespace = true
+	}
+	flag.BoolVar(&AppArgs.DelWhitespace, "delWhitespace", AppArgs.DelWhitespace,
 		"(optional) Delete superfluous whitespace in generated pages")
 
-	s, _ = AppArguments.Get("errorLog")
-	errorLog := absolute(dataDir, s)
-	flag.StringVar(&errorLog, "errorlog", errorLog,
+	if s, ok = appArguments.AsString("errorLog"); (ok) && (0 < len(s)) {
+		AppArgs.ErrorLog = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.ErrorLog, "errorlog", AppArgs.ErrorLog,
 		"<filename> Name of the error logfile to write to\n")
 
-	gzipBool, _ := AppArguments.AsBool("gzip")
-	flag.BoolVar(&gzipBool, "gzip", gzipBool,
+	if AppArgs.GZip, ok = appArguments.AsBool("gzip"); !ok {
+		AppArgs.GZip = true
+	}
+	flag.BoolVar(&AppArgs.GZip, "gzip", AppArgs.GZip,
 		"<boolean> use gzip compression for server responses")
 
-	/*
-		s, _ = AppArguments.Get("intl")
-		intlStr := absolute(dataStr, s)
-		flag.StringVar(&intlStr, "intl", intlStr,
-			"<fileName> the path/filename of the localisation file\n")
-	*/
+	/* * /
+	if s, ok = appArguments.AsString("intl"); (ok) && (0 < len(s)) {
+		AppArgs.Intl = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.Intl, "intl", AppArgs.Intl,
+		"<fileName> the path/filename of the localisation file\n")
+	/* */
 
-	iniFile, _ := AppArguments.Get("iniFile")
+	iniFile, _ := appArguments.AsString("iniFile")
 	flag.StringVar(&iniFile, "ini", iniFile,
 		"<fileName> the path/filename of the INI file to use\n")
 
-	langStr, _ := AppArguments.Get("lang")
-	flag.StringVar(&langStr, "lang", langStr,
+	if AppArgs.Lang, ok = appArguments.AsString("lang"); (!ok) || (0 == len(AppArgs.Lang)) {
+		AppArgs.Lang = `en`
+	}
+	flag.StringVar(&AppArgs.Lang, "lang", AppArgs.Lang,
 		"the default language to use ")
 
-	libName, _ := AppArguments.Get("libraryName")
-	flag.StringVar(&libName, "libraryName", libName,
+	AppArgs.LibName, _ = appArguments.AsString("libraryName")
+	flag.StringVar(&AppArgs.LibName, "libraryName", AppArgs.LibName,
 		"Name of this Library (shown on every page)\n")
 
-	libPath, _ := AppArguments.Get("libraryPath")
-	flag.StringVar(&libPath, "libraryPath", libPath,
+	if s, ok = appArguments.AsString("libraryPath"); ok && (0 < len(s)) {
+		AppArgs.LibPath, _ = filepath.Abs(s)
+	} else {
+		AppArgs.LibPath = `/var/opt/Calibre`
+	}
+	flag.StringVar(&AppArgs.LibPath, "libraryPath", AppArgs.LibPath,
 		"<pathname> Path name of/to the Calibre library\n")
 
-	listenStr, _ := AppArguments.Get("listen")
-	flag.StringVar(&listenStr, "listen", listenStr,
+	if AppArgs.Listen, ok = appArguments.AsString("listen"); (!ok) || (0 == len(AppArgs.Listen)) {
+		AppArgs.Listen = `127.0.0.1`
+	}
+	flag.StringVar(&AppArgs.Listen, "listen", AppArgs.Listen,
 		"the host's IP to listen at ")
 
-	logStack, _ := AppArguments.AsBool("logStack")
-	flag.BoolVar(&logStack, "logStack", logStack,
+	AppArgs.LogStack, _ = appArguments.AsBool("logStack")
+	flag.BoolVar(&AppArgs.LogStack, "logStack", AppArgs.LogStack,
 		"<boolean> Log a stack trace for recovered runtime errors ")
 
-	portInt, _ := AppArguments.AsInt("port")
-	flag.IntVar(&portInt, "port", portInt,
+	if AppArgs.Port, ok = appArguments.AsInt("port"); (!ok) || (0 == AppArgs.Port) {
+		AppArgs.Port = 8383
+	}
+	flag.IntVar(&AppArgs.Port, "port", AppArgs.Port,
 		"<portNumber> The IP port to listen to ")
 
-	realmStr, _ := AppArguments.Get("realm")
-	flag.StringVar(&realmStr, "realm", realmStr,
+	if AppArgs.Realm, ok = appArguments.AsString("realm"); (!ok) || (0 == len(AppArgs.Realm)) {
+		AppArgs.Realm = `eBooks Host`
+	}
+	flag.StringVar(&AppArgs.Realm, "realm", AppArgs.Realm,
 		"<hostName> Name of host/domain to secure by BasicAuth\n")
 
-	sessionTTL, _ := AppArguments.AsInt("sessionTTL")
-	flag.IntVar(&sessionTTL, "sessionTTL", sessionTTL,
+	if AppArgs.SessionTTL, ok = appArguments.AsInt("sessionTTL"); (!ok) || (0 == AppArgs.SessionTTL) {
+		AppArgs.SessionTTL = 1200
+	}
+	flag.IntVar(&AppArgs.SessionTTL, "sessionTTL", AppArgs.SessionTTL,
 		"<seconds> Number of seconds an unused session keeps valid ")
 
-	sidName, _ := AppArguments.Get("sidName")
-	flag.StringVar(&sidName, "sidName", sidName,
+	if AppArgs.SidName, ok = appArguments.AsString("sidName"); (!ok) || (0 == len(AppArgs.SidName)) {
+		AppArgs.SidName = `sid`
+	}
+	flag.StringVar(&AppArgs.SidName, "sidName", AppArgs.SidName,
 		"<name> The name of the session ID to use\n")
 
-	s, _ = AppArguments.Get("sqlTrace")
-	sqlTrace := absolute(dataDir, s)
-	flag.StringVar(&sqlTrace, "sqlTrace", sqlTrace,
+	if s, ok = appArguments.AsString("sqlTrace"); ok && (0 < len(AppArgs.SQLTrace)) {
+		AppArgs.SQLTrace = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.SQLTrace, "sqlTrace", AppArgs.SQLTrace,
 		"<filename> Name of the SQL logfile to write to\n")
 
-	themeStr, _ := AppArguments.Get("theme")
-	flag.StringVar(&themeStr, "theme", themeStr,
+	if AppArgs.Theme, _ = appArguments.AsString("theme"); 0 < len(AppArgs.Theme) {
+		AppArgs.Theme = strings.ToLower(AppArgs.Theme)
+	}
+	switch AppArgs.Theme {
+	case `dark`, `light`:
+	default:
+		AppArgs.Theme = `dark`
+	}
+	flag.StringVar(&AppArgs.Theme, "theme", AppArgs.Theme,
 		"<name> The display theme to use ('light' or 'dark')\n")
 
-	uaStr := ""
-	flag.StringVar(&uaStr, "ua", uaStr,
+	flag.StringVar(&AppArgs.UserAdd, "ua", AppArgs.UserAdd,
 		"<userName> User add: add a username to the password file")
 
-	ucStr := ""
-	flag.StringVar(&ucStr, "uc", ucStr,
+	flag.StringVar(&AppArgs.UserCheck, "uc", AppArgs.UserCheck,
 		"<userName> User check: check a username in the password file")
 
-	udStr := ""
-	flag.StringVar(&udStr, "ud", udStr,
+	flag.StringVar(&AppArgs.UserDelete, "ud", AppArgs.UserDelete,
 		"<userName> User delete: remove a username from the password file")
 
-	s, _ = AppArguments.Get("passFile")
-	ufStr := absolute(dataDir, s)
-	flag.StringVar(&ufStr, "uf", ufStr,
+	if s, ok = appArguments.AsString("passFile"); ok && (0 < len(s)) {
+		AppArgs.PassFile = absolute(AppArgs.DataDir, s)
+	}
+	flag.StringVar(&AppArgs.PassFile, "uf", AppArgs.PassFile,
 		"<fileName> Passwords file storing user/passwords for BasicAuth\n")
 
-	ulBool := false
-	flag.BoolVar(&ulBool, "ul", ulBool,
+	flag.BoolVar(&AppArgs.UserList, "ul", AppArgs.UserList,
 		"<boolean> User list: show all users in the password file")
 
-	uuStr := ""
-	flag.StringVar(&uuStr, "uu", uuStr,
+	flag.StringVar(&AppArgs.UserUpdate, "uu", AppArgs.UserUpdate,
 		"<userName> User update: update a username in the password file")
 
-	flag.Usage = ShowHelp
-	flag.Parse() // // // // // // // // // // // // // // // // // // //
-
-	if authBool {
-		s = "true"
-	} else {
-		s = ""
-	}
-	AppArguments.set("authAll", s)
-
-	AppArguments.set("booksPerPage", fmt.Sprintf("%d", bppInt))
-
-	if 0 < len(dataDir) {
-		dataDir, _ = filepath.Abs(dataDir)
-	}
-	if f, err := os.Stat(dataDir); nil != err {
-		log.Fatalf("dataDir == %s` problem: %v", dataDir, err)
-	} else if !f.IsDir() {
-		log.Fatalf("Error: Not a directory `%s`", dataDir)
-	}
-	AppArguments.set("dataDir", dataDir)
-
-	if 0 < len(accessLog) {
-		accessLog = absolute(dataDir, accessLog)
-	}
-	AppArguments.set("accessLog", accessLog)
-
-	if 0 < len(certKey) {
-		certKey = absolute(dataDir, certKey)
-		if fi, err := os.Stat(certKey); (nil != err) || (0 >= fi.Size()) {
-			certKey = ""
-		}
-	}
-	AppArguments.set("certKey", certKey)
-
-	if 0 < len(certPem) {
-		certPem = absolute(dataDir, certPem)
-		if fi, err := os.Stat(certPem); (nil != err) || (0 >= fi.Size()) {
-			certPem = ""
-		}
-	}
-	AppArguments.set("certPem", certPem)
-
-	whitespace.UseRemoveWhitespace = delWhitespace
-
-	if 0 < len(errorLog) {
-		errorLog = absolute(dataDir, errorLog)
-	}
-	AppArguments.set("errorLog", errorLog)
-
-	if gzipBool {
-		s = "true"
-	} else {
-		s = ""
-	}
-	AppArguments.set("gzip", s)
-
-	if 0 == len(langStr) {
-		langStr = "en"
-	}
-	AppArguments.set("lang", strings.ToLower(langStr))
-
-	if 0 == len(libName) {
-		libName = time.Now().Format("2006:01:02:15:04:05")
-	}
-	AppArguments.set("libraryName", libName)
-
-	// To allow for use of multiple libraries we add the MD5
-	// of the libraryPath to our cache path.
-	s = fmt.Sprintf("%x", md5.Sum([]byte(libPath))) // #nosec G401
-	if ucd, err := os.UserCacheDir(); (nil != err) || (0 == len(ucd)) {
-		db.SetCalibreCachePath(filepath.Join(dataDir, "img", s))
-	} else {
-		db.SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
-	}
-	db.SetCalibreLibraryPath(libPath)
-
-	if "0" == listenStr {
-		listenStr = ""
-	}
-	AppArguments.set("listen", listenStr)
-
-	if logStack {
-		s = "true"
-	} else {
-		s = ""
-	}
-	AppArguments.set("logStack", s)
-
-	AppArguments.set("port", fmt.Sprintf("%d", portInt))
-
-	AppArguments.set("realm", realmStr)
-
-	AppArguments.set("sessiondir", absolute(dataDir, "sessions"))
-
-	if 0 == len(sidName) {
-		sidName = "SID"
-	}
-	sessions.SetSIDname(sidName)
-
-	if 0 >= sessionTTL {
-		sessionTTL = 1200
-	}
-	sessions.SetSessionTTL(sessionTTL)
-
-	if 0 < len(sqlTrace) {
-		sqlTrace = absolute(dataDir, sqlTrace)
-	}
-	db.SetSQLtraceFile(sqlTrace)
-
-	AppArguments.set("theme", strings.ToLower(themeStr))
-	AppArguments.set("ua", uaStr)
-	AppArguments.set("uc", ucStr)
-	AppArguments.set("ud", udStr)
-
-	if 0 < len(ufStr) {
-		ufStr = absolute(dataDir, ufStr)
-	}
-	AppArguments.set("uf", ufStr)
-
-	if ulBool {
-		s = "true"
-	} else {
-		s = ""
-	}
-	AppArguments.set("ul", s)
-
-	AppArguments.set("uu", uuStr)
-} // InitConfig()
+	appArguments.Clear() // release unneeded memory
+} // setFlags()
 
 // ShowHelp lists the commandline options to `Stderr`.
 func ShowHelp() {

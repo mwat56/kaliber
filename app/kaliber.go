@@ -37,28 +37,25 @@ func fatal(aMessage string) {
 
 // `userCmdline()` checks for and executes user/password handling functions.
 func userCmdline() {
-	var (
-		err   error
-		fn, s string
-	)
-	if fn, err = kaliber.AppArguments.Get("uf"); (nil != err) || (0 == len(fn)) {
+	if 0 == len(kaliber.AppArgs.PassFile) {
 		return // without user file nothing to do
 	}
+
 	// All the following `kaliber.xxxUser()` calls terminate the program
-	if s, err = kaliber.AppArguments.Get("ua"); (nil == err) && (0 < len(s)) {
-		kaliber.AddUser(s, fn)
+	if 0 < len(kaliber.AppArgs.UserAdd) {
+		kaliber.AddUser(kaliber.AppArgs.UserAdd, kaliber.AppArgs.PassFile)
 	}
-	if s, err = kaliber.AppArguments.Get("uc"); (nil == err) && (0 < len(s)) {
-		kaliber.CheckUser(s, fn)
+	if 0 < len(kaliber.AppArgs.UserCheck) {
+		kaliber.CheckUser(kaliber.AppArgs.UserCheck, kaliber.AppArgs.PassFile)
 	}
-	if s, err = kaliber.AppArguments.Get("ud"); (nil == err) && (0 < len(s)) {
-		kaliber.DeleteUser(s, fn)
+	if 0 < len(kaliber.AppArgs.UserDelete) {
+		kaliber.DeleteUser(kaliber.AppArgs.UserDelete, kaliber.AppArgs.PassFile)
 	}
-	if s, err = kaliber.AppArguments.Get("ul"); (nil == err) && (0 < len(s)) {
-		kaliber.ListUsers(fn)
+	if kaliber.AppArgs.UserList {
+		kaliber.ListUsers(kaliber.AppArgs.PassFile)
 	}
-	if s, err = kaliber.AppArguments.Get("uu"); (nil == err) && (0 < len(s)) {
-		kaliber.UpdateUser(s, fn)
+	if 0 < len(kaliber.AppArgs.UserUpdate) {
+		kaliber.UpdateUser(kaliber.AppArgs.UserUpdate, kaliber.AppArgs.PassFile)
 	}
 } // userCmdline()
 
@@ -104,30 +101,30 @@ func main() {
 	handler := errorhandler.Wrap(ph, ph)
 
 	// Inspect `sessiondir` config option and setup the session handler
-	if s, err = kaliber.AppArguments.Get("sessiondir"); (nil == err) && (0 < len(s)) {
-		// we assume, an error means: no automatic session handling
-		handler = sessions.Wrap(handler, s)
+	if 0 < len(kaliber.AppArgs.SessionDir) {
+		// an empty string means: no automatic session handling
+		handler = sessions.Wrap(handler, kaliber.AppArgs.SessionDir)
 	}
 
 	// Inspect `gzip` config option and setup the Gzip handler:
-	if s, err = kaliber.AppArguments.Get("gzip"); (nil == err) && ("true" == s) {
-		// we assume, an error means: no gzip compression
+	if kaliber.AppArgs.GZip {
+		// a FALSE means: no gzip compression
 		handler = gziphandler.GzipHandler(handler)
 	}
 
 	// Inspect logging config options and setup the `ApacheLogger`:
-	if s, err = kaliber.AppArguments.Get("accessLog"); (nil == err) && (0 < len(s)) {
-		// we assume, an error means: no logfile
-		if s2, err2 := kaliber.AppArguments.Get("errorLog"); (nil == err2) && (0 < len(s2)) {
-			handler = apachelogger.Wrap(handler, s, s2)
+	if 0 < len(kaliber.AppArgs.AccessLog) {
+		// an empty string means: no logfile
+		if 0 < len(kaliber.AppArgs.ErrorLog) {
+			handler = apachelogger.Wrap(handler, kaliber.AppArgs.AccessLog, kaliber.AppArgs.ErrorLog)
 		} else {
-			handler = apachelogger.Wrap(handler, s, "")
+			handler = apachelogger.Wrap(handler, kaliber.AppArgs.AccessLog, ``)
 		}
 		// err = nil // for use by test for `apachelogger.SetErrLog()` (below)
-	} else if s, err = kaliber.AppArguments.Get("errorLog"); (nil == err) && (0 < len(s)) {
-		handler = apachelogger.Wrap(handler, "", s)
+	} else if 0 < len(kaliber.AppArgs.ErrorLog) {
+		handler = apachelogger.Wrap(handler, ``, kaliber.AppArgs.ErrorLog)
 	} else {
-		handler = apachelogger.Wrap(handler, "", "")
+		handler = apachelogger.Wrap(handler, ``, ``)
 	}
 
 	// We need a `server` reference to use it in `setupSignals()`
@@ -146,13 +143,11 @@ func main() {
 	}
 	setupSignals(server)
 
-	ck, _ := kaliber.AppArguments.Get("certKey")
-	cp, _ := kaliber.AppArguments.Get("certPem")
-	if (0 < len(ck)) && (0 < len(cp)) {
+	if (0 < len(kaliber.AppArgs.CertKey)) && (0 < len(kaliber.AppArgs.CertPem)) {
 		s = fmt.Sprintf("%s listening HTTPS at %s", Me, server.Addr)
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)
-		if err = server.ListenAndServeTLS(cp, ck); nil != err {
+		if err = server.ListenAndServeTLS(kaliber.AppArgs.CertPem, kaliber.AppArgs.CertKey); nil != err {
 			fatal(fmt.Sprintf("%s: %v", Me, err))
 		}
 		return

@@ -59,48 +59,29 @@ func NewPageHandler() (*TPageHandler, error) {
 
 	result.cacheFS = jffs.FileServer(db.CalibreCachePath())
 
-	if s, err = AppArguments.Get("authAll"); nil == err {
-		result.authAll = ("true" == s)
-	}
+	result.authAll = AppArgs.AuthAll
 
-	result.docsPerPage = 24
-	if s, _ = AppArguments.Get("booksPerPage"); 0 < len(s) {
-		if bpp, er2 := strconv.Atoi(s); nil == er2 {
-			result.docsPerPage = bpp
-		}
-	}
+	result.docsPerPage = AppArgs.BooksPerPage
 
-	if s, err = AppArguments.Get("dataDir"); nil != err {
-		return nil, err
-	}
-	result.dataDir = s
-	result.cssFS = cssfs.FileServer(s + `/`)
+	result.dataDir = AppArgs.DataDir
+	result.cssFS = cssfs.FileServer(AppArgs.DataDir + `/`)
 	result.docFS = jffs.FileServer(db.CalibreLibraryPath())
 
-	if s, err = AppArguments.Get("lang"); nil == err {
-		result.lang = s
-	}
+	result.lang = AppArgs.Lang
 
-	if s, err = AppArguments.Get("libraryName"); nil == err {
-		result.libName = s
-	}
+	result.libName = AppArgs.LibName
 
-	result.addr, _ = AppArguments.Get("listen")
+	result.addr = AppArgs.Listen
 	// an empty value means: listen on all interfaces
 
-	if s, err = AppArguments.Get("logStack"); nil == err {
-		result.logStack = ("true" == s)
-	}
+	result.logStack = AppArgs.LogStack
 
-	if s, err = AppArguments.Get("port"); nil != err {
-		return nil, err
-	}
-	result.addr += ":" + s
+	result.addr += fmt.Sprintf(":%d", AppArgs.Port)
 
 	result.staticFS = jffs.FileServer(result.dataDir)
 
-	if s, err = AppArguments.Get("uf"); nil != err {
-		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
+	if s = AppArgs.PassFile; 0 == len(s) {
+		s = "missing user/password file\nAUTHENTICATION DISABLED!`"
 		apachelogger.Err("NewPageHandler()", s)
 	} else if result.usrList, err = passlist.LoadPasswords(s); nil != err {
 		s = fmt.Sprintf("%v\nAUTHENTICATION DISABLED!", err)
@@ -108,17 +89,11 @@ func NewPageHandler() (*TPageHandler, error) {
 		result.usrList = nil
 	}
 
-	if s, err = AppArguments.Get("realm"); nil == err {
-		result.realm = s
-	}
+	result.realm = AppArgs.Realm
 
-	if s, err = AppArguments.Get("theme"); nil != err {
-		result.theme = "dark"
-	} else {
-		result.theme = s
-	}
+	result.theme = AppArgs.Theme
 
-	if result.viewList, err = newViewList(filepath.Join(result.dataDir, "views")); nil != err {
+	if result.viewList, err = newViewList(filepath.Join(result.dataDir, `views`)); nil != err {
 		return nil, err
 	}
 
