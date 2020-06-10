@@ -105,16 +105,18 @@ func init() {
 // InitConfig sets up and reads all configuration data from INI files
 // and commandline arguments.
 func InitConfig() {
+	flag.CommandLine = flag.NewFlagSet(`Kaliber`, flag.ExitOnError)
 	readIniFiles()
 	setFlags()
 	parseFlags()
 	readFlags()
+	flag.CommandLine = nil // free unneeded memory
 } // InitConfig()
 
 // `parseFlags()` parses the commandline arguments.
 func parseFlags() {
 	flag.Usage = ShowHelp
-	flag.Parse()
+	_ = flag.CommandLine.Parse(os.Args[1:])
 } // parseFlags()
 
 // `readFlags()` checks all available configurations flags.
@@ -308,13 +310,13 @@ func setFlags() {
 	if AppArgs.AuthAll, ok = appArguments.AsBool(`authAll`); !ok {
 		AppArgs.AuthAll = true
 	}
-	flag.BoolVar(&AppArgs.AuthAll, `authAll`, AppArgs.AuthAll,
+	flag.CommandLine.BoolVar(&AppArgs.AuthAll, `authAll`, AppArgs.AuthAll,
 		"<boolean> whether to require authentication for all pages ")
 
 	if AppArgs.BooksPerPage, ok = appArguments.AsInt(`booksPerPage`); (!ok) || (0 >= AppArgs.BooksPerPage) {
 		AppArgs.BooksPerPage = 24
 	}
-	flag.IntVar(&AppArgs.BooksPerPage, `booksPerPage`, AppArgs.BooksPerPage,
+	flag.CommandLine.IntVar(&AppArgs.BooksPerPage, `booksPerPage`, AppArgs.BooksPerPage,
 		"<number> the default number of books shown per page ")
 
 	if s, ok = appArguments.AsString("dataDir"); (ok) && (0 < len(s)) {
@@ -322,65 +324,65 @@ func setFlags() {
 	} else {
 		AppArgs.DataDir, _ = filepath.Abs(`./`)
 	}
-	flag.StringVar(&AppArgs.DataDir, "dataDir", AppArgs.DataDir,
+	flag.CommandLine.StringVar(&AppArgs.DataDir, "dataDir", AppArgs.DataDir,
 		"<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories\n")
 
 	if s, ok = appArguments.AsString("accessLog"); (ok) && (0 < len(s)) {
 		AppArgs.AccessLog = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.AccessLog, "accessLog", AppArgs.AccessLog,
+	flag.CommandLine.StringVar(&AppArgs.AccessLog, "accessLog", AppArgs.AccessLog,
 		"<filename> Name of the access logfile to write to\n")
 
 	if s, ok = appArguments.AsString("certKey"); (ok) && (0 < len(s)) {
 		AppArgs.CertKey = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.CertKey, "certKey", AppArgs.CertKey,
+	flag.CommandLine.StringVar(&AppArgs.CertKey, "certKey", AppArgs.CertKey,
 		"<fileName> the name of the TLS certificate key\n")
 
 	if s, ok = appArguments.AsString("certPem"); (ok) && (0 < len(s)) {
 		AppArgs.CertPem = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.CertPem, "certPem", AppArgs.CertPem,
+	flag.CommandLine.StringVar(&AppArgs.CertPem, "certPem", AppArgs.CertPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
 	if AppArgs.DelWhitespace, ok = appArguments.AsBool("delWhitespace"); !ok {
 		AppArgs.DelWhitespace = true
 	}
-	flag.BoolVar(&AppArgs.DelWhitespace, "delWhitespace", AppArgs.DelWhitespace,
+	flag.CommandLine.BoolVar(&AppArgs.DelWhitespace, "delWhitespace", AppArgs.DelWhitespace,
 		"(optional) Delete superfluous whitespace in generated pages")
 
 	if s, ok = appArguments.AsString("errorLog"); (ok) && (0 < len(s)) {
 		AppArgs.ErrorLog = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.ErrorLog, "errorlog", AppArgs.ErrorLog,
+	flag.CommandLine.StringVar(&AppArgs.ErrorLog, "errorlog", AppArgs.ErrorLog,
 		"<filename> Name of the error logfile to write to\n")
 
 	if AppArgs.GZip, ok = appArguments.AsBool("gzip"); !ok {
 		AppArgs.GZip = true
 	}
-	flag.BoolVar(&AppArgs.GZip, "gzip", AppArgs.GZip,
+	flag.CommandLine.BoolVar(&AppArgs.GZip, "gzip", AppArgs.GZip,
 		"<boolean> use gzip compression for server responses")
 
 	/* * /
 	if s, ok = appArguments.AsString("intl"); (ok) && (0 < len(s)) {
 		AppArgs.Intl = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.Intl, "intl", AppArgs.Intl,
+	appFlags.StringVar(&AppArgs.Intl, "intl", AppArgs.Intl,
 		"<fileName> the path/filename of the localisation file\n")
 	/* */
 
 	iniFile, _ := appArguments.AsString("iniFile")
-	flag.StringVar(&iniFile, "ini", iniFile,
+	flag.CommandLine.StringVar(&iniFile, "ini", iniFile,
 		"<fileName> the path/filename of the INI file to use\n")
 
 	if AppArgs.Lang, ok = appArguments.AsString("lang"); (!ok) || (0 == len(AppArgs.Lang)) {
 		AppArgs.Lang = `en`
 	}
-	flag.StringVar(&AppArgs.Lang, "lang", AppArgs.Lang,
+	flag.CommandLine.StringVar(&AppArgs.Lang, "lang", AppArgs.Lang,
 		"the default language to use ")
 
 	AppArgs.LibName, _ = appArguments.AsString("libraryName")
-	flag.StringVar(&AppArgs.LibName, "libraryName", AppArgs.LibName,
+	flag.CommandLine.StringVar(&AppArgs.LibName, "libraryName", AppArgs.LibName,
 		"Name of this Library (shown on every page)\n")
 
 	if s, ok = appArguments.AsString("libraryPath"); ok && (0 < len(s)) {
@@ -388,47 +390,47 @@ func setFlags() {
 	} else {
 		AppArgs.LibPath = `/var/opt/Calibre`
 	}
-	flag.StringVar(&AppArgs.LibPath, "libraryPath", AppArgs.LibPath,
+	flag.CommandLine.StringVar(&AppArgs.LibPath, "libraryPath", AppArgs.LibPath,
 		"<pathname> Path name of/to the Calibre library\n")
 
 	if AppArgs.Listen, ok = appArguments.AsString("listen"); (!ok) || (0 == len(AppArgs.Listen)) {
 		AppArgs.Listen = `127.0.0.1`
 	}
-	flag.StringVar(&AppArgs.Listen, "listen", AppArgs.Listen,
+	flag.CommandLine.StringVar(&AppArgs.Listen, "listen", AppArgs.Listen,
 		"the host's IP to listen at ")
 
 	AppArgs.LogStack, _ = appArguments.AsBool("logStack")
-	flag.BoolVar(&AppArgs.LogStack, "logStack", AppArgs.LogStack,
+	flag.CommandLine.BoolVar(&AppArgs.LogStack, "logStack", AppArgs.LogStack,
 		"<boolean> Log a stack trace for recovered runtime errors ")
 
 	if AppArgs.Port, ok = appArguments.AsInt("port"); (!ok) || (0 == AppArgs.Port) {
 		AppArgs.Port = 8383
 	}
-	flag.IntVar(&AppArgs.Port, "port", AppArgs.Port,
+	flag.CommandLine.IntVar(&AppArgs.Port, "port", AppArgs.Port,
 		"<portNumber> The IP port to listen to ")
 
 	if AppArgs.Realm, ok = appArguments.AsString("realm"); (!ok) || (0 == len(AppArgs.Realm)) {
 		AppArgs.Realm = `eBooks Host`
 	}
-	flag.StringVar(&AppArgs.Realm, "realm", AppArgs.Realm,
+	flag.CommandLine.StringVar(&AppArgs.Realm, "realm", AppArgs.Realm,
 		"<hostName> Name of host/domain to secure by BasicAuth\n")
 
 	if AppArgs.SessionTTL, ok = appArguments.AsInt("sessionTTL"); (!ok) || (0 == AppArgs.SessionTTL) {
 		AppArgs.SessionTTL = 1200
 	}
-	flag.IntVar(&AppArgs.SessionTTL, "sessionTTL", AppArgs.SessionTTL,
+	flag.CommandLine.IntVar(&AppArgs.SessionTTL, "sessionTTL", AppArgs.SessionTTL,
 		"<seconds> Number of seconds an unused session keeps valid ")
 
 	if AppArgs.SidName, ok = appArguments.AsString("sidName"); (!ok) || (0 == len(AppArgs.SidName)) {
 		AppArgs.SidName = `sid`
 	}
-	flag.StringVar(&AppArgs.SidName, "sidName", AppArgs.SidName,
+	flag.CommandLine.StringVar(&AppArgs.SidName, "sidName", AppArgs.SidName,
 		"<name> The name of the session ID to use\n")
 
 	if s, ok = appArguments.AsString("sqlTrace"); ok && (0 < len(AppArgs.SQLTrace)) {
 		AppArgs.SQLTrace = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.SQLTrace, "sqlTrace", AppArgs.SQLTrace,
+	flag.CommandLine.StringVar(&AppArgs.SQLTrace, "sqlTrace", AppArgs.SQLTrace,
 		"<filename> Name of the SQL logfile to write to\n")
 
 	if AppArgs.Theme, _ = appArguments.AsString("theme"); 0 < len(AppArgs.Theme) {
@@ -439,28 +441,28 @@ func setFlags() {
 	default:
 		AppArgs.Theme = `dark`
 	}
-	flag.StringVar(&AppArgs.Theme, "theme", AppArgs.Theme,
+	flag.CommandLine.StringVar(&AppArgs.Theme, "theme", AppArgs.Theme,
 		"<name> The display theme to use ('light' or 'dark')\n")
 
-	flag.StringVar(&AppArgs.UserAdd, "ua", AppArgs.UserAdd,
+	flag.CommandLine.StringVar(&AppArgs.UserAdd, "ua", AppArgs.UserAdd,
 		"<userName> User add: add a username to the password file")
 
-	flag.StringVar(&AppArgs.UserCheck, "uc", AppArgs.UserCheck,
+	flag.CommandLine.StringVar(&AppArgs.UserCheck, "uc", AppArgs.UserCheck,
 		"<userName> User check: check a username in the password file")
 
-	flag.StringVar(&AppArgs.UserDelete, "ud", AppArgs.UserDelete,
+	flag.CommandLine.StringVar(&AppArgs.UserDelete, "ud", AppArgs.UserDelete,
 		"<userName> User delete: remove a username from the password file")
 
 	if s, ok = appArguments.AsString("passFile"); ok && (0 < len(s)) {
 		AppArgs.PassFile = absolute(AppArgs.DataDir, s)
 	}
-	flag.StringVar(&AppArgs.PassFile, "uf", AppArgs.PassFile,
+	flag.CommandLine.StringVar(&AppArgs.PassFile, "uf", AppArgs.PassFile,
 		"<fileName> Passwords file storing user/passwords for BasicAuth\n")
 
-	flag.BoolVar(&AppArgs.UserList, "ul", AppArgs.UserList,
+	flag.CommandLine.BoolVar(&AppArgs.UserList, "ul", AppArgs.UserList,
 		"<boolean> User list: show all users in the password file")
 
-	flag.StringVar(&AppArgs.UserUpdate, "uu", AppArgs.UserUpdate,
+	flag.CommandLine.StringVar(&AppArgs.UserUpdate, "uu", AppArgs.UserUpdate,
 		"<userName> User update: update a username in the password file")
 
 	appArguments.Clear() // release unneeded memory
@@ -469,7 +471,7 @@ func setFlags() {
 // ShowHelp lists the commandline options to `Stderr`.
 func ShowHelp() {
 	fmt.Fprintf(os.Stderr, "\n  Usage: %s [OPTIONS]\n\n", os.Args[0])
-	flag.PrintDefaults()
+	flag.CommandLine.PrintDefaults()
 	fmt.Fprintln(os.Stderr, "\n  Most options can be set in an INI file to keep the command-line short ;-)")
 } // ShowHelp()
 
