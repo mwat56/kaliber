@@ -192,8 +192,8 @@ func readFlags() {
 	}
 	db.SetCalibreLibraryPath(AppArgs.LibPath)
 
-	if (0 == len(AppArgs.Listen)) || (`0` == AppArgs.Listen) {
-		AppArgs.Listen = `127.0.0.1`
+	if `0` == AppArgs.Listen {
+		AppArgs.Listen = ``
 	}
 
 	if 0 >= AppArgs.Port {

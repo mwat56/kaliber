@@ -135,7 +135,7 @@ func Test_readFlagsDebug(t *testing.T) {
 		Lang:          `en`,
 		LibName:       `testing`,
 		LibPath:       `/var/opt/Calibre`,
-		Listen:        `127.0.0.1`,
+		Listen:        ``,
 		LogStack:      false,
 		PassFile:      ``,
 		Port:          8383,

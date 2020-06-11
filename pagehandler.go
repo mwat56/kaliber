@@ -71,12 +71,10 @@ func NewPageHandler() (*TPageHandler, error) {
 
 	result.libName = AppArgs.LibName
 
-	result.addr = AppArgs.Listen
-	// an empty value means: listen on all interfaces
+	// an empty `listen` value means: listen on all interfaces
+	result.addr = fmt.Sprintf("%s:%d", AppArgs.Listen, AppArgs.Port)
 
 	result.logStack = AppArgs.LogStack
-
-	result.addr += fmt.Sprintf(":%d", AppArgs.Port)
 
 	result.staticFS = jffs.FileServer(result.dataDir)
 
