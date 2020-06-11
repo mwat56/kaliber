@@ -72,8 +72,8 @@ var (
 	// set up by a call to `InitConfig()`.
 	AppArgs TAppArgs
 
-	// `appArguments` is the merged list for the INI values.
-	appArguments tArguments
+	// `iniValues` is the merged list for the INI values.
+	iniValues tArguments
 )
 
 // `absolute()` returns `aDir` as an absolute path.
@@ -322,7 +322,7 @@ func readIniFiles() {
 		}
 	}
 
-	appArguments = tArguments{*ini1.GetSection(``)}
+	iniValues = tArguments{*ini1.GetSection(``)}
 } // readIniFiles()
 
 // `setFlags()` sets up the flags for the commandline arguments.
@@ -331,19 +331,19 @@ func setFlags() {
 		ok bool
 		s  string // temp. value
 	)
-	if AppArgs.AuthAll, ok = appArguments.AsBool(`authAll`); !ok {
+	if AppArgs.AuthAll, ok = iniValues.AsBool(`authAll`); !ok {
 		AppArgs.AuthAll = true
 	}
 	flag.CommandLine.BoolVar(&AppArgs.AuthAll, `authAll`, AppArgs.AuthAll,
 		"<boolean> whether to require authentication for all pages ")
 
-	if AppArgs.BooksPerPage, ok = appArguments.AsInt(`booksPerPage`); (!ok) || (0 >= AppArgs.BooksPerPage) {
+	if AppArgs.BooksPerPage, ok = iniValues.AsInt(`booksPerPage`); (!ok) || (0 >= AppArgs.BooksPerPage) {
 		AppArgs.BooksPerPage = 24
 	}
 	flag.CommandLine.IntVar(&AppArgs.BooksPerPage, `booksPerPage`, AppArgs.BooksPerPage,
 		"<number> the default number of books shown per page ")
 
-	if s, ok = appArguments.AsString("dataDir"); (ok) && (0 < len(s)) {
+	if s, ok = iniValues.AsString("dataDir"); (ok) && (0 < len(s)) {
 		AppArgs.DataDir, _ = filepath.Abs(s)
 	} else {
 		AppArgs.DataDir, _ = filepath.Abs(`./`)
@@ -351,25 +351,25 @@ func setFlags() {
 	flag.CommandLine.StringVar(&AppArgs.DataDir, "dataDir", AppArgs.DataDir,
 		"<dirName> the directory with CSS, FONTS, IMG, SESSIONS, and VIEWS sub-directories\n")
 
-	if s, ok = appArguments.AsString("accessLog"); (ok) && (0 < len(s)) {
+	if s, ok = iniValues.AsString("accessLog"); (ok) && (0 < len(s)) {
 		AppArgs.AccessLog = absolute(AppArgs.DataDir, s)
 	}
 	flag.CommandLine.StringVar(&AppArgs.AccessLog, "accessLog", AppArgs.AccessLog,
 		"<filename> Name of the access logfile to write to\n")
 
-	if s, ok = appArguments.AsString("certKey"); (ok) && (0 < len(s)) {
+	if s, ok = iniValues.AsString("certKey"); (ok) && (0 < len(s)) {
 		AppArgs.CertKey = absolute(AppArgs.DataDir, s)
 	}
 	flag.CommandLine.StringVar(&AppArgs.CertKey, "certKey", AppArgs.CertKey,
 		"<fileName> the name of the TLS certificate key\n")
 
-	if s, ok = appArguments.AsString("certPem"); (ok) && (0 < len(s)) {
+	if s, ok = iniValues.AsString("certPem"); (ok) && (0 < len(s)) {
 		AppArgs.CertPem = absolute(AppArgs.DataDir, s)
 	}
 	flag.CommandLine.StringVar(&AppArgs.CertPem, "certPem", AppArgs.CertPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
-	if AppArgs.delWhitespace, ok = appArguments.AsBool("delWhitespace"); !ok {
+	if AppArgs.delWhitespace, ok = iniValues.AsBool("delWhitespace"); !ok {
 		AppArgs.delWhitespace = true
 	}
 	flag.CommandLine.BoolVar(&AppArgs.delWhitespace, "delWhitespace", AppArgs.delWhitespace,
@@ -377,13 +377,13 @@ func setFlags() {
 
 	flag.CommandLine.BoolVar(&AppArgs.dump, `d`, AppArgs.dump, "dump")
 
-	if s, ok = appArguments.AsString("errorLog"); (ok) && (0 < len(s)) {
+	if s, ok = iniValues.AsString("errorLog"); (ok) && (0 < len(s)) {
 		AppArgs.ErrorLog = absolute(AppArgs.DataDir, s)
 	}
 	flag.CommandLine.StringVar(&AppArgs.ErrorLog, "errorlog", AppArgs.ErrorLog,
 		"<filename> Name of the error logfile to write to\n")
 
-	if AppArgs.GZip, ok = appArguments.AsBool("gzip"); !ok {
+	if AppArgs.GZip, ok = iniValues.AsBool("gzip"); !ok {
 		AppArgs.GZip = true
 	}
 	flag.CommandLine.BoolVar(&AppArgs.GZip, "gzip", AppArgs.GZip,
@@ -397,21 +397,21 @@ func setFlags() {
 		"<fileName> the path/filename of the localisation file\n")
 	/* */
 
-	iniFile, _ := appArguments.AsString("iniFile")
+	iniFile, _ := iniValues.AsString("iniFile")
 	flag.CommandLine.StringVar(&iniFile, "ini", iniFile,
 		"<fileName> the path/filename of the INI file to use\n")
 
-	if AppArgs.Lang, ok = appArguments.AsString("lang"); (!ok) || (0 == len(AppArgs.Lang)) {
+	if AppArgs.Lang, ok = iniValues.AsString("lang"); (!ok) || (0 == len(AppArgs.Lang)) {
 		AppArgs.Lang = `en`
 	}
 	flag.CommandLine.StringVar(&AppArgs.Lang, "lang", AppArgs.Lang,
 		"the default language to use ")
 
-	AppArgs.LibName, _ = appArguments.AsString("libraryName")
+	AppArgs.LibName, _ = iniValues.AsString("libraryName")
 	flag.CommandLine.StringVar(&AppArgs.LibName, "libraryName", AppArgs.LibName,
 		"Name of this Library (shown on every page)\n")
 
-	if s, ok = appArguments.AsString("libraryPath"); ok && (0 < len(s)) {
+	if s, ok = iniValues.AsString("libraryPath"); ok && (0 < len(s)) {
 		AppArgs.libPath, _ = filepath.Abs(s)
 	} else {
 		AppArgs.libPath = `/var/opt/Calibre`
@@ -419,47 +419,47 @@ func setFlags() {
 	flag.CommandLine.StringVar(&AppArgs.libPath, "libraryPath", AppArgs.libPath,
 		"<pathname> Path name of/to the Calibre library\n")
 
-	if AppArgs.listen, ok = appArguments.AsString("listen"); (!ok) || (0 == len(AppArgs.listen)) {
+	if AppArgs.listen, ok = iniValues.AsString("listen"); (!ok) || (0 == len(AppArgs.listen)) {
 		AppArgs.listen = `127.0.0.1`
 	}
 	flag.CommandLine.StringVar(&AppArgs.listen, "listen", AppArgs.listen,
 		"the host's IP to listen at ")
 
-	AppArgs.LogStack, _ = appArguments.AsBool("logStack")
+	AppArgs.LogStack, _ = iniValues.AsBool("logStack")
 	flag.CommandLine.BoolVar(&AppArgs.LogStack, "logStack", AppArgs.LogStack,
 		"<boolean> Log a stack trace for recovered runtime errors ")
 
-	if AppArgs.port, ok = appArguments.AsInt("port"); (!ok) || (0 == AppArgs.port) {
+	if AppArgs.port, ok = iniValues.AsInt("port"); (!ok) || (0 == AppArgs.port) {
 		AppArgs.port = 8383
 	}
 	flag.CommandLine.IntVar(&AppArgs.port, "port", AppArgs.port,
 		"<portNumber> The IP port to listen to ")
 
-	if AppArgs.Realm, ok = appArguments.AsString("realm"); (!ok) || (0 == len(AppArgs.Realm)) {
+	if AppArgs.Realm, ok = iniValues.AsString("realm"); (!ok) || (0 == len(AppArgs.Realm)) {
 		AppArgs.Realm = `eBooks Host`
 	}
 	flag.CommandLine.StringVar(&AppArgs.Realm, "realm", AppArgs.Realm,
 		"<hostName> Name of host/domain to secure by BasicAuth\n")
 
-	if AppArgs.sessionTTL, ok = appArguments.AsInt("sessionTTL"); (!ok) || (0 == AppArgs.sessionTTL) {
+	if AppArgs.sessionTTL, ok = iniValues.AsInt("sessionTTL"); (!ok) || (0 == AppArgs.sessionTTL) {
 		AppArgs.sessionTTL = 1200
 	}
 	flag.CommandLine.IntVar(&AppArgs.sessionTTL, "sessionTTL", AppArgs.sessionTTL,
 		"<seconds> Number of seconds an unused session keeps valid ")
 
-	if AppArgs.sidName, ok = appArguments.AsString("sidName"); (!ok) || (0 == len(AppArgs.sidName)) {
+	if AppArgs.sidName, ok = iniValues.AsString("sidName"); (!ok) || (0 == len(AppArgs.sidName)) {
 		AppArgs.sidName = `sid`
 	}
 	flag.CommandLine.StringVar(&AppArgs.sidName, "sidName", AppArgs.sidName,
 		"<name> The name of the session ID to use\n")
 
-	if s, ok = appArguments.AsString("sqlTrace"); ok && (0 < len(AppArgs.writeSQLTrace)) {
+	if s, ok = iniValues.AsString("sqlTrace"); ok && (0 < len(s)) {
 		AppArgs.writeSQLTrace = absolute(AppArgs.DataDir, s)
 	}
 	flag.CommandLine.StringVar(&AppArgs.writeSQLTrace, "sqlTrace", AppArgs.writeSQLTrace,
 		"<filename> Name of the SQL logfile to write to\n")
 
-	if AppArgs.Theme, _ = appArguments.AsString("theme"); 0 < len(AppArgs.Theme) {
+	if AppArgs.Theme, _ = iniValues.AsString("theme"); 0 < len(AppArgs.Theme) {
 		AppArgs.Theme = strings.ToLower(AppArgs.Theme)
 	}
 	switch AppArgs.Theme {
@@ -479,7 +479,7 @@ func setFlags() {
 	flag.CommandLine.StringVar(&AppArgs.UserDelete, "ud", AppArgs.UserDelete,
 		"<userName> User delete: remove a username from the password file")
 
-	if s, ok = appArguments.AsString("passFile"); ok && (0 < len(s)) {
+	if s, ok = iniValues.AsString("passFile"); ok && (0 < len(s)) {
 		AppArgs.PassFile = absolute(AppArgs.DataDir, s)
 	}
 	flag.CommandLine.StringVar(&AppArgs.PassFile, "uf", AppArgs.PassFile,
@@ -491,7 +491,7 @@ func setFlags() {
 	flag.CommandLine.StringVar(&AppArgs.UserUpdate, "uu", AppArgs.UserUpdate,
 		"<userName> User update: update a username in the password file")
 
-	appArguments.Clear() // release unneeded memory
+	iniValues.Clear() // release unneeded memory
 } // setFlags()
 
 // ShowHelp lists the commandline options to `Stderr`.

@@ -65,7 +65,7 @@ func setFlagsDebug() *TAppArgs {
 
 	var ini1 ini.TIniList
 	// Clear/reset the INI values to simulate missing INI file(s):
-	appArguments = tArguments{*ini1.GetSection(``)}
+	iniValues = tArguments{*ini1.GetSection(``)}
 
 	setFlags()
 
