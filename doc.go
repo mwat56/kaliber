@@ -33,7 +33,8 @@ private functions. Most of the `public` functions/methods are only public
 because they may be called from outside the source code file they were
 written in.
 
-	For a real understanding you're encouraged to read the source code and the comments therein.
+	For a real understanding you're encouraged to read the source
+	code and the comments therein.
 
 */
 package kaliber

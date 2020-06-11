@@ -41,7 +41,7 @@ func userCmdline() {
 		return // without user file nothing to do
 	}
 
-	// All the following `kaliber.xxxUser()` calls terminate the program
+	// All the following `kaliber.UserXxx()` calls terminate the program:
 	if 0 < len(kaliber.AppArgs.UserAdd) {
 		kaliber.UserAdd(kaliber.AppArgs.UserAdd, kaliber.AppArgs.PassFile)
 	}

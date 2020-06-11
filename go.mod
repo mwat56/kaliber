@@ -9,7 +9,7 @@ require (
 	github.com/mwat56/errorhandler v1.1.6
 	github.com/mwat56/ini v1.4.0
 	github.com/mwat56/jffs v0.1.1
-	github.com/mwat56/kaliber/db v0.0.0-20200609121408-4af2c22eab13
+	github.com/mwat56/kaliber/db v0.0.0-20200611180039-ebddaf1c7b43
 	github.com/mwat56/passlist v1.3.1
 	github.com/mwat56/sessions v0.3.10
 	github.com/mwat56/whitespace v0.2.1
