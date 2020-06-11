@@ -35,6 +35,7 @@ type (
 		CertPem       string // private TLS certificate
 		DataDir       string // base directory of application's data
 		delWhitespace bool   // remove whitespace from generated pages
+		dump          bool   // Debug: dump this structure to `StdOut`
 		ErrorLog      string // (optional) name of page error logfile
 		GZip          bool   // send compressed data to remote browser
 		// Intl       string // path/filename of the localisation file
@@ -92,6 +93,22 @@ func absolute(aBaseDir, aDir string) string {
 
 	return filepath.Join(aBaseDir, aDir)
 } // absolute()
+
+// String implements the `Stringer` interface returning a (pretty printed)
+// string representation of the current `TAppArgs` instance.
+//
+// NOTE: This method is meant mostly for debugging purposes.
+func (aa TAppArgs) String() string {
+	return strings.Replace(
+		strings.Replace(
+			strings.Replace(
+				strings.Replace(
+					fmt.Sprintf("%#v", aa),
+					`, `, ",\n\t", -1),
+				`{`, "{\n\t", -1),
+			`}`, ",\n}", -1),
+		`:`, ` : `, -1) //FIXME this affects property values as well!
+} // String()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -166,7 +183,7 @@ func readFlags() {
 	switch AppArgs.Lang {
 	case `de`, `en`:
 	default:
-		AppArgs.Lang = "en"
+		AppArgs.Lang = `en`
 	}
 
 	if 0 == len(AppArgs.LibName) {
@@ -235,6 +252,11 @@ func readFlags() {
 
 	if 0 < len(AppArgs.PassFile) {
 		AppArgs.PassFile = absolute(AppArgs.DataDir, AppArgs.PassFile)
+	}
+
+	if AppArgs.dump {
+		// Print out the arguments and terminate:
+		log.Fatalf("runtime arguments:\n%s", AppArgs.String())
 	}
 } // readFlags()
 
@@ -352,6 +374,8 @@ func setFlags() {
 	}
 	flag.CommandLine.BoolVar(&AppArgs.delWhitespace, "delWhitespace", AppArgs.delWhitespace,
 		"(optional) Delete superfluous whitespace in generated pages")
+
+	flag.CommandLine.BoolVar(&AppArgs.dump, `d`, AppArgs.dump, "dump")
 
 	if s, ok = appArguments.AsString("errorLog"); (ok) && (0 < len(s)) {
 		AppArgs.ErrorLog = absolute(AppArgs.DataDir, s)

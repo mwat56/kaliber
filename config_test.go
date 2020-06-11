@@ -35,7 +35,6 @@ func parseFlagDebug() *TAppArgs {
 	flag.CommandLine.StringVar(&timeout, `test.timeout`, timeout,
 		"timeout for tests")
 
-	setFlags()
 	parseFlags()
 
 	return &AppArgs
@@ -46,10 +45,10 @@ func parseFlagDebug() *TAppArgs {
 // This function is meant for unit testing only.
 func readFlagsDebug() *TAppArgs {
 	flag.CommandLine = flag.NewFlagSet(`Kaliber`, flag.ExitOnError)
-
 	AppArgs = TAppArgs{}
 	// Set up some required values:
 	AppArgs.DataDir, _ = filepath.Abs(`./`)
+	// AppArgs.dump = true
 	AppArgs.LibName = `testing`
 	AppArgs.libPath = `/var/opt/Calibre`
 
@@ -76,35 +75,7 @@ func setFlagsDebug() *TAppArgs {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 func Test_parseFlagDebug(t *testing.T) {
-	expected := &TAppArgs{
-		AccessLog:     ``,
-		AuthAll:       true,
-		BooksPerPage:  24,
-		CertKey:       ``,
-		CertPem:       ``,
-		DataDir:       `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
-		delWhitespace: true,
-		ErrorLog:      ``,
-		GZip:          true,
-		Lang:          `en`,
-		LibName:       ``,
-		libPath:       `/var/opt/Calibre`,
-		listen:        `127.0.0.1`,
-		LogStack:      false,
-		PassFile:      ``,
-		port:          8383,
-		Realm:         `eBooks Host`,
-		SessionDir:    ``,
-		sessionTTL:    1200,
-		sidName:       `sid`,
-		writeSQLTrace: ``,
-		Theme:         `dark`,
-		UserAdd:       ``,
-		UserCheck:     ``,
-		UserDelete:    ``,
-		UserList:      false,
-		UserUpdate:    ``,
-	}
+	expected := &TAppArgs{}
 	tests := []struct {
 		name string
 		want *TAppArgs
@@ -115,7 +86,7 @@ func Test_parseFlagDebug(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := parseFlagDebug(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseFlagDebug() = %v,\nwant %v", got, tt.want)
+				t.Errorf("parseFlagDebug() = %s,\nwant %s", got, tt.want)
 			}
 		})
 	}
@@ -123,34 +94,18 @@ func Test_parseFlagDebug(t *testing.T) {
 
 func Test_readFlagsDebug(t *testing.T) {
 	expected := &TAppArgs{
-		AccessLog:     ``,
-		Addr:          `:8383`,
-		AuthAll:       false,
-		BooksPerPage:  24,
-		CertKey:       ``,
-		CertPem:       ``,
-		DataDir:       `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
-		delWhitespace: false,
-		ErrorLog:      ``,
-		GZip:          false,
-		Lang:          `en`,
-		LibName:       `testing`,
-		libPath:       `/var/opt/Calibre`,
-		listen:        ``,
-		LogStack:      false,
-		PassFile:      ``,
-		port:          8383,
-		Realm:         `eBooks Host`,
-		SessionDir:    `/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions`,
-		sessionTTL:    1200,
-		sidName:       `sid`,
-		writeSQLTrace: ``,
-		Theme:         `dark`,
-		UserAdd:       ``,
-		UserCheck:     ``,
-		UserDelete:    ``,
-		UserList:      false,
-		UserUpdate:    ``,
+		Addr:         `:8383`,
+		BooksPerPage: 24,
+		DataDir:      `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
+		Lang:         `en`,
+		LibName:      `testing`,
+		libPath:      `/var/opt/Calibre`,
+		port:         8383,
+		Realm:        `eBooks Host`,
+		SessionDir:   `/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions`,
+		sessionTTL:   1200,
+		sidName:      `sid`,
+		Theme:        `dark`,
 	}
 	tests := []struct {
 		name string
@@ -162,7 +117,7 @@ func Test_readFlagsDebug(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := readFlagsDebug(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("readFlagsDebug() = %v,\nwant %v", got, tt.want)
+				t.Errorf("readFlagsDebug() = %s,\nwant %s", got, tt.want)
 			}
 		})
 	}
@@ -186,33 +141,19 @@ func Test_readIniFiles(t *testing.T) {
 
 func Test_setFlagsDebug(t *testing.T) {
 	expected := &TAppArgs{
-		AccessLog:     ``,
 		AuthAll:       true,
 		BooksPerPage:  24,
-		CertKey:       ``,
-		CertPem:       ``,
 		DataDir:       `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
 		delWhitespace: true,
-		ErrorLog:      ``,
 		GZip:          true,
 		Lang:          `en`,
-		LibName:       ``,
 		libPath:       `/var/opt/Calibre`,
 		listen:        `127.0.0.1`,
-		LogStack:      false,
-		PassFile:      ``,
 		port:          8383,
 		Realm:         `eBooks Host`,
-		SessionDir:    ``,
 		sessionTTL:    1200,
 		sidName:       `sid`,
-		writeSQLTrace: ``,
 		Theme:         `dark`,
-		UserAdd:       ``,
-		UserCheck:     ``,
-		UserDelete:    ``,
-		UserList:      false,
-		UserUpdate:    ``,
 	}
 	tests := []struct {
 		name string
@@ -224,7 +165,7 @@ func Test_setFlagsDebug(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := setFlagsDebug(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setFlagsDebug() = %v,\nwant %v", got, tt.want)
+				t.Errorf("setFlagsDebug() = %s,\nwant %s", got, tt.want)
 			}
 		})
 	}
