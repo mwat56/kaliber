@@ -25,36 +25,37 @@ import (
 )
 
 type (
-	// TAppArgs Commandline arguments and INI values.
+	// TAppArgs Collection of commandline arguments and INI values.
 	TAppArgs struct {
-		AccessLog     string
-		AuthAll       bool
-		BooksPerPage  int
-		CertKey       string
-		CertPem       string
-		DataDir       string
-		DelWhitespace bool
-		ErrorLog      string
-		GZip          bool
-		// Intl          string
-		Lang       string
-		LibName    string
-		LibPath    string
-		Listen     string
-		LogStack   bool
-		PassFile   string
-		Port       int
-		Realm      string
-		SessionDir string
-		SessionTTL int
-		SidName    string
-		SQLTrace   string
-		Theme      string
-		UserAdd    string
-		UserCheck  string
-		UserDelete string
-		UserList   bool
-		UserUpdate string
+		AccessLog     string // (optional) name of page access logfile
+		Addr          string // listen address ("1.2.3.4:5678")
+		AuthAll       bool   // authenticate user for all pages and documents
+		BooksPerPage  int    // number of documents shown per web-page
+		CertKey       string // TLS certificate key
+		CertPem       string // private TLS certificate
+		DataDir       string // base directory of application's data
+		delWhitespace bool   // remove whitespace from generated pages
+		ErrorLog      string // (optional) name of page error logfile
+		GZip          bool   // send compressed data to remote browser
+		// Intl       string // path/filename of the localisation file
+		Lang          string // default GUI language
+		LibName       string // the library's name
+		libPath       string // path to `Calibre` library
+		listen        string // IP of host to listen at
+		LogStack      bool   // log stack trace in case of errors
+		PassFile      string // (optional) name of page access logfile
+		port          int    // port to listen to
+		Realm         string // host/domain to secure by BasicAuth
+		SessionDir    string // directory for session data
+		sessionTTL    int    // session time to live
+		sidName       string // name of session ID
+		Theme         string // `dark` or `light` display theme
+		UserAdd       string // username to add to password list
+		UserCheck     string // username to check in password list
+		UserDelete    string // username to delete from password list
+		UserList      bool   // print out a list of current users
+		UserUpdate    string // username to update in password list
+		writeSQLTrace string // (optional) name of SQL trace logfile
 	}
 
 	// List structure for the INI values.
@@ -153,7 +154,7 @@ func readFlags() {
 		}
 	}
 
-	whitespace.UseRemoveWhitespace = AppArgs.DelWhitespace
+	whitespace.UseRemoveWhitespace = AppArgs.delWhitespace
 
 	if 0 < len(AppArgs.ErrorLog) {
 		AppArgs.ErrorLog = absolute(AppArgs.DataDir, AppArgs.ErrorLog)
@@ -172,33 +173,34 @@ func readFlags() {
 		AppArgs.LibName = time.Now().Format("2006:01:02:15:04:05")
 	}
 
-	if 0 == len(AppArgs.LibPath) {
+	if 0 == len(AppArgs.libPath) {
 		log.Fatalln("Error: Missing `libPath` value")
 	}
-	AppArgs.LibPath, _ = filepath.Abs(AppArgs.LibPath)
-	if f, err := os.Stat(AppArgs.LibPath); nil != err {
-		log.Fatalf("`libPath` == `%s` problem: %v", AppArgs.LibPath, err)
+	AppArgs.libPath, _ = filepath.Abs(AppArgs.libPath)
+	if f, err := os.Stat(AppArgs.libPath); nil != err {
+		log.Fatalf("`libPath` == `%s` problem: %v", AppArgs.libPath, err)
 	} else if !f.IsDir() {
-		log.Fatalf("Error: `libPath` not a directory `%s`", AppArgs.LibPath)
+		log.Fatalf("Error: `libPath` not a directory `%s`", AppArgs.libPath)
 	}
 
 	// To allow for use of multiple libraries we add the MD5
 	// of the libraryPath to our cache path.
-	s := fmt.Sprintf("%x", md5.Sum([]byte(AppArgs.LibPath))) // #nosec G401
+	s := fmt.Sprintf("%x", md5.Sum([]byte(AppArgs.libPath))) // #nosec G401
 	if ucd, err := os.UserCacheDir(); (nil != err) || (0 == len(ucd)) {
-		db.SetCalibreCachePath(filepath.Join(AppArgs.DataDir, "img", s))
+		db.SetCalibreCachePath(filepath.Join(AppArgs.DataDir, `img`, s))
 	} else {
-		db.SetCalibreCachePath(filepath.Join(ucd, "kaliber", s))
+		db.SetCalibreCachePath(filepath.Join(ucd, `kaliber`, s))
 	}
-	db.SetCalibreLibraryPath(AppArgs.LibPath)
+	db.SetCalibreLibraryPath(AppArgs.libPath)
 
-	if `0` == AppArgs.Listen {
-		AppArgs.Listen = ``
+	if `0` == AppArgs.listen {
+		AppArgs.listen = ``
 	}
-
-	if 0 >= AppArgs.Port {
-		AppArgs.Port = 8383
+	if 0 >= AppArgs.port {
+		AppArgs.port = 8383
 	}
+	// an empty `listen` value means: listen on all interfaces
+	AppArgs.Addr = fmt.Sprintf("%s:%d", AppArgs.listen, AppArgs.port)
 
 	if 0 == len(AppArgs.Realm) {
 		AppArgs.Realm = `eBooks Host`
@@ -206,20 +208,20 @@ func readFlags() {
 
 	AppArgs.SessionDir = absolute(AppArgs.DataDir, `sessions`)
 
-	if 0 == len(AppArgs.SidName) {
-		AppArgs.SidName = "sid"
+	if 0 == len(AppArgs.sidName) {
+		AppArgs.sidName = `sid`
 	}
-	sessions.SetSIDname(AppArgs.SidName)
+	sessions.SetSIDname(AppArgs.sidName)
 
-	if 0 >= AppArgs.SessionTTL {
-		AppArgs.SessionTTL = 1200
+	if 0 >= AppArgs.sessionTTL {
+		AppArgs.sessionTTL = 1200
 	}
-	sessions.SetSessionTTL(AppArgs.SessionTTL)
+	sessions.SetSessionTTL(AppArgs.sessionTTL)
 
-	if 0 < len(AppArgs.SQLTrace) {
-		AppArgs.SQLTrace = absolute(AppArgs.DataDir, AppArgs.SQLTrace)
+	if 0 < len(AppArgs.writeSQLTrace) {
+		AppArgs.writeSQLTrace = absolute(AppArgs.DataDir, AppArgs.writeSQLTrace)
 	}
-	db.SetSQLtraceFile(AppArgs.SQLTrace)
+	db.SetSQLtraceFile(AppArgs.writeSQLTrace)
 
 	if 0 < len(AppArgs.Theme) {
 		AppArgs.Theme = strings.ToLower(AppArgs.Theme)
@@ -345,10 +347,10 @@ func setFlags() {
 	flag.CommandLine.StringVar(&AppArgs.CertPem, "certPem", AppArgs.CertPem,
 		"<fileName> the name of the TLS certificate PEM\n")
 
-	if AppArgs.DelWhitespace, ok = appArguments.AsBool("delWhitespace"); !ok {
-		AppArgs.DelWhitespace = true
+	if AppArgs.delWhitespace, ok = appArguments.AsBool("delWhitespace"); !ok {
+		AppArgs.delWhitespace = true
 	}
-	flag.CommandLine.BoolVar(&AppArgs.DelWhitespace, "delWhitespace", AppArgs.DelWhitespace,
+	flag.CommandLine.BoolVar(&AppArgs.delWhitespace, "delWhitespace", AppArgs.delWhitespace,
 		"(optional) Delete superfluous whitespace in generated pages")
 
 	if s, ok = appArguments.AsString("errorLog"); (ok) && (0 < len(s)) {
@@ -386,27 +388,27 @@ func setFlags() {
 		"Name of this Library (shown on every page)\n")
 
 	if s, ok = appArguments.AsString("libraryPath"); ok && (0 < len(s)) {
-		AppArgs.LibPath, _ = filepath.Abs(s)
+		AppArgs.libPath, _ = filepath.Abs(s)
 	} else {
-		AppArgs.LibPath = `/var/opt/Calibre`
+		AppArgs.libPath = `/var/opt/Calibre`
 	}
-	flag.CommandLine.StringVar(&AppArgs.LibPath, "libraryPath", AppArgs.LibPath,
+	flag.CommandLine.StringVar(&AppArgs.libPath, "libraryPath", AppArgs.libPath,
 		"<pathname> Path name of/to the Calibre library\n")
 
-	if AppArgs.Listen, ok = appArguments.AsString("listen"); (!ok) || (0 == len(AppArgs.Listen)) {
-		AppArgs.Listen = `127.0.0.1`
+	if AppArgs.listen, ok = appArguments.AsString("listen"); (!ok) || (0 == len(AppArgs.listen)) {
+		AppArgs.listen = `127.0.0.1`
 	}
-	flag.CommandLine.StringVar(&AppArgs.Listen, "listen", AppArgs.Listen,
+	flag.CommandLine.StringVar(&AppArgs.listen, "listen", AppArgs.listen,
 		"the host's IP to listen at ")
 
 	AppArgs.LogStack, _ = appArguments.AsBool("logStack")
 	flag.CommandLine.BoolVar(&AppArgs.LogStack, "logStack", AppArgs.LogStack,
 		"<boolean> Log a stack trace for recovered runtime errors ")
 
-	if AppArgs.Port, ok = appArguments.AsInt("port"); (!ok) || (0 == AppArgs.Port) {
-		AppArgs.Port = 8383
+	if AppArgs.port, ok = appArguments.AsInt("port"); (!ok) || (0 == AppArgs.port) {
+		AppArgs.port = 8383
 	}
-	flag.CommandLine.IntVar(&AppArgs.Port, "port", AppArgs.Port,
+	flag.CommandLine.IntVar(&AppArgs.port, "port", AppArgs.port,
 		"<portNumber> The IP port to listen to ")
 
 	if AppArgs.Realm, ok = appArguments.AsString("realm"); (!ok) || (0 == len(AppArgs.Realm)) {
@@ -415,22 +417,22 @@ func setFlags() {
 	flag.CommandLine.StringVar(&AppArgs.Realm, "realm", AppArgs.Realm,
 		"<hostName> Name of host/domain to secure by BasicAuth\n")
 
-	if AppArgs.SessionTTL, ok = appArguments.AsInt("sessionTTL"); (!ok) || (0 == AppArgs.SessionTTL) {
-		AppArgs.SessionTTL = 1200
+	if AppArgs.sessionTTL, ok = appArguments.AsInt("sessionTTL"); (!ok) || (0 == AppArgs.sessionTTL) {
+		AppArgs.sessionTTL = 1200
 	}
-	flag.CommandLine.IntVar(&AppArgs.SessionTTL, "sessionTTL", AppArgs.SessionTTL,
+	flag.CommandLine.IntVar(&AppArgs.sessionTTL, "sessionTTL", AppArgs.sessionTTL,
 		"<seconds> Number of seconds an unused session keeps valid ")
 
-	if AppArgs.SidName, ok = appArguments.AsString("sidName"); (!ok) || (0 == len(AppArgs.SidName)) {
-		AppArgs.SidName = `sid`
+	if AppArgs.sidName, ok = appArguments.AsString("sidName"); (!ok) || (0 == len(AppArgs.sidName)) {
+		AppArgs.sidName = `sid`
 	}
-	flag.CommandLine.StringVar(&AppArgs.SidName, "sidName", AppArgs.SidName,
+	flag.CommandLine.StringVar(&AppArgs.sidName, "sidName", AppArgs.sidName,
 		"<name> The name of the session ID to use\n")
 
-	if s, ok = appArguments.AsString("sqlTrace"); ok && (0 < len(AppArgs.SQLTrace)) {
-		AppArgs.SQLTrace = absolute(AppArgs.DataDir, s)
+	if s, ok = appArguments.AsString("sqlTrace"); ok && (0 < len(AppArgs.writeSQLTrace)) {
+		AppArgs.writeSQLTrace = absolute(AppArgs.DataDir, s)
 	}
-	flag.CommandLine.StringVar(&AppArgs.SQLTrace, "sqlTrace", AppArgs.SQLTrace,
+	flag.CommandLine.StringVar(&AppArgs.writeSQLTrace, "sqlTrace", AppArgs.writeSQLTrace,
 		"<filename> Name of the SQL logfile to write to\n")
 
 	if AppArgs.Theme, _ = appArguments.AsString("theme"); 0 < len(AppArgs.Theme) {

@@ -51,7 +51,7 @@ func readFlagsDebug() *TAppArgs {
 	// Set up some required values:
 	AppArgs.DataDir, _ = filepath.Abs(`./`)
 	AppArgs.LibName = `testing`
-	AppArgs.LibPath = `/var/opt/Calibre`
+	AppArgs.libPath = `/var/opt/Calibre`
 
 	readFlags()
 
@@ -76,28 +76,28 @@ func setFlagsDebug() *TAppArgs {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 func Test_parseFlagDebug(t *testing.T) {
-	w1 := &TAppArgs{
+	expected := &TAppArgs{
 		AccessLog:     ``,
 		AuthAll:       true,
 		BooksPerPage:  24,
 		CertKey:       ``,
 		CertPem:       ``,
 		DataDir:       `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
-		DelWhitespace: true,
+		delWhitespace: true,
 		ErrorLog:      ``,
 		GZip:          true,
 		Lang:          `en`,
 		LibName:       ``,
-		LibPath:       `/var/opt/Calibre`,
-		Listen:        `127.0.0.1`,
+		libPath:       `/var/opt/Calibre`,
+		listen:        `127.0.0.1`,
 		LogStack:      false,
 		PassFile:      ``,
-		Port:          8383,
+		port:          8383,
 		Realm:         `eBooks Host`,
 		SessionDir:    ``,
-		SessionTTL:    1200,
-		SidName:       `sid`,
-		SQLTrace:      ``,
+		sessionTTL:    1200,
+		sidName:       `sid`,
+		writeSQLTrace: ``,
 		Theme:         `dark`,
 		UserAdd:       ``,
 		UserCheck:     ``,
@@ -110,40 +110,41 @@ func Test_parseFlagDebug(t *testing.T) {
 		want *TAppArgs
 	}{
 		// TODO: Add test cases.
-		{" 1", w1},
+		{" 1", expected},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := parseFlagDebug(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseFlagDebug() = %v, want %v", got, tt.want)
+				t.Errorf("parseFlagDebug() = %v,\nwant %v", got, tt.want)
 			}
 		})
 	}
 } // Test_parseFlagDebug()
 
 func Test_readFlagsDebug(t *testing.T) {
-	w1 := &TAppArgs{
+	expected := &TAppArgs{
 		AccessLog:     ``,
+		Addr:          `:8383`,
 		AuthAll:       false,
 		BooksPerPage:  24,
 		CertKey:       ``,
 		CertPem:       ``,
 		DataDir:       `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
-		DelWhitespace: false,
+		delWhitespace: false,
 		ErrorLog:      ``,
 		GZip:          false,
 		Lang:          `en`,
 		LibName:       `testing`,
-		LibPath:       `/var/opt/Calibre`,
-		Listen:        ``,
+		libPath:       `/var/opt/Calibre`,
+		listen:        ``,
 		LogStack:      false,
 		PassFile:      ``,
-		Port:          8383,
+		port:          8383,
 		Realm:         `eBooks Host`,
 		SessionDir:    `/home/matthias/devel/Go/src/github.com/mwat56/kaliber/sessions`,
-		SessionTTL:    1200,
-		SidName:       `sid`,
-		SQLTrace:      ``,
+		sessionTTL:    1200,
+		sidName:       `sid`,
+		writeSQLTrace: ``,
 		Theme:         `dark`,
 		UserAdd:       ``,
 		UserCheck:     ``,
@@ -156,7 +157,7 @@ func Test_readFlagsDebug(t *testing.T) {
 		want *TAppArgs
 	}{
 		// TODO: Add test cases.
-		{" 1", w1},
+		{" 1", expected},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -184,28 +185,28 @@ func Test_readIniFiles(t *testing.T) {
 } // Test_readIniFiles()
 
 func Test_setFlagsDebug(t *testing.T) {
-	w1 := &TAppArgs{
+	expected := &TAppArgs{
 		AccessLog:     ``,
 		AuthAll:       true,
 		BooksPerPage:  24,
 		CertKey:       ``,
 		CertPem:       ``,
 		DataDir:       `/home/matthias/devel/Go/src/github.com/mwat56/kaliber`,
-		DelWhitespace: true,
+		delWhitespace: true,
 		ErrorLog:      ``,
 		GZip:          true,
 		Lang:          `en`,
 		LibName:       ``,
-		LibPath:       `/var/opt/Calibre`,
-		Listen:        `127.0.0.1`,
+		libPath:       `/var/opt/Calibre`,
+		listen:        `127.0.0.1`,
 		LogStack:      false,
 		PassFile:      ``,
-		Port:          8383,
+		port:          8383,
 		Realm:         `eBooks Host`,
 		SessionDir:    ``,
-		SessionTTL:    1200,
-		SidName:       `sid`,
-		SQLTrace:      ``,
+		sessionTTL:    1200,
+		sidName:       `sid`,
+		writeSQLTrace: ``,
 		Theme:         `dark`,
 		UserAdd:       ``,
 		UserCheck:     ``,
@@ -218,7 +219,7 @@ func Test_setFlagsDebug(t *testing.T) {
 		want *TAppArgs
 	}{
 		// TODO: Add test cases.
-		{" 1", w1},
+		{" 1", expected},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

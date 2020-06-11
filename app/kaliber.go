@@ -130,9 +130,9 @@ func main() {
 	// We need a `server` reference to use it in `setupSignals()`
 	// and to set some reasonable timeouts:
 	server := &http.Server{
-		Addr:              ph.Address(),
+		Addr:              kaliber.AppArgs.Addr,
 		Handler:           handler,
-		IdleTimeout:       1,
+		IdleTimeout:       0,
 		ReadHeaderTimeout: 20 * time.Second,
 		ReadTimeout:       20 * time.Second,
 		// enough time for book download with little bandwidth:
