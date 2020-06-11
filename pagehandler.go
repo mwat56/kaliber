@@ -31,21 +31,13 @@ import (
 type (
 	// TPageHandler provides the handling of HTTP request/response.
 	TPageHandler struct {
-		addr        string              // listen address ("1.2.3.4:5678")
-		authAll     bool                // authenticate user for all pages and documents
-		cacheFS     http.Handler        // cache file server (i.e. thumbnails)
-		cssFS       http.Handler        // CSS file server
-		dataDir     string              // base dir for data
-		docFS       http.Handler        // document file server
-		docsPerPage int                 // number of documents shown per web-page
-		lang        string              // default GUI language
-		libName     string              // the library's name
-		logStack    bool                // log stack trace
-		realm       string              // host/domain to secure by BasicAuth
-		staticFS    http.Handler        // static file server
-		theme       string              // `dark` or `light` display theme
-		usrList     *passlist.TPassList // user/password list
-		viewList    *TViewList          // list of template/views
+		cacheFS  http.Handler        // cache file server (i.e. thumbnails)
+		cssFS    http.Handler        // CSS file server
+		dataDir  string              // base dir for data
+		docFS    http.Handler        // document file server
+		staticFS http.Handler        // static file server
+		usrList  *passlist.TPassList // user/password list
+		viewList *TViewList          // list of template/views
 	}
 )
 
@@ -59,23 +51,10 @@ func NewPageHandler() (*TPageHandler, error) {
 
 	result.cacheFS = jffs.FileServer(db.CalibreCachePath())
 
-	result.authAll = AppArgs.AuthAll
-
-	result.docsPerPage = AppArgs.BooksPerPage
-
 	result.dataDir = AppArgs.DataDir
+
 	result.cssFS = cssfs.FileServer(AppArgs.DataDir + `/`)
 	result.docFS = jffs.FileServer(db.CalibreLibraryPath())
-
-	result.lang = AppArgs.Lang
-
-	result.libName = AppArgs.LibName
-
-	// an empty `listen` value means: listen on all interfaces
-	result.addr = fmt.Sprintf("%s:%d", AppArgs.Listen, AppArgs.Port)
-
-	result.logStack = AppArgs.LogStack
-
 	result.staticFS = jffs.FileServer(result.dataDir)
 
 	if s = AppArgs.PassFile; 0 == len(s) {
@@ -86,10 +65,6 @@ func NewPageHandler() (*TPageHandler, error) {
 		apachelogger.Err("NewPageHandler()", s)
 		result.usrList = nil
 	}
-
-	result.realm = AppArgs.Realm
-
-	result.theme = AppArgs.Theme
 
 	if result.viewList, err = newViewList(filepath.Join(result.dataDir, `views`)); nil != err {
 		return nil, err
@@ -170,7 +145,7 @@ func URLparts(aURL string) (rDir, rPath string) {
 // implementing the `TErrorPager` interface.
 func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 	var empty []byte
-	qo := db.NewQueryOptions(ph.docsPerPage)
+	qo := db.NewQueryOptions(AppArgs.BooksPerPage)
 	pageData := ph.basicTemplateData(qo).
 		Set("ShowForm", false)
 
@@ -192,16 +167,11 @@ func (ph *TPageHandler) GetErrorPage(aData []byte, aStatus int) []byte {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// Address returns the configured `IP:Port` address to use for listening.
-func (ph *TPageHandler) Address() string {
-	return ph.addr
-} // Address()
-
 // `basicTemplateData()` returns a list of common template values.
 func (ph *TPageHandler) basicTemplateData(aOptions *db.TQueryOptions) *TemplateData {
 	y, m, d := time.Now().Date()
 
-	lang := ph.lang
+	lang := AppArgs.Lang
 	switch aOptions.GuiLang {
 	case db.QoLangEnglish:
 		lang = "en"
@@ -209,7 +179,7 @@ func (ph *TPageHandler) basicTemplateData(aOptions *db.TQueryOptions) *TemplateD
 		lang = "de"
 	}
 
-	theme := ph.theme
+	theme := AppArgs.Theme
 	switch aOptions.Theme {
 	case db.QoThemeDark:
 		theme = "dark"
@@ -224,14 +194,14 @@ func (ph *TPageHandler) basicTemplateData(aOptions *db.TQueryOptions) *TemplateD
 		Set("HasPrev", false).
 		Set("IsGrid", db.QoLayoutGrid == aOptions.Layout).
 		Set("Lang", lang).
-		Set("LibraryName", ph.libName).
+		Set("LibraryName", AppArgs.LibName).
 		Set("Robots", "noindex,nofollow").
 		Set("SLO", aOptions.SelectLayoutOptions()).
 		Set("SLL", aOptions.SelectLimitOptions()).
 		Set("SOO", aOptions.SelectOrderOptions()).
 		Set("SSB", aOptions.SelectSortByOptions()).
 		Set("THEME", aOptions.SelectThemeOptions()).
-		Set("Title", ph.realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d)).
+		Set("Title", AppArgs.Realm+fmt.Sprintf(": %d-%02d-%02d", y, m, d)).
 		Set("VirtLib", aOptions.SelectVirtLibOptions()) // #nosec G203
 } // basicTemplateData()
 
@@ -253,7 +223,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		ph.handleQuery(aWriter, aRequest, aOption, aSession, dbHandle)
 	} // doHandleQuery()
 
-	qo := db.NewQueryOptions(ph.docsPerPage) // in `queryoptions.go`
+	qo := db.NewQueryOptions(AppArgs.BooksPerPage) // in `queryoptions.go`
 	so := sessions.GetSession(aRequest)
 	if qos, ok := so.GetString("QOS"); ok {
 		qo.Scan(qos)
@@ -467,7 +437,7 @@ func (ph *TPageHandler) handlePOST(aWriter http.ResponseWriter, aRequest *http.R
 	path, _ := URLparts(aRequest.URL.Path)
 	switch path {
 	case "qo": // the only valid POST destination
-		qo := db.NewQueryOptions(ph.docsPerPage)
+		qo := db.NewQueryOptions(AppArgs.BooksPerPage)
 		so := sessions.GetSession(aRequest)
 		if qos, ok := so.GetString("QOS"); ok {
 			qo.Scan(qos)
@@ -568,7 +538,7 @@ func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
 	if nil == ph.usrList {
 		return false
 	}
-	if ph.authAll {
+	if AppArgs.AuthAll {
 		return true
 	}
 	path, _ := URLparts(aRequest.URL.Path)
@@ -583,12 +553,12 @@ func (ph *TPageHandler) NeedAuthentication(aRequest *http.Request) bool {
 
 // ServeHTTP handles the incoming HTTP requests.
 func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Request) {
-	defer recoverPanic(ph.logStack)
+	defer recoverPanic(AppArgs.LogStack)
 
 	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 	if ph.NeedAuthentication(aRequest) {
 		if err := ph.usrList.IsAuthenticated(aRequest); nil != err {
-			passlist.Deny(ph.realm, aWriter)
+			passlist.Deny(AppArgs.Realm, aWriter)
 			return
 		}
 	}
