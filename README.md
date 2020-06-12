@@ -6,8 +6,8 @@
 [![Issues](https://img.shields.io/github/issues/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/issues?q=is%3Aopen+is%3Aissue)
 [![Size](https://img.shields.io/github/repo-size/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/)
 [![Tag](https://img.shields.io/github/tag/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/releases)
-[![License](https://img.shields.io/github/license/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/blob/master/LICENSE)
-[![View examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg)](https://github.com/mwat56/kaliber/blob/master/app/kaliber.go)
+[![License](https://img.shields.io/github/license/mwat56/kaliber.svg)](https://github.com/mwat56/kaliber/blob/main/LICENSE)
+[![View examples](https://img.shields.io/badge/learn%20by-examples-0077b3.svg)](https://github.com/mwat56/kaliber/blob/main/app/kaliber.go)
 
 - [Kaliber](#kaliber)
 	- [Note](#note)
