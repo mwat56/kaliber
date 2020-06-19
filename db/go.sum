@@ -1,6 +1,4 @@
 github.com/mattn/go-sqlite3 v2.0.3+incompatible h1:gXHsfypPkaMZrKbD5209QV9jbUTJKjyR5WD3HYQSd+U=
 github.com/mattn/go-sqlite3 v2.0.3+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
-github.com/mwat56/apachelogger v1.4.8 h1:LdAx+P+1IqV4I6hYf/jpVnkp1+41BvSbfxa6bAucddk=
-github.com/mwat56/apachelogger v1.4.8/go.mod h1:LuMqFj0QkyaN01qlqYt5qnwb2r8yYEcyfBbbhcJKFZ4=
-github.com/mwat56/apachelogger v1.4.9 h1:Yic7gOoTv0ipoocZfl2cP+gfmm2RGLyQifDf8X2Vmzw=
-github.com/mwat56/apachelogger v1.4.9/go.mod h1:LuMqFj0QkyaN01qlqYt5qnwb2r8yYEcyfBbbhcJKFZ4=
+github.com/mwat56/apachelogger v1.4.10 h1:4G18UZkEITSBD2r3PZFjuXaO+8dJtKorzkQXUpTJNlg=
+github.com/mwat56/apachelogger v1.4.10/go.mod h1:LuMqFj0QkyaN01qlqYt5qnwb2r8yYEcyfBbbhcJKFZ4=
