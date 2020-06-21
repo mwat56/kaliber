@@ -11,7 +11,6 @@ package db
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,6 +42,12 @@ var (
 
 	// Guard against parallel database copies.
 	syncCopyMtx = new(sync.Mutex)
+
+	// The channel to send SQL to and read trace messages from.
+	syncSQLTraceChannel = make(chan string, 127)
+
+	// Optional file to log all SQL queries.
+	syncSQLTraceFile = ``
 )
 
 // `goSyncFile()` checks in background once a minute whether the
@@ -69,14 +74,6 @@ func goSyncFile() {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-var (
-	// The channel to send SQL to and read trace messages from.
-	syncSQLTraceChannel = make(chan string, 127)
-
-	// Optional file to log all SQL queries.
-	syncSQLTraceFile = ``
-)
-
 // `goSQLtrace()` runs in background to log `aQuery`
 // (if a tracefile is set).
 //
@@ -94,8 +91,8 @@ func goSQLtrace(aQuery string, aWhen time.Time) {
 } // goSQLtrace()
 
 const (
-	// Timer interval to look for trace file closing.
-	syncSex = time.Second << 2 // four seconds
+	// Timer interval to wait for trace file closing after inactivity.
+	syncSex = time.Second << 3 // eight seconds
 
 	// Mode of opening the logfile(s).
 	syncOpenFlags = os.O_CREATE | os.O_APPEND | os.O_WRONLY | os.O_SYNC
@@ -105,17 +102,15 @@ const (
 //
 // This function is called only once, handling all write requests
 // while running in background.
-//
-//	`aSource` R/O channel to read the log messages to write.
-func goWriteSQLtrace(aSource <-chan string) {
+func goWriteSQLtrace() {
 	var (
 		err        error
-		file       *os.File
+		traceFile  *os.File
 		fileCloser *time.Timer
 	)
 	defer func() {
-		if (nil != file) && (os.Stderr != file) {
-			_ = file.Close()
+		if (nil != traceFile) && (os.Stderr != traceFile) {
+			_ = traceFile.Close()
 		}
 		if nil != fileCloser {
 			_ = fileCloser.Stop()
@@ -123,33 +118,34 @@ func goWriteSQLtrace(aSource <-chan string) {
 	}()
 
 	// Let the application initialise:
-	time.Sleep(syncSex)
+	time.Sleep(time.Second)
 	fileCloser = time.NewTimer(syncSex)
 
 	for { // wait for strings to write
 		select {
-		case txt, more := <-aSource:
+		case txt, more := <-syncSQLTraceChannel:
 			if !more { // channel closed
-				log.Println(`syncdb.goWriteSQLtrace(): trace channel closed`)
 				return
 			}
-			if 0 < len(syncSQLTraceFile) {
-				if nil == file {
-					if file, err = os.OpenFile(syncSQLTraceFile,
-						syncOpenFlags, 0640); /* #nosec G302 */ nil != err {
-						file = os.Stderr // a last resort
+			if (0 < len(syncSQLTraceFile)) && (0 < len(txt)) {
+				if nil == traceFile {
+					if traceFile, err = os.OpenFile(syncSQLTraceFile, syncOpenFlags, 0640); /* #nosec G302 */ nil != err {
+						// A last resort:
+						traceFile = os.Stderr
 					}
 				}
-				fmt.Fprintln(file, txt)
-				fileCloser.Reset(syncSex)
+				fmt.Fprintln(traceFile, txt)
 			}
+			fileCloser.Reset(syncSex)
 
 		case <-fileCloser.C:
-			if nil != file {
-				if os.Stderr != file {
-					_ = file.Close()
+			// Make sure to close the trace file after
+			// a certain time of inactivity.
+			if nil != traceFile {
+				if os.Stderr != traceFile {
+					_ = traceFile.Close()
 				}
-				file = nil
+				traceFile = nil
 			}
 			fileCloser.Reset(syncSex)
 		}
@@ -165,7 +161,10 @@ var (
 //
 // If the provided `aFilename` is empty the SQL logging gets disabled.
 //
-//	`aFilename` the tracefile to use; if empty tracing is disabled.
+// NOTE: Once the function was called with a valid `aFilename` argument
+// any forther call will be ignored.
+//
+//	`aFilename` The tracefile to use, if empty tracing is disabled.
 func SetSQLtraceFile(aFilename string) {
 	if 0 < len(aFilename) {
 		if path, err := filepath.Abs(aFilename); nil == err {
@@ -173,7 +172,7 @@ func SetSQLtraceFile(aFilename string) {
 		}
 		syncFilenameOnce.Do(func() {
 			// start the background writer:
-			go goWriteSQLtrace(syncSQLTraceChannel)
+			go goWriteSQLtrace()
 		})
 
 		return
@@ -182,7 +181,8 @@ func SetSQLtraceFile(aFilename string) {
 	syncSQLTraceFile = ``
 } // SetSQLtraceFile()
 
-// SQLtraceFile returns the file used for the optional logging of SQL queries.
+// SQLtraceFile returns the filename used for the optional logging
+// of SQL queries.
 func SQLtraceFile() string {
 	return syncSQLTraceFile
 } // SQLtraceFile()
@@ -190,55 +190,54 @@ func SQLtraceFile() string {
 // `syncDatabaseFile()` copies Calibre's original database file
 // to the configured cache directory.
 //
-// The `bool` return value signals whether the database file was actually
-// copied or not.
-// the `error` return value is either `nil` in case of success or the
-// occurred error.
+// The `bool` return value signals whether the database file was
+// actually copied or not.
+// The `error` return value is either `nil` in case of success or the
+// error that occurred.
 func syncDatabaseFile() (bool, error) {
+	var (
+		err              error
+		srcFile, tmpFile *os.File
+		srcFI, dstFI     os.FileInfo
+	)
+	defer func() {
+		if nil != srcFile {
+			_ = srcFile.Close()
+		}
+		if nil != tmpFile {
+			_ = tmpFile.Close()
+		}
+	}()
 	syncCopyMtx.Lock()
 	defer syncCopyMtx.Unlock()
 
-	var (
-		err          error
-		sFile, tFile *os.File
-		sFI, dFI     os.FileInfo
-	)
-	defer func() {
-		if nil != sFile {
-			_ = sFile.Close()
-		}
-		if nil != tFile {
-			_ = tFile.Close()
-		}
-	}()
-
-	sName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
-	if sFI, err = os.Stat(sName); nil != err {
+	srcName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
+	if srcFI, err = os.Stat(srcName); nil != err {
 		return false, err
 	}
 
-	dName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
-	if dFI, err = os.Stat(dName); nil == err {
-		if sFI.ModTime().Before(dFI.ModTime()) {
+	dstName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
+	if dstFI, err = os.Stat(dstName); nil == err {
+		if srcFI.ModTime().Before(dstFI.ModTime()) {
 			return false, nil
 		}
 	}
 
-	if sFile, err = os.Open(sName); /* #nosec G304 */ err != nil {
+	if srcFile, err = os.OpenFile(srcName, os.O_RDONLY, 0); /* #nosec G304 */ err != nil {
 		return false, err
 	}
 
-	tName := dName + `~`
-	if tFile, err = os.OpenFile(tName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
+	tmpName := dstName + `~`
+	if tmpFile, err = os.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
 		return false, err
 	}
 
-	if _, err = io.Copy(tFile, sFile); nil != err {
+	if _, err = io.Copy(tmpFile, srcFile); nil != err {
 		return false, err
 	}
-	go goSQLtrace(`-- copied `+sName+` to `+dName, time.Now())
+	go goSQLtrace(`-- copied `+srcName+` to `+dstName, time.Now())
 
-	return true, os.Rename(tName, dName)
+	return true, os.Rename(tmpName, dstName)
 } // syncDatabaseFile()
 
 /*

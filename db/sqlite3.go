@@ -11,6 +11,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -26,10 +27,10 @@ import (
 )
 
 const (
-	// Name of the `Calibre` database
+	// Name of the `Calibre` database.
 	dbCalibreDatabaseFilename = `metadata.db`
 
-	// Calibre's metadata/preferences store
+	// `Calibre's` metadata/preferences store.
 	dbCalibrePreferencesFile = `metadata_db_prefs_backup.json`
 )
 
@@ -42,6 +43,7 @@ type (
 	}
 )
 
+/*
 // `doOnNew()` is called when a new database connection is required.
 //
 // If the operation could not be performned successfully the returned
@@ -77,6 +79,7 @@ func doOnNew(aContext context.Context) (rConn *sql.DB, rErr error) {
 
 	return
 } // doOnNew()
+*/
 
 var (
 	// Make sure the database file monitoring is started only once.
@@ -87,16 +90,12 @@ var (
 //
 //	`aContext` The current web request's context.
 func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
-	var copied bool
-
 	// Prepare the local database copy:
-	if copied, rErr = syncDatabaseFile(); nil != rErr {
+	if _, rErr = syncDatabaseFile(); nil != rErr {
 		return
 	}
-	if copied {
-		// Signal for `rDB.reOpen()`:
-		syncCopiedChan <- struct{}{}
-	}
+	// Signal for `rDB.reOpen()`:
+	syncCopiedChan <- struct{}{}
 
 	dbRunFileCheckOnce.Do(func() {
 		// Start monitoring the original database file:
@@ -104,7 +103,7 @@ func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
 	})
 
 	rDB = &TDataBase{
-		sqlConns: NewPool(doOnNew),
+		sqlConns: newPool( /* doOnNew */ ),
 	}
 	rErr = rDB.reOpen(aContext)
 
@@ -114,7 +113,7 @@ func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 var (
-	// Pathname to the cached `Calibre` database
+	// Pathname to the copied `Calibre` database
 	dbCalibreCachePath = ``
 
 	// Pathname to the original `Calibre` database
@@ -139,22 +138,40 @@ func CalibrePreferencesFile() string {
 
 // SetCalibreCachePath sets the directory of the `Calibre` database copy.
 //
-//	`aPath` is the directory path to use for caching the Calibre library.
-func SetCalibreCachePath(aPath string) {
+// If `aPath` is an empty string or is a directory that can't be used or
+// created the function returns an appropriate error, otherwise the return
+// value is `nil`.
+//
+//	`aPath` is the directory path to use for caching the `Calibre` library.
+func SetCalibreCachePath(aPath string) error {
+	if 0 == len(aPath) {
+		return errors.New(`SetCalibreCachePath can't use empty directory/path`)
+	}
 	if path, err := filepath.Abs(aPath); nil == err {
 		aPath = path
 	}
 	if fi, err := os.Stat(aPath); (nil == err) && fi.IsDir() {
 		dbCalibreCachePath = aPath
-	} else if err := os.MkdirAll(aPath, os.ModeDir|0775); nil == err {
+	} else if err := os.MkdirAll(aPath, os.ModeDir|0750); nil == err {
 		dbCalibreCachePath = aPath
+	} else {
+		dbCalibreCachePath = ``
+		return fmt.Errorf("SetCalibreCachePath can't find directory: %v", err)
 	}
+
+	return nil
 } // SetCalibreCachePath()
 
 // SetCalibreLibraryPath sets the base directory of the `Calibre` library.
 //
-//	`aPath` is the directory path where the Calibre library resides.
-func SetCalibreLibraryPath(aPath string) string {
+// If `aPath` is an empty string or is a directory that can't be used the
+// function returns an appropriate error, otherwise the return value is `nil`.
+//
+//	`aPath` is the directory path where the `Calibre` library resides.
+func SetCalibreLibraryPath(aPath string) error {
+	if 0 == len(aPath) {
+		return errors.New(`SetCalibreLibraryPath can't use empty directory/path`)
+	}
 	if path, err := filepath.Abs(aPath); nil == err {
 		aPath = path
 	}
@@ -162,9 +179,9 @@ func SetCalibreLibraryPath(aPath string) string {
 		dbCalibreLibraryPath = aPath
 	} else {
 		dbCalibreLibraryPath = ``
+		return fmt.Errorf("SetCalibreLibraryPath can't find directory: %v", err)
 	}
-
-	return dbCalibreLibraryPath
+	return nil
 } // SetCalibreLibraryPath()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -468,10 +485,10 @@ type (
 	tPSVstring = string
 )
 
-// Close terminates the database connection.
+// Close terminates the current database connection.
 func (db *TDataBase) Close() {
 	if nil != db.sqlDB {
-		pLen := strconv.Itoa(db.sqlConns.Put(db.sqlDB))
+		pLen := strconv.Itoa(db.sqlConns.put(db.sqlDB))
 		db.sqlDB = nil // clear reference
 
 		go goSQLtrace(`-- recycling DB connection `+pLen, time.Now()) //FIXME REMOVE
@@ -733,6 +750,7 @@ func (db *TDataBase) doQueryGrid(aContext context.Context, aQuery string) (rList
 		case <-aContext.Done():
 			rErr = aContext.Err()
 			return
+
 		default:
 			rList.Add(doc)
 		}
@@ -760,6 +778,7 @@ func (db *TDataBase) query(aContext context.Context, aQuery string) (rRows *sql.
 	go goSQLtrace(aQuery, time.Now())
 
 	rRows, rErr = db.sqlDB.QueryContext(aContext, aQuery)
+	db.Close() // recycle the connection
 
 	return
 } // query()
@@ -1008,15 +1027,15 @@ func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
 			_ = db.sqlDB.Close()
 			db.sqlDB = nil // clear reference
 		}
-		db.sqlConns.Clear()
+		db.sqlConns.clear()
 
 		go goSQLtrace(`-- closed all DB connections`, time.Now()) //FIXME REMOVE
 
-		db.sqlDB, rErr = db.sqlConns.Get(aContext)
+		db.sqlDB, rErr = db.sqlConns.get(aContext)
 
 	default:
 		if nil == db.sqlDB {
-			db.sqlDB, rErr = db.sqlConns.Get(aContext)
+			db.sqlDB, rErr = db.sqlConns.get(aContext)
 		}
 	}
 

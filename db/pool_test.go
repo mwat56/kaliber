@@ -31,34 +31,29 @@ func prepDBforTesting(aContext context.Context) {
 	// _ = NewPool(mock, mock)
 } // prepDBforTesting()
 
-func TestTDBpool_Put(t *testing.T) {
+func TestTDBpool_Clear(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
-	var conn1 *sql.DB
-	conn2, _ := doOnNew(ctx)
-	_ = NewPool(doOnNew)
 
-	type args struct {
-		aConnection *sql.DB
-	}
+	conn, _ := pConnPool.get(ctx)
+	_ = pConnPool.put(conn)
+
 	tests := []struct {
 		name string
-		args args
-		want int
+		want *TDBpool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{conn1}, 0},
-		{" 2", args{conn2}, 1},
-		{" 3", args{conn2}, 2},
+		{" 1", pConnPool},
+		{" 2", pConnPool},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pConnPool.Put(tt.args.aConnection); got != tt.want {
-				t.Errorf("TDBpool.Put() = %v, want %v", got, tt.want)
+			if got := pConnPool.clear(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TDBpool.Clear() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // TestTDBpool_Put()
+} // TestTDBpool_Clear()
 
 func TestTDBpool_Get(t *testing.T) {
 	ctx := context.Background()
@@ -78,7 +73,7 @@ func TestTDBpool_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRConn, err := pConnPool.Get(tt.args.aContext)
+			gotRConn, err := pConnPool.get(tt.args.aContext)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TDBpool.Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -86,32 +81,37 @@ func TestTDBpool_Get(t *testing.T) {
 			if nil == gotRConn {
 				t.Errorf("TDBpool.Get() = %v, want (!nil)", gotRConn)
 			} else {
-				_ = pConnPool.Put(gotRConn)
+				_ = pConnPool.put(gotRConn)
 			}
 		})
 	}
 } // TestTDBpool_Get()
 
-func TestTDBpool_Clear(t *testing.T) {
+func TestTDBpool_Put(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 
-	conn, _ := pConnPool.Get(ctx)
-	_ = pConnPool.Put(conn)
+	var conn1 *sql.DB
+	conn2, _ := pConnPool.get(ctx)
 
+	type args struct {
+		aConnection *sql.DB
+	}
 	tests := []struct {
 		name string
-		want *TDBpool
+		args args
+		want int
 	}{
 		// TODO: Add test cases.
-		{" 1", pConnPool},
-		{" 2", pConnPool},
+		{" 1", args{conn1}, 0},
+		{" 2", args{conn2}, 1},
+		{" 3", args{conn2}, 2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pConnPool.Clear(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TDBpool.Clear() = %v, want %v", got, tt.want)
+			if got := pConnPool.put(tt.args.aConnection); got != tt.want {
+				t.Errorf("TDBpool.Put() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // TestTDBpool_Clear()
+} // TestTDBpool_Put()
