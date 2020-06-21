@@ -78,17 +78,26 @@ var (
 
 // `absolute()` returns `aDir` as an absolute path.
 //
+// If `aDir` is an empty string the current directory (`./`) gets returned.
+//
 // If `aDir` starts with a slash (`/`) it's returned after cleaning.
+//
+// If `aBaseDir` is an empty string the current directory (`./`) is used.
+//
 // Otherwise `aBaseDir` gets prepended to `aDir` and returned after cleaning.
 //
 //	`aBaseDir` The base directory to prepend to `aDir`.
 //	`aDir` The directory to make absolute.
 func absolute(aBaseDir, aDir string) string {
 	if 0 == len(aDir) {
+		aDir, _ = filepath.Abs(`./`)
 		return aDir
 	}
 	if '/' == aDir[0] {
 		return filepath.Clean(aDir)
+	}
+	if 0 == len(aBaseDir) {
+		aBaseDir, _ = filepath.Abs(`./`)
 	}
 
 	return filepath.Join(aBaseDir, aDir)
@@ -120,20 +129,39 @@ func init() {
 } // init()
 */
 
-// InitConfig sets up and reads all configuration data from INI files
+// InitConfig sets up and reads all configuration data from INI file(s)
 // and commandline arguments.
+//
+// The steps here are:
+//
+// (1) read the INI file(s):
+//	(a) read the local `./.kaliber.ini`
+//	(b) read the global `/etc/kaliber.ini`
+//	(c) read the user-local `~/.kaliber.ini`
+//	(d) read the user-local `~/.config/kaliber.ini`
+// (2) merge the commandline arguments with the INI values
+// into the global `AppArgs` variable.
+//
+// This function is meant to be called first thing in the application's
+// `main()` function.
 func InitConfig() {
 	flag.CommandLine = flag.NewFlagSet(`Kaliber`, flag.ExitOnError)
+	iniValues = readIniFiles()
 	readIniFiles()
+
 	setFlags()
+	iniValues.Clear()           // release unneeded memory
+	iniValues = tArguments{nil} // dito
+
 	parseFlags()
+
 	readFlags()
 	flag.CommandLine = nil // free unneeded memory
 } // InitConfig()
 
 // `parseFlags()` parses the commandline arguments.
 func parseFlags() {
-	flag.Usage = ShowHelp
+	flag.CommandLine.Usage = ShowHelp
 	_ = flag.CommandLine.Parse(os.Args[1:])
 } // parseFlags()
 
@@ -204,11 +232,17 @@ func readFlags() {
 	// of the libraryPath to our cache path.
 	s := fmt.Sprintf("%x", md5.Sum([]byte(AppArgs.libPath))) // #nosec G401
 	if ucd, err := os.UserCacheDir(); (nil != err) || (0 == len(ucd)) {
-		db.SetCalibreCachePath(filepath.Join(AppArgs.DataDir, `img`, s))
+		if err = db.SetCalibreCachePath(filepath.Join(AppArgs.DataDir, `img`, s)); nil != err {
+			log.Fatalf("Error: %v", err)
+		}
 	} else {
-		db.SetCalibreCachePath(filepath.Join(ucd, `kaliber`, s))
+		if err = db.SetCalibreCachePath(filepath.Join(ucd, `kaliber`, s)); nil != err {
+			log.Fatalf("Error: %v", err)
+		}
 	}
-	db.SetCalibreLibraryPath(AppArgs.libPath)
+	if err := db.SetCalibreLibraryPath(AppArgs.libPath); nil != err {
+		log.Fatalf("Error: %v", err)
+	}
 
 	if `0` == AppArgs.listen {
 		AppArgs.listen = ``
@@ -260,7 +294,7 @@ func readFlags() {
 	}
 } // readFlags()
 
-// `readIniFiles()` processes the config values read from INI file(s).
+// `readIniFiles()` reads the application specific INI files.
 //
 // The steps here are:
 //	(1) read the local `./.kaliber.ini`,
@@ -268,61 +302,8 @@ func readFlags() {
 //	(3) read the user-local `~/.kaliber.ini`,
 //	(4) read the user-local `~/.config/kaliber.ini`,
 //	(5) read the `-ini` commandline argument.
-func readIniFiles() {
-	// (1) ./
-	fName, _ := filepath.Abs(`./kaliber.ini`)
-	ini1, err := ini.New(fName)
-	if nil == err {
-		ini1.AddSectionKey(``, `iniFile`, fName)
-	}
-
-	// (2) /etc/
-	fName = `/etc/kaliber.ini`
-	if ini2, err2 := ini.New(fName); nil == err2 {
-		ini1.Merge(ini2)
-		ini1.AddSectionKey(``, `iniFile`, fName)
-	}
-
-	// (3) ~user/
-	if fName, _ = os.UserHomeDir(); 0 < len(fName) {
-		fName, _ = filepath.Abs(filepath.Join(fName, `.kaliber.ini`))
-		if ini2, err2 := ini.New(fName); nil == err2 {
-			ini1.Merge(ini2)
-			ini2.Clear()
-			ini1.AddSectionKey(``, `iniFile`, fName)
-		}
-	}
-
-	// (4) ~/.config/
-	if confDir, err3 := os.UserConfigDir(); nil == err3 {
-		fName, _ = filepath.Abs(filepath.Join(confDir, `kaliber.ini`))
-		if ini2, err2 := ini.New(fName); nil == err2 {
-			ini1.Merge(ini2)
-			ini2.Clear()
-			ini1.AddSectionKey(``, `iniFile`, fName)
-		}
-	}
-
-	// (5) cmdline
-	for aLen, i := len(os.Args), 1; i < aLen; i++ {
-		if `-ini` == os.Args[i] {
-			//XXX Note that this works only if `-ini` and
-			// filename are two separate arguments. It will
-			// fail if it's given in the form `-ini=filename`.
-			i++
-			if i < aLen {
-				fName, _ = filepath.Abs(os.Args[i])
-				if ini2, _ := ini.New(fName); nil == err {
-					ini1.Merge(ini2)
-					ini2.Clear()
-					ini1.AddSectionKey(``, `iniFile`, fName)
-				}
-			}
-			break
-		}
-	}
-
-	iniValues = tArguments{*ini1.GetSection(``)}
+func readIniFiles() tArguments {
+	return tArguments{*ini.ReadIniData(`kaliber`)}
 } // readIniFiles()
 
 // `setFlags()` sets up the flags for the commandline arguments.
@@ -490,8 +471,6 @@ func setFlags() {
 
 	flag.CommandLine.StringVar(&AppArgs.UserUpdate, "uu", AppArgs.UserUpdate,
 		"<userName> User update: update a username in the password file")
-
-	iniValues.Clear() // release unneeded memory
 } // setFlags()
 
 // ShowHelp lists the commandline options to `Stderr`.
