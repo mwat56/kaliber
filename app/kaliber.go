@@ -86,9 +86,10 @@ func main() {
 	var (
 		err error
 		ph  *kaliber.TPageHandler
-		s   string
 	)
 	Me, _ := filepath.Abs(os.Args[0])
+
+	// Read INI file(s) and commandline options:
 	kaliber.InitConfig()
 
 	// Handle commandline user/password maintenance:
@@ -113,20 +114,9 @@ func main() {
 		handler = gziphandler.GzipHandler(handler)
 	}
 
-	// Inspect logging config options and setup the `ApacheLogger`:
-	if 0 < len(kaliber.AppArgs.AccessLog) {
-		// an empty string means: no logfile
-		if 0 < len(kaliber.AppArgs.ErrorLog) {
-			handler = apachelogger.Wrap(handler, kaliber.AppArgs.AccessLog, kaliber.AppArgs.ErrorLog)
-		} else {
-			handler = apachelogger.Wrap(handler, kaliber.AppArgs.AccessLog, ``)
-		}
-		// err = nil // for use by test for `apachelogger.SetErrLog()` (below)
-	} else if 0 < len(kaliber.AppArgs.ErrorLog) {
-		handler = apachelogger.Wrap(handler, ``, kaliber.AppArgs.ErrorLog)
-	} else {
-		handler = apachelogger.Wrap(handler, ``, ``)
-	}
+	// Use logging config options and setup the `ApacheLogger`:
+	handler = apachelogger.Wrap(handler,
+		kaliber.AppArgs.AccessLog, kaliber.AppArgs.ErrorLog)
 
 	// We need a `server` reference to use it in `setupSignals()`
 	// and to set some reasonable timeouts:
@@ -139,9 +129,7 @@ func main() {
 		// enough time for book download with little bandwidth:
 		WriteTimeout: 20 * time.Minute,
 	}
-	if (nil == err) && (0 < len(s)) { // values from logfile test
-		apachelogger.SetErrLog(server)
-	}
+	apachelogger.SetErrLog(server)
 	setupSignals(server)
 
 	if (0 < len(kaliber.AppArgs.CertKey)) && (0 < len(kaliber.AppArgs.CertPem)) {
@@ -177,21 +165,20 @@ func main() {
 		} // #nosec G402
 		server.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
 
-		s = fmt.Sprintf("%s listening HTTPS at %s", Me, server.Addr)
-		log.Println(s)
-		apachelogger.Log("Kaliber/main", s)
-		if err = server.ListenAndServeTLS(kaliber.AppArgs.CertPem, kaliber.AppArgs.CertKey); nil != err {
-			fatal(fmt.Sprintf("%s: %v", Me, err))
+		if s := fmt.Sprintf("%s listening HTTPS at %s", Me, server.Addr); 0 < len(s) {
+			log.Println(s)
+			apachelogger.Log("Kaliber/main", s)
 		}
+		fatal(fmt.Sprintf("%s: %v", Me,
+			server.ListenAndServeTLS(kaliber.AppArgs.CertPem, kaliber.AppArgs.CertKey)))
 		return
 	}
 
-	s = fmt.Sprintf("%s listening HTTP at %s", Me, server.Addr)
-	log.Println(s)
-	apachelogger.Log("Kaliber/main", s)
-	if err = server.ListenAndServe(); nil != err {
-		fatal(fmt.Sprintf("%s: %v", Me, err))
+	if s := fmt.Sprintf("%s listening HTTP at %s", Me, server.Addr); 0 < len(s) {
+		log.Println(s)
+		apachelogger.Log("Kaliber/main", s)
 	}
+	fatal(fmt.Sprintf("%s: %v", Me, server.ListenAndServe()))
 } // main()
 
 /* _EoF_ */
