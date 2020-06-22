@@ -190,13 +190,12 @@ func SQLtraceFile() string {
 // `syncDatabaseFile()` copies Calibre's original database file
 // to the configured cache directory.
 //
-// The `bool` return value signals whether the database file was
-// actually copied or not.
-// The `error` return value is either `nil` in case of success or the
-// error that occurred.
-func syncDatabaseFile() (bool, error) {
+// The `rCopied` return value signals whether the database file
+// was actually copied or not.
+// The `rErr` return value is either `nil` in case of success or
+// the error that occurred.
+func syncDatabaseFile() (rCopied bool, rErr error) {
 	var (
-		err              error
 		srcFile, tmpFile *os.File
 		srcFI, dstFI     os.FileInfo
 	)
@@ -212,28 +211,28 @@ func syncDatabaseFile() (bool, error) {
 	defer syncCopyMtx.Unlock()
 
 	srcName := filepath.Join(dbCalibreLibraryPath, dbCalibreDatabaseFilename)
-	if srcFI, err = os.Stat(srcName); nil != err {
-		return false, err
+	if srcFI, rErr = os.Stat(srcName); nil != rErr {
+		return
 	}
 
 	dstName := filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename)
-	if dstFI, err = os.Stat(dstName); nil == err {
+	if dstFI, rErr = os.Stat(dstName); nil == rErr {
 		if srcFI.ModTime().Before(dstFI.ModTime()) {
-			return false, nil
+			return
 		}
 	}
 
-	if srcFile, err = os.OpenFile(srcName, os.O_RDONLY, 0); /* #nosec G304 */ err != nil {
-		return false, err
+	if srcFile, rErr = os.OpenFile(srcName, os.O_RDONLY, 0); /* #nosec G304 */ rErr != nil {
+		return
 	}
 
 	tmpName := dstName + `~`
-	if tmpFile, err = os.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); err != nil {
-		return false, err
+	if tmpFile, rErr = os.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600); rErr != nil {
+		return
 	}
 
-	if _, err = io.Copy(tmpFile, srcFile); nil != err {
-		return false, err
+	if _, rErr = io.Copy(tmpFile, srcFile); nil != rErr {
+		return
 	}
 	go goSQLtrace(`-- copied `+srcName+` to `+dstName, time.Now())
 
