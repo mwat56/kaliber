@@ -16,6 +16,8 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
@@ -25,31 +27,16 @@ type (
 	// A List of database connections.
 	tDBlist []*sql.DB
 
-	// // TOnNewFunc is called whenever an additional new database connection
-	// // is required.
-	// //
-	// // If the operation could not be performned successfully the returned
-	// // database pointer should be `nil` and the error must not be `nil`.
-	// //
-	// // In case of success the returned database should point to a valid
-	// // database instance and the returned error must be `nil`.
-	// //
-	// //	`aContext` The current web request's context.
-	// TOnNewFunc func(aContext context.Context) (*sql.DB, error)
-
-	// TDBpool The list of database connections.
-	TDBpool struct {
+	// tDBpool The list of database connections.
+	tDBpool struct {
 		pList tDBlist     // The actual list of available connections
 		pMtx  *sync.Mutex // A guard against concurrent write accesses
-		// pOnNew TOnNewFunc  // The object creating the connections
 	}
 )
 
 var (
 	// The list of database connections.
-	//
-	// NOTE: This variable as such must be considered R/O.
-	pConnPool *TDBpool
+	pConnPool *tDBpool
 
 	// Guard for repetitive calls to `NewPool()`.
 	pInitPoolOnce sync.Once
@@ -65,8 +52,7 @@ func goMonitorPool() {
 	for {
 		select {
 		case <-chkTimer.C:
-			pLen := pConnPool.put(nil)
-			if 63 < pLen {
+			if 63 < len(pConnPool.pList) {
 				pConnPool.clear()
 			}
 			chkTimer.Reset(chkInterval)
@@ -74,15 +60,13 @@ func goMonitorPool() {
 	}
 } // goMonitorPool()
 
-// `newPool()` returns the list of database connections.
+// `newPool()` returns a list of database connections.
 //
 // To retrieve or store a certain connection use the return value's
-// `Get()` and `Put()` methods respectively.
-//
-//	`aCreator` The object that's supposed to create database connections.
-func newPool( /* aCreator TOnNewFunc */ ) *TDBpool {
+// `get()` and `put()` methods respectively.
+func newPool() *tDBpool {
 	pInitPoolOnce.Do(func() {
-		pConnPool = &TDBpool{
+		pConnPool = &tDBpool{
 			pList: make(tDBlist, 0, 127),
 			pMtx:  new(sync.Mutex),
 			// pOnNew: aCreator,
@@ -98,7 +82,10 @@ func newPool( /* aCreator TOnNewFunc */ ) *TDBpool {
 // `clear()` empties the list.
 //
 // All connections are closed.
-func (p *TDBpool) clear() *TDBpool {
+func (p *tDBpool) clear() *tDBpool {
+	if nil == p {
+		return p
+	}
 	p.pMtx.Lock()
 	defer p.pMtx.Unlock()
 
@@ -111,7 +98,7 @@ func (p *TDBpool) clear() *TDBpool {
 	p.pList = p.pList[:0] // empty the list
 
 	return p
-} // Clear()
+} // clear()
 
 // `get()` selects a single database connection from the list, removes it
 // from the Pool, and returns it to the caller.
@@ -120,7 +107,11 @@ func (p *TDBpool) clear() *TDBpool {
 // and the values returned by `get()`.
 //
 //	`aContext` The current request's context.
-func (p *TDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
+func (p *tDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
+	if nil == p {
+		rErr = errors.New(`'tDBpool' object uninitialised`)
+		return
+	}
 	p.pMtx.Lock()
 	defer p.pMtx.Unlock()
 
@@ -173,19 +164,19 @@ func (p *TDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
 		} else { // case (3)
 			p.pList = p.pList[1:] // remove first item from list
 		}
+		go goSQLtrace(`-- reused DB connection`, time.Now()) //REMOVE
 	}
 
 	return
-} // Get()
+} // get()
 
-// `put()` adds `aConnection` to the list returning the new number
-// of elements in the Pool.
-//
-// To just get the current number of connections in the pool
-// use `nil` as the method's argument.
+// `put()` adds `aConnection` to the list.
 //
 //	`aConnection` The database connection to add to the pool.
-func (p *TDBpool) put(aConnection *sql.DB) int {
+func (p *tDBpool) put(aConnection *sql.DB) *tDBpool {
+	if nil == p {
+		return p
+	}
 	p.pMtx.Lock()
 	defer p.pMtx.Unlock()
 
@@ -193,7 +184,11 @@ func (p *TDBpool) put(aConnection *sql.DB) int {
 		p.pList = append(p.pList, aConnection)
 	}
 
-	return len(p.pList)
+	go goSQLtrace(fmt.Sprintf(
+		"-- recycling DB connection %d", len(p.pList)),
+		time.Now()) //FIXME REMOVE
+
+	return p
 } // put()
 
 /* _EoF_ */

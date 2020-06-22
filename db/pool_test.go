@@ -6,8 +6,6 @@
 
 package db
 
-//lint:file-ignore ST1017 - I prefer Yoda conditions
-
 import (
 	"context"
 	"crypto/md5"
@@ -16,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -27,35 +26,37 @@ func prepDBforTesting(aContext context.Context) {
 	SetCalibreLibraryPath(libPath)
 	SetSQLtraceFile("./SQLtrace.sql")
 	_, _ = OpenDatabase(aContext)
-
-	// _ = NewPool(mock, mock)
 } // prepDBforTesting()
 
-func TestTDBpool_Clear(t *testing.T) {
+func Test_tDBpool_clear(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 
-	conn, _ := pConnPool.get(ctx)
-	_ = pConnPool.put(conn)
-
+	type fields struct {
+		pList tDBlist
+		pMtx  *sync.Mutex
+	}
 	tests := []struct {
-		name string
-		want *TDBpool
+		name   string
+		fields *tDBpool
+		want   *tDBpool
 	}{
 		// TODO: Add test cases.
-		{" 1", pConnPool},
-		{" 2", pConnPool},
+		{" 0", nil, nil},
+		{" 1", pConnPool, pConnPool},
+		{" 2", pConnPool, pConnPool},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pConnPool.clear(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TDBpool.Clear() = %v, want %v", got, tt.want)
+			p := tt.fields
+			if got := p.clear(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("tDBpool.clear() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // TestTDBpool_Clear()
+} // Test_tDBpool_clear()
 
-func TestTDBpool_Get(t *testing.T) {
+func Test_tDBpool_get(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 
@@ -63,31 +64,40 @@ func TestTDBpool_Get(t *testing.T) {
 		aContext context.Context
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name     string
+		fields   *tDBpool
+		args     args
+		wantRnil bool
+		wantErr  bool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{ctx}, false},
-		{" 2", args{ctx}, false},
+		{" 0", nil, args{ctx}, true, true},
+		{" 1", pConnPool, args{ctx}, false, false},
+		{" 2", pConnPool, args{ctx}, false, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRConn, err := pConnPool.get(tt.args.aContext)
+			p := tt.fields
+			gotRConn, err := p.get(tt.args.aContext)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("TDBpool.Get() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("tDBpool.get() error = %v, wantErr %v",
+					err, tt.wantErr)
 				return
 			}
-			if nil == gotRConn {
-				t.Errorf("TDBpool.Get() = %v, want (!nil)", gotRConn)
+			if nil != gotRConn {
+				if tt.wantRnil {
+					t.Errorf("tDBpool.get() = %v, want NIL", gotRConn)
+				}
 			} else {
-				_ = pConnPool.put(gotRConn)
+				if !tt.wantRnil {
+					t.Errorf("tDBpool.get() = %v, want !NIL", nil)
+				}
 			}
 		})
 	}
-} // TestTDBpool_Get()
+} // Test_tDBpool_get()
 
-func TestTDBpool_Put(t *testing.T) {
+func Test_tDBpool_put(t *testing.T) {
 	ctx := context.Background()
 	prepDBforTesting(ctx)
 
@@ -98,20 +108,22 @@ func TestTDBpool_Put(t *testing.T) {
 		aConnection *sql.DB
 	}
 	tests := []struct {
-		name string
-		args args
-		want int
+		name   string
+		fields *tDBpool
+		args   args
+		want   *tDBpool
 	}{
 		// TODO: Add test cases.
-		{" 1", args{conn1}, 0},
-		{" 2", args{conn2}, 1},
-		{" 3", args{conn2}, 2},
+		{" 0", nil, args{conn1}, nil},
+		{" 1", pConnPool, args{conn1}, pConnPool},
+		{" 2", pConnPool, args{conn2}, pConnPool},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pConnPool.put(tt.args.aConnection); got != tt.want {
-				t.Errorf("TDBpool.Put() = %v, want %v", got, tt.want)
+			p := tt.fields
+			if got := p.put(tt.args.aConnection); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("tDBpool.put() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-} // TestTDBpool_Put()
+}
