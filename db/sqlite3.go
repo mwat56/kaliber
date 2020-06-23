@@ -38,48 +38,10 @@ type (
 	// TDataBase An opaque structure providing the properties and
 	// methods to access the `Calibre` database.
 	TDataBase struct {
-		sqlConns *TDBpool // reference of the connection pool
+		sqlConns *tDBpool // reference of the connection pool
 		sqlDB    *sql.DB  // the used database connection
 	}
 )
-
-/*
-// `doOnNew()` is called when a new database connection is required.
-//
-// If the operation could not be performned successfully the returned
-// database pointer should be `nil` and the error must not be `nil`.
-//
-// In case of success the returned database should point to a valid
-// database instance and the returned error must be `nil`.
-//
-//	`aContext` The current web request's context.
-func doOnNew(aContext context.Context) (rConn *sql.DB, rErr error) {
-	//XXX Are there custom functions to inject?
-
-	// `cache=shared` is essential to avoid running out of file
-	// handles since each query seems to hold its own file handle.
-	// `loc=auto` gets time.Time with current locale.
-	// `mode=ro` is self-explanatory since we don't change the DB
-	// in any way.
-	dsn := `file:` +
-		filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
-		`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
-
-	select {
-	case <-aContext.Done():
-		rErr = aContext.Err()
-
-	default:
-		if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
-			// rConn.Exec("PRAGMA xxx=yyy")
-			go goSQLtrace(`-- opened DB`, time.Now()) //REMOVE
-			rErr = rConn.PingContext(aContext)
-		}
-	}
-
-	return
-} // doOnNew()
-*/
 
 var (
 	// Make sure the database file monitoring is started only once.
@@ -103,7 +65,7 @@ func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
 	})
 
 	rDB = &TDataBase{
-		sqlConns: newPool( /* doOnNew */ ),
+		sqlConns: newPool(),
 	}
 	rErr = rDB.reOpen(aContext)
 
@@ -488,10 +450,8 @@ type (
 // Close terminates the current database connection.
 func (db *TDataBase) Close() {
 	if nil != db.sqlDB {
-		pLen := strconv.Itoa(db.sqlConns.put(db.sqlDB))
+		db.sqlConns.put(db.sqlDB)
 		db.sqlDB = nil // clear reference
-
-		go goSQLtrace(`-- recycling DB connection `+pLen, time.Now()) //FIXME REMOVE
 	}
 } // Close()
 
@@ -1021,6 +981,10 @@ func (db *TDataBase) QuerySearch(aContext context.Context, aOptions *TQueryOptio
 //
 //	`aContext` The current request's context.
 func (db *TDataBase) reOpen(aContext context.Context) (rErr error) {
+	// Make sure we don't interfere with an ongoing copy.
+	syncCopyMtx.Lock()
+	defer syncCopyMtx.Unlock()
+
 	select {
 	case <-syncCopiedChan:
 		if nil != db.sqlDB {
