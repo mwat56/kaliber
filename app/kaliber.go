@@ -28,13 +28,13 @@ import (
 	"github.com/mwat56/sessions"
 )
 
-// `fatal()` logs `aMessage` and terminates the program.
-func fatal(aMessage string) {
+// `exit()` logs `aMessage` and terminates the program.
+func exit(aMessage string) {
 	apachelogger.Err("Kaliber/main", aMessage)
 	runtime.Gosched() // let the logger write
 	apachelogger.Close()
 	log.Fatalln(aMessage)
-} // fatal()
+} // exit()
 
 // `userCmdline()` checks for and executes user/password handling functions.
 func userCmdline() {
@@ -76,7 +76,7 @@ func setupSignals(aServer *http.Server) {
 			log.Println(msg)
 			runtime.Gosched() // let the logger write
 			if err := aServer.Shutdown(context.Background()); nil != err {
-				fatal(fmt.Sprintf("%s: %v", os.Args[0], err))
+				exit(fmt.Sprintf("%s: %v", os.Args[0], err))
 			}
 		}
 	}()
@@ -97,7 +97,7 @@ func main() {
 
 	if ph, err = kaliber.NewPageHandler(); nil != err {
 		kaliber.ShowHelp()
-		fatal(fmt.Sprintf("%s: %v", Me, err))
+		exit(fmt.Sprintf("%s: %v", Me, err))
 	}
 	// Setup the errorpage handler:
 	handler := errorhandler.Wrap(ph, ph)
@@ -169,7 +169,7 @@ func main() {
 			log.Println(s)
 			apachelogger.Log("Kaliber/main", s)
 		}
-		fatal(fmt.Sprintf("%s: %v", Me,
+		exit(fmt.Sprintf("%s: %v", Me,
 			server.ListenAndServeTLS(kaliber.AppArgs.CertPem, kaliber.AppArgs.CertKey)))
 		return
 	}
@@ -178,7 +178,7 @@ func main() {
 		log.Println(s)
 		apachelogger.Log("Kaliber/main", s)
 	}
-	fatal(fmt.Sprintf("%s: %v", Me, server.ListenAndServe()))
+	exit(fmt.Sprintf("%s: %v", Me, server.ListenAndServe()))
 } // main()
 
 /* _EoF_ */
