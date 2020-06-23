@@ -143,7 +143,7 @@ func (p *tDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
 		default:
 			if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
 				// rConn.Exec("PRAGMA xxx=yyy")
-				go goSQLtrace(`-- opened DB`, time.Now()) //REMOVE
+				go goSQLtrace(`-- opened connection`, time.Now()) //REMOVE
 				rErr = rConn.PingContext(aContext)
 			}
 		}
@@ -164,7 +164,7 @@ func (p *tDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
 		} else { // case (3)
 			p.pList = p.pList[1:] // remove first item from list
 		}
-		go goSQLtrace(`-- reused DB connection`, time.Now()) //REMOVE
+		go goSQLtrace(`-- reusing DB connection`, time.Now()) //REMOVE
 	}
 
 	return
