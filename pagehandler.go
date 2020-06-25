@@ -77,6 +77,9 @@ func NewPageHandler() (*TPageHandler, error) {
 		return nil, err
 	}
 
+	// Initialise the database:
+	db.Init()
+
 	// Update the thumbnails cache:
 	go ThumbnailUpdate()
 
@@ -145,7 +148,7 @@ func URLparts(aURL string) (rDir, rPath string) {
 func (ph *TPageHandler) basicTemplateData(aRequest *http.Request, aOptions *db.TQueryOptions) *TemplateData {
 	y, m, d := time.Now().Date()
 
-	lang := AppArgs.Lang
+	var lang, theme string
 	switch aOptions.GuiLang {
 	case db.QoLangEnglish:
 		lang = `en`
@@ -153,7 +156,6 @@ func (ph *TPageHandler) basicTemplateData(aRequest *http.Request, aOptions *db.T
 		lang = `de`
 	}
 
-	theme := AppArgs.Theme
 	switch aOptions.Theme {
 	case db.QoThemeDark:
 		theme = `dark`
