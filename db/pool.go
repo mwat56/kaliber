@@ -44,6 +44,7 @@ var (
 
 // `goMonitorPool()` checks the size of the connection pool.
 func goMonitorPool() {
+	var pLen int
 	chkInterval := time.Minute << 2 // four minutes
 	chkTimer := time.NewTimer(chkInterval)
 	defer chkTimer.Stop()
@@ -52,7 +53,11 @@ func goMonitorPool() {
 	for {
 		select {
 		case <-chkTimer.C:
-			if 63 < len(pConnPool.pList) {
+			pConnPool.pMtx.Lock()
+			pLen = len(pConnPool.pList)
+			pConnPool.pMtx.Unlock()
+
+			if 63 < pLen {
 				pConnPool.clear()
 			}
 			chkTimer.Reset(chkInterval)
@@ -69,7 +74,6 @@ func newPool() *tDBpool {
 		pConnPool = &tDBpool{
 			pList: make(tDBlist, 0, 127),
 			pMtx:  new(sync.Mutex),
-			// pOnNew: aCreator,
 		}
 		go goMonitorPool()
 	})
@@ -136,6 +140,7 @@ func (p *tDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
 		dsn := `file:` +
 			filepath.Join(dbCalibreCachePath, dbCalibreDatabaseFilename) +
 			`?cache=shared&case_sensitive_like=1&immutable=0&loc=auto&mode=ro&query_only=1`
+
 		select {
 		case <-aContext.Done():
 			rErr = aContext.Err()
@@ -143,7 +148,7 @@ func (p *tDBpool) get(aContext context.Context) (rConn *sql.DB, rErr error) {
 		default:
 			if rConn, rErr = sql.Open(`sqlite3`, dsn); nil == rErr {
 				// rConn.Exec("PRAGMA xxx=yyy")
-				go goSQLtrace(`-- opened connection`, time.Now()) //REMOVE
+				go goSQLtrace(`-- opened DB connection`, time.Now()) //REMOVE
 				rErr = rConn.PingContext(aContext)
 			}
 		}
@@ -182,11 +187,11 @@ func (p *tDBpool) put(aConnection *sql.DB) *tDBpool {
 
 	if nil != aConnection {
 		p.pList = append(p.pList, aConnection)
-	}
 
-	go goSQLtrace(fmt.Sprintf(
-		"-- recycling DB connection %d", len(p.pList)),
-		time.Now()) //FIXME REMOVE
+		go goSQLtrace(fmt.Sprintf(
+			"-- recycling DB connection %d", len(p.pList)),
+			time.Now()) //FIXME REMOVE
+	}
 
 	return p
 } // put()
