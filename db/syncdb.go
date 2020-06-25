@@ -104,6 +104,7 @@ const (
 // while running in background.
 func goWriteSQLtrace() {
 	var (
+		cLen       int // channel length
 		err        error
 		traceFile  *os.File
 		fileCloser *time.Timer
@@ -135,6 +136,20 @@ func goWriteSQLtrace() {
 					}
 				}
 				fmt.Fprintln(traceFile, txt)
+
+				if cLen = len(syncSQLTraceChannel); 0 < cLen {
+					// Batch all waiting messages at once.
+					for txt = range syncSQLTraceChannel {
+						fmt.Fprintln(traceFile, txt)
+						cLen--
+						if 0 < cLen {
+							continue
+						}
+						if cLen = len(syncSQLTraceChannel); 0 == cLen {
+							break
+						}
+					}
+				}
 			}
 			fileCloser.Reset(syncSex)
 
