@@ -46,30 +46,59 @@ type (
 var (
 	// Make sure the database file monitoring is started only once.
 	dbRunFileCheckOnce sync.Once
+
+	// The database instance that handles all connections
+	dbDataBase *TDataBase
 )
 
-// OpenDatabase returns a new database connection.
+// Init instantiates the database object.
 //
-//	`aContext` The current web request's context.
-func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
+// This function should be called before using the database.
+func Init() {
 	// Prepare the local database copy:
-	if _, rErr = syncDatabaseFile(); nil != rErr {
-		return
+	if copied, _ := syncDatabaseFile(); copied {
+		// Signal for `rDB.reOpen()`:
+		syncCopiedChan <- struct{}{}
 	}
-	// Signal for `rDB.reOpen()`:
-	syncCopiedChan <- struct{}{}
 
 	dbRunFileCheckOnce.Do(func() {
 		// Start monitoring the original database file:
 		go goSyncFile()
 	})
 
-	rDB = &TDataBase{
+	dbDataBase = &TDataBase{
 		sqlConns: newPool(),
 	}
-	rErr = rDB.reOpen(aContext)
+} // Init()
 
-	return
+// OpenDatabase returns a database connection.
+//
+//	`aContext` The current web request's context.
+func OpenDatabase(aContext context.Context) (rDB *TDataBase, rErr error) {
+	/*
+		// Prepare the local database copy:
+		if _, rErr = syncDatabaseFile(); nil != rErr {
+			return
+		}
+		// Signal for `rDB.reOpen()`:
+		syncCopiedChan <- struct{}{}
+
+		dbRunFileCheckOnce.Do(func() {
+			// Start monitoring the original database file:
+			go goSyncFile()
+		})
+
+		rDB = &TDataBase{
+			sqlConns: newPool(),
+		}
+		rErr = rDB.reOpen(aContext)
+		return
+	*/
+
+	if nil == dbDataBase {
+		Init()
+	}
+	return dbDataBase, dbDataBase.reOpen(aContext)
 } // OpenDatabase()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
