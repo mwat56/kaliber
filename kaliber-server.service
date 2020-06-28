@@ -4,7 +4,7 @@ Documentation=https://github.com/mwat56/kaliber/
 After=network.target
 
 [Service]
-Type=idle
+Type=simple
 User=matthias
 Group=matthias
 WorkingDirectory=/home/matthias/devel/Go/src/github.com/mwat56/kaliber/
