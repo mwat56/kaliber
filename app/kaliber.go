@@ -32,7 +32,6 @@ import (
 func exit(aMessage string) {
 	apachelogger.Err("Kaliber/main", aMessage)
 	runtime.Gosched() // let the logger write
-	apachelogger.Close()
 	log.Fatalln(aMessage)
 } // exit()
 
