@@ -66,30 +66,31 @@ type (
 
 	// TDocument represents a single document (e.g. book)
 	TDocument struct {
-		ID          TID
-		authors     *tAuthorList
-		authorSort  string
-		comments    string
-		flags       int
-		formats     *tFormatList
-		hasCover    bool
-		identifiers *tIdentifierList
-		ISBN        string
-		languages   *tLanguageList
-		lccn        string
-		Pages       int
-		path        string
-		pubdate     time.Time // SQL: timestamp
-		publisher   *tPublisher
-		Rating      int
-		Size        int64
-		series      *tSeries
-		seriesindex float32 // SQL: real
-		tags        *tTagList
-		timestamp   time.Time // SQL: timestamp
-		Title       string
-		titleSort   string
-		uuid        string
+		ID           TID
+		acquisition  time.Time // SQL: timestamp
+		authors      *tAuthorList
+		authorSort   string
+		comments     string
+		flags        int
+		formats      *tFormatList
+		hasCover     bool
+		identifiers  *tIdentifierList
+		ISBN         string
+		languages    *tLanguageList
+		lccn         string
+		lastModified time.Time // SQL: timestamp
+		Pages        int
+		path         string
+		pubdate      time.Time // SQL: timestamp
+		publisher    *tPublisher
+		Rating       int
+		Size         int64
+		series       *tSeries
+		seriesindex  float32 // SQL: real
+		tags         *tTagList
+		Title        string
+		titleSort    string
+		uuid         string
 	}
 )
 
@@ -331,6 +332,11 @@ func (doc *TDocument) Languages() *TEntityList {
 	return &result
 } // Languages()
 
+// LastModified returns the last-modified date/time of the document.
+func (doc *TDocument) LastModified() string {
+	return doc.lastModified.Format(time.RFC1123)
+} // LastModified()
+
 // PubDate returns the document's formatted publication date.
 func (doc *TDocument) PubDate() string {
 	y, m, _ := doc.pubdate.Date()
@@ -416,9 +422,9 @@ func (doc *TDocument) Thumb() string {
 	return fmt.Sprintf("/thumb/%d/cover.jpg", doc.ID)
 } // Thumb()
 
-// Timestamp returns the formatted `timestamp` property.
+// Timestamp returns the formatted `acquisition` property.
 func (doc *TDocument) Timestamp() string {
-	return doc.timestamp.Format("2006-01-02 15:04:05")
+	return doc.acquisition.Format("2006-01-02 15:04:05")
 } // Timestamp()
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

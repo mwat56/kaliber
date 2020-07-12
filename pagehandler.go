@@ -245,7 +245,7 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 	)
 	defer func() {
 		if nil != dbHandle {
-			defer dbHandle.Close()
+			dbHandle.Close()
 		}
 	}()
 
@@ -324,6 +324,8 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 		pageData := ph.basicTemplateData(aRequest, qo).
 			Set("Document", doc)
+		aWriter.Header().Set(`Cache-Control`, `private, max-age=864000`) // 10 days
+		aWriter.Header().Set(`Last-Modified`, doc.LastModified())
 		ph.handleReply(`document`, aWriter, qo, so, pageData)
 
 	case `faq`:
@@ -349,6 +351,8 @@ func (ph *TPageHandler) handleGET(aWriter http.ResponseWriter, aRequest *http.Re
 			http.NotFound(aWriter, aRequest)
 			return
 		}
+		aWriter.Header().Set(`Cache-Control`, `private, max-age=864000`) // 10 days
+		aWriter.Header().Set(`Last-Modified`, doc.LastModified())
 		aRequest.URL.Path = file
 		ph.docFS.ServeHTTP(aWriter, aRequest)
 
@@ -588,7 +592,7 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 		}
 	}()
 
-	aWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET")
+	aWriter.Header().Set(`Access-Control-Allow-Methods`, `GET, HEAD, POST`)
 	if ph.NeedAuthentication(aRequest) {
 		if err := ph.usrList.IsAuthenticated(aRequest); nil != err {
 			passlist.Deny(AppArgs.Realm, aWriter)
@@ -597,10 +601,13 @@ func (ph *TPageHandler) ServeHTTP(aWriter http.ResponseWriter, aRequest *http.Re
 	}
 
 	switch aRequest.Method {
-	case "GET":
+	case `GET`:
 		ph.handleGET(aWriter, aRequest)
 
-	case "POST":
+	case `HEAD`:
+		ph.handleGET(aWriter, aRequest)
+
+	case `POST`:
 		ph.handlePOST(aWriter, aRequest)
 
 	default:

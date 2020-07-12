@@ -505,12 +505,15 @@ func (db *TDataBase) doQueryAll(aContext context.Context, aQuery string) (rList 
 			visible bool
 		)
 		doc := NewDocument()
-		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &publisher,
-			&doc.Rating, &doc.timestamp, &doc.Size, &tags,
-			&doc.comments, &series, &doc.seriesindex,
+		if err := rows.Scan(&doc.ID, &doc.Title, &authors,
+			&publisher, &doc.Rating, &doc.acquisition, &doc.Size,
+			&tags, &doc.comments, &series, &doc.seriesindex,
 			&doc.titleSort, &doc.authorSort, &formats, &languages,
 			&doc.ISBN, &identifiers, &doc.path, &doc.lccn,
-			&doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover)
+			&doc.pubdate, &doc.flags, &doc.uuid, &doc.hasCover,
+			&doc.lastModified); nil != err {
+			continue
+		}
 
 		// check for (in)visible fields:
 		if visible, _ = BookFieldVisible(`authors`); !visible {
@@ -553,7 +556,7 @@ func (db *TDataBase) doQueryAll(aContext context.Context, aQuery string) (rList 
 			doc.tags = prepTags(tags)
 		}
 		if visible, _ = BookFieldVisible(`timestamp`); !visible {
-			doc.timestamp = noTime
+			doc.acquisition = noTime
 		}
 		if visible, _ = BookFieldVisible(`title`); !visible {
 			visible, _ = BookFieldVisible(`sort`)
@@ -566,6 +569,9 @@ func (db *TDataBase) doQueryAll(aContext context.Context, aQuery string) (rList 
 		}
 		if visible, _ = BookFieldVisible(`uuid`); !visible {
 			doc.uuid = ``
+		}
+		if visible, _ = BookFieldVisible(`last_modified`); !visible {
+			doc.lastModified = time.Now()
 		}
 
 		select {
@@ -648,7 +654,8 @@ b.lccn,
 b.pubdate,
 b.flags,
 b.uuid,
-b.has_cover
+b.has_cover,
+b.last_modified
 FROM books b `
 
 	// see `QueryBy()`, `QuerySearch()`
@@ -726,9 +733,11 @@ func (db *TDataBase) doQueryGrid(aContext context.Context, aQuery string) (rList
 		)
 		doc := NewDocument()
 
-		_ = rows.Scan(&doc.ID, &doc.Title, &authors, &languages,
+		if err := rows.Scan(&doc.ID, &doc.Title, &authors, &languages,
 			&publisher, &rating, &series, &size, &tags, &pubdate,
-			&titleSort)
+			&titleSort); nil != err {
+			continue
+		}
 
 		if visible, _ = BookFieldVisible(`authors`); !visible {
 			_, _ = BookFieldVisible(`author_sort`)
@@ -908,11 +917,10 @@ func (db *TDataBase) QueryDocMini(aContext context.Context, aID TID) (rDoc *TDoc
 //	`aContext` The current web request's context.
 //	`aID` The document ID to lookup.
 func (db *TDataBase) QueryDocument(aContext context.Context, aID TID) *TDocument {
-	list, err := db.doQueryAll(aContext, dbBaseQuery+
+	if list, err := db.doQueryAll(aContext, dbBaseQuery+
 		`WHERE b.id=`+
 		strconv.FormatInt(int64(aID), 10)+
-		` LIMIT 1`)
-	if (nil == err) && (0 < len(*list)) {
+		` LIMIT 1`); (nil == err) && (0 < len(*list)) {
 		doc := (*list)[0]
 
 		return &doc
