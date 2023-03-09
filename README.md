@@ -18,7 +18,7 @@
 		- [Commandline options](#commandline-options)
 		- [INI file](#ini-file)
 		- [Authentication](#authentication)
-			- [User/password file & handling](#userpassword-file--handling)
+			- [User/password file \& handling](#userpassword-file--handling)
 	- [Directory structure](#directory-structure)
 	- [Caveats](#caveats)
 	- [Logging](#logging)
@@ -431,7 +431,7 @@ The following external libraries were used building `Kaliber`:
 
 ## Licence
 
-        Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
+        Copyright © 2019, 2023 M.Watermann, 10247 Berlin, Germany
                         All rights reserved
                     EMail : <support@mwat.de>
 

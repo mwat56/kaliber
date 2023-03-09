@@ -1,10 +1,9 @@
 /*
-
 Package kaliber implements a server for the `Calibre` library software.
 
-    Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
-                    All rights reserved
-                EMail : <support@mwat.de>
+	Copyright © 2019, 2023 M.Watermann, 10247 Berlin, Germany
+	                All rights reserved
+	            EMail : <support@mwat.de>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -35,7 +34,6 @@ written in.
 
 	For a real understanding you're encouraged to read the source
 	code and the comments therein.
-
 */
 package kaliber
 

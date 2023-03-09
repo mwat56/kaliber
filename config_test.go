@@ -1,5 +1,5 @@
 /*
-   Copyright © 2020 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2020, 2023 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
@@ -25,9 +25,11 @@ func parseFlagDebug() *TAppArgs {
 
 	// Define some flags used by `testing` to avoid
 	// bailing out during the test.
-	var coverprofile, run, testlogfile, timeout string
+	var coverprofile, panic, run, testlogfile, timeout string
 	flag.CommandLine.StringVar(&coverprofile, `test.coverprofile`, coverprofile,
 		"coverprofile for tests")
+	flag.CommandLine.StringVar(&panic, `test.paniconexit0`, panic,
+		"panic for tests")
 	flag.CommandLine.StringVar(&run, `test.run`, run,
 		"run for tests")
 	flag.CommandLine.StringVar(&testlogfile, `test.testlogfile`, testlogfile,
