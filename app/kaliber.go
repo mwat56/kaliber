@@ -1,5 +1,5 @@
 /*
-   Copyright © 2019, 2020 M.Watermann, 10247 Berlin, Germany
+   Copyright © 2019, 2023 M.Watermann, 10247 Berlin, Germany
                   All rights reserved
                EMail : <support@mwat.de>
 */
@@ -70,7 +70,7 @@ func setupSignals(aServer *http.Server) {
 
 	go func() {
 		for signal := range c {
-			msg := fmt.Sprintf("%s captured '%v', stopping program and exiting ...", os.Args[0], signal)
+			msg := fmt.Sprintf("%s captured '%v', 'stopping program and exiting ...'", os.Args[0], signal)
 			apachelogger.Err(`Kaliber/catchSignals`, msg)
 			log.Println(msg)
 			runtime.Gosched() // let the logger write
